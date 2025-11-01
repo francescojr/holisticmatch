@@ -1,0 +1,85 @@
+BASE_URL=http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com
+
+ENDPOINTS:
+==========
+
+1. LISTAR TODOS
+   GET /api/v1/professionals/
+
+2. FILTRAR
+   GET /api/v1/professionals/?service=Yoga
+   GET /api/v1/professionals/?city=São Paulo
+   GET /api/v1/professionals/?attendance_type=online
+   GET /api/v1/professionals/?price_min=100&price_max=200
+   GET /api/v1/professionals/?service=Reiki&city=Fortaleza
+
+3. DETALHE
+   GET /api/v1/professionals/24/
+   GET /api/v1/professionals/23/
+   GET /api/v1/professionals/13/
+
+4. SERVIÇOS
+   GET /api/v1/professionals/service_types/
+
+TESTES RÁPIDOS:
+===============
+
+✅ Copia e cola no Postman:
+   http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/api/v1/professionals/
+
+✅ Com filtro:
+   http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/api/v1/professionals/?service=Yoga
+
+✅ Profissional específico:
+   http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/api/v1/professionals/24/
+
+VARIÁVEIS (para Postman):
+========================
+
+base_url = holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com
+
+Aí use {{base_url}}/api/v1/professionals/
+
+IDS PROFISSIONAIS:
+=================
+13 - Maria Silva (São Paulo)
+14 - João Santos (Rio de Janeiro)
+15 - Ana Costa (Belo Horizonte)
+16 - Carlos Oliveira (Curitiba)
+17 - Juliana Lima (Porto Alegre)
+18 - Patrícia Mendes (Brasília)
+19 - Roberto Alves (São Paulo)
+20 - Fernanda Rocha (Florianópolis)
+21 - Marcos Ferreira (Salvador)
+22 - Luciana Martins (Recife)
+23 - Beatriz Silva (Campinas)
+24 - André Souza (Fortaleza)
+
+SERVIÇOS:
+=========
+Reiki
+Acupuntura
+Aromaterapia
+Massagem
+Meditação Guiada
+Tai Chi
+Reflexologia
+Cristaloterapia
+Florais
+Yoga
+Pilates Holístico
+
+FILTROS:
+========
+?service=             (tipo de serviço)
+?city=                (cidade)
+?state=               (estado, 2 letras)
+?price_min=           (preço mínimo)
+?price_max=           (preço máximo)
+?attendance_type=     (online|presencial|ambos)
+?limit=               (itens por página)
+?offset=              (paginação)
+
+EXEMPLO COMBINADO:
+==================
+?service=Yoga&city=São Paulo&price_min=100&price_max=200&limit=5
