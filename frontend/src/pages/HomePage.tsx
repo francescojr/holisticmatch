@@ -94,7 +94,15 @@ function HomePage() {
                 variants={scrollItemVariants(index)}
                 initial="hidden"
                 animate={isContainerVisible ? "visible" : "hidden"}
-                whileHover="hover"
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: "0 10px 25px -5px rgb(0 0 0 / 0.15)",
+                  transition: {
+                    type: "spring",
+                    duration: 0.6,
+                    bounce: 0.52,
+                  },
+                }}
                 onClick={() => handleCardClick(professional.id)}
                 className="cursor-pointer"
               >
