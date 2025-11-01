@@ -1,55 +1,28 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { containerVariants, fadeInVariants } from '../lib/animations'
-import { useProfessionals, useProfessional } from '../hooks/useProfessionals'
+import { useProfessionals } from '../hooks/useProfessionals'
 import SearchFilters from '../components/SearchFilters'
 import ProfessionalCard from '../components/ProfessionalCard'
-import ProfessionalModal from '../components/ProfessionalModal'
 import type { ProfessionalFilters } from '../types/Professional'
 
 function HomePage() {
+  const navigate = useNavigate()
   const [filters, setFilters] = useState<ProfessionalFilters>({})
-  const [selectedProfessionalId, setSelectedProfessionalId] = useState<number | null>(null)
   
   const { data: professionalsData, isLoading, error } = useProfessionals(filters)
-  const { data: selectedProfessional } = useProfessional(selectedProfessionalId || 0)
 
   const handleFilterChange = (newFilters: ProfessionalFilters) => {
     setFilters(newFilters)
   }
 
   const handleCardClick = (id: number) => {
-    setSelectedProfessionalId(id)
-  }
-
-  const handleCloseModal = () => {
-    setSelectedProfessionalId(null)
+    navigate(`/professionals/${id}`)
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="sticky top-0 z-30 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
-        <div className="container mx-auto flex items-center justify-between px-4 py-4">
-          <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white">
-              <span className="material-symbols-outlined text-2xl">spa</span>
-            </div>
-            <h1 className="text-2xl font-black tracking-tight text-gray-900">
-              HolisticMatch
-            </h1>
-          </div>
-          <div className="flex gap-3">
-            <button className="rounded-lg bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-600 transition-colors hover:bg-purple-100">
-              Para Profissionais
-            </button>
-            <button className="rounded-lg bg-green-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-600">
-              Entrar
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <div className="bg-gray-50">
       {/* Hero Section */}
       <motion.section
         variants={fadeInVariants}
@@ -144,13 +117,6 @@ function HomePage() {
           </div>
         )}
       </main>
-
-      {/* Professional Detail Modal */}
-      <ProfessionalModal
-        professional={selectedProfessional || null}
-        isOpen={selectedProfessionalId !== null}
-        onClose={handleCloseModal}
-      />
     </div>
   )
 }

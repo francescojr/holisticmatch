@@ -2,13 +2,28 @@
 
 > Marketplace para conectar pessoas a profissionais de terapias holísticas
 
-[![CI/CD](https://github.com/francescojr/holisticmatch/actions/workflows/ci.yml/badge.svg)](https://github.com/francescojr/holisticmatch/actions)
-[![Backend Deploy](https://github.com/francescojr/holisticmatch/actions/workflows/deploy-backend.yml/badge.svg)](https://github.com/francescojr/holisticmatch/actions)
-[![Frontend Deploy](https://github.com/francescojr/holisticmatch/actions/workflows/deploy-frontend.yml/badge.svg)](https://github.com/francescojr/holisticmatch/actions)
+[![Status](https://img.shields.io/badge/status-production%20live-success)]()
+[![Frontend](https://img.shields.io/badge/frontend-vercel%20live-blue)](https://holisticmatch.vercel.app)
+[![Backend](https://img.shields.io/badge/backend-elastic%20beanstalk-orange)](http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com)
+
+---
+
+## 🎉 Production Status - LIVE! 
+
+✅ **Frontend**: https://holisticmatch.vercel.app/ (React 18 + Vite)  
+✅ **Backend**: http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/ (Django 4.2)  
+✅ **Database**: Supabase PostgreSQL (12 professionals loaded)  
+✅ **API**: Full CRUD endpoints with filtering & pagination  
 
 ---
 
 ## 🚀 Quick Start
+
+### Acesso Rápido (Produção)
+```
+Frontend: https://holisticmatch.vercel.app
+API Base: http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/api/v1
+```
 
 ### Desenvolvimento Local
 
@@ -33,7 +48,7 @@ npm run dev
 Acesse:
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://127.0.0.1:8000/api/v1/professionals/
-- **Admin**: http://127.0.0.1:8000/admin/
+- **Admin Django**: http://127.0.0.1:8000/admin/
 
 ---
 
@@ -42,25 +57,23 @@ Acesse:
 ### Backend
 - **Framework**: Django 4.2.7 + Django REST Framework 3.14.0
 - **Database**: PostgreSQL (Supabase) / SQLite (dev)
-- **Storage**: AWS S3 (profile photos)
-- **Authentication**: JWT (24h access, 7d refresh)
-- **Testing**: pytest + pytest-django (10/10 tests passing)
+- **Server**: Gunicorn + Nginx (AWS Elastic Beanstalk)
+- **Testing**: pytest + pytest-django (10/10 tests passing ✅)
 - **Linting**: ruff
 
 ### Frontend
 - **Framework**: React 18 + TypeScript 5.3 (strict mode)
-- **Build Tool**: Vite 5
+- **Build**: Vite 5
 - **Styling**: TailwindCSS 3.4 (mobile-first)
 - **Animations**: Framer Motion 10
-- **Data Fetching**: React Query (5-min stale time)
-- **HTTP Client**: Axios (JWT interceptors)
+- **State**: React Query + Axios
+- **Deployment**: Vercel (auto-deploy on git push)
 
-### Infrastructure
-- **Backend**: AWS Elastic Beanstalk (t3.micro EC2)
-- **Frontend**: Vercel (auto-deploy on push)
-- **Database**: Supabase PostgreSQL (500MB free)
-- **Storage**: AWS S3
-- **CI/CD**: GitHub Actions
+### Infrastructure  
+- **Backend**: AWS Elastic Beanstalk (t3.micro, us-east-2)
+- **Frontend**: Vercel (auto-deploy)
+- **Database**: Supabase PostgreSQL
+- **Networking**: IPv6 enabled, Security Groups configured
 
 ---
 
@@ -69,7 +82,7 @@ Acesse:
 ### ✅ Implementado
 
 - **Listagem de Profissionais**
-  - Grid responsivo (1/2/3/4 colunas)
+  - Grid responsivo (1/2/3/4 colunas conforme tela)
   - Cards com foto, nome, serviços, localização, preço
   - Animações suaves (Framer Motion)
 
@@ -84,20 +97,22 @@ Acesse:
   - Bio, serviços, localização, preço
   - Botões de contato: WhatsApp, Email, Telefone
 
-- **Backend API**
+- **Backend API** ✅
   - `GET /api/v1/professionals/` - Listagem com filtros
   - `GET /api/v1/professionals/{id}/` - Detalhes
   - `GET /api/v1/professionals/service_types/` - Tipos de serviço
-  - 10/10 tests passing (pytest)
+  - Paginação (12 por página)
+  - 10/10 tests passing
 
-- **Database**
-  - 12 profissionais de exemplo (8 cidades brasileiras)
-  - Comando: `python manage.py seed_professionals`
+- **Database** ✅
+  - 12 profissionais de exemplo em 8 cidades brasileiras
+  - Seeding automático: `python manage.py seed_professionals`
 
-- **CI/CD**
-  - Deploy automático no push (AWS EB + Vercel)
-  - Testes automáticos (backend + frontend)
-  - Migrations manuais via GitHub Actions
+- **Deployment** ✅  
+  - Frontend: Vercel (auto-deploy on push)
+  - Backend: AWS Elastic Beanstalk (Gunicorn + Nginx)
+  - Database: Supabase PostgreSQL
+
 
 ### 🔮 Roadmap (Futuro)
 
