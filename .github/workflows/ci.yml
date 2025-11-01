@@ -96,7 +96,7 @@ jobs:
       - name: Check build output
         run: |
           echo "Checking dist folder..."
-          ls -la dist/ || echo "ERROR: dist folder not found"
+          ls -la dist/ || echo "dist folder not found"
       
       - name: Check build size
         run: |

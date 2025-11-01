@@ -39,6 +39,12 @@ jobs:
         run: |
           pytest tests/ -v --tb=short
       
+      - name: Create deployment package
+        run: |
+          cd ..
+          zip -r backend.zip backend/ -x "backend/.git*" "backend/.env*" "backend/.pytest_cache/*" "backend/htmlcov/*" "backend/db.sqlite3"
+          ls -lh backend.zip
+      
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
         with:
@@ -48,7 +54,7 @@ jobs:
           environment_name: holisticmatch-env
           region: sa-east-1
           version_label: ${{ github.sha }}
-          deployment_package: backend
+          deployment_package: backend.zip
           wait_for_environment_recovery: 120
       
       - name: Notify Success

@@ -37,7 +37,8 @@ jobs:
         run: npm run build
       
       - name: Check build output
-        run: ls -la dist/ || echo "ERROR: dist folder not found"
+        run: |
+          ls -la dist/ || echo "dist folder not found"
       
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
