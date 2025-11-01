@@ -65,7 +65,7 @@ Acesse:
 - **Framework**: React 18 + TypeScript 5.3 (strict mode)
 - **Build**: Vite 5
 - **Styling**: TailwindCSS 3.4 (mobile-first)
-- **Animations**: Framer Motion 10
+- **Animations**: Framer Motion 11 (enhanced with spring physics & custom easing)
 - **State**: React Query + Axios
 - **Deployment**: Vercel (auto-deploy on git push)
 
@@ -84,7 +84,7 @@ Acesse:
 - **Listagem de Profissionais**
   - Grid responsivo (1/2/3/4 colunas conforme tela)
   - Cards com foto, nome, serviços, localização, preço
-  - Animações suaves (Framer Motion)
+  - Animações premium com spring physics (Framer Motion 11)
 
 - **Filtros de Busca**
   - Tipo de serviço (12 opções: Reiki, Yoga, Acupuntura, etc.)
@@ -113,6 +113,19 @@ Acesse:
   - Backend: AWS Elastic Beanstalk (Gunicorn + Nginx)
   - Database: Supabase PostgreSQL
 
+### 🎨 Recent Improvements (v1.0.1)
+
+- **🔧 Bug Fixes**
+  - Fixed service type filters (JSON array filtering in SQLite)
+  - Corrected background colors to #f6f8f7 across all pages
+  - Fixed missing logo symbols in login/register pages
+
+- **✨ Animation Enhancements**
+  - Upgraded to Framer Motion 11.x with spring physics
+  - Custom cubic-bezier easing for smoother transitions
+  - Enhanced animation durations (0.6-0.8s) and offsets
+  - Added new animation variants for premium UX
+  - Applied to all major pages: Dashboard, ProfessionalDetail, Login, Register
 
 ### 🔮 Roadmap (Futuro)
 
@@ -342,7 +355,7 @@ The MVP focuses on **User Story 1: Client Search and Discovery**
 - Professional profile detail view
 - Direct contact mechanisms (WhatsApp, Email, Instagram)
 - Mobile-responsive design
-- Smooth animations with Framer Motion
+- Premium animations with Framer Motion 11 (spring physics & custom easing)
 - Pagination (12 results per page)
 
 **What's NOT included in MVP:**

@@ -23,10 +23,11 @@ export default function ProfessionalCard({ professional, onClick }: Professional
   return (
     <motion.div
       variants={itemVariants}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      initial="hidden"
+      animate="visible"
+      whileHover="hover"
       onClick={onClick}
-      className="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all hover:shadow-lg cursor-pointer"
+      className="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all cursor-pointer"
     >
       {/* Profile Image */}
       <div className="relative h-64 w-full overflow-hidden bg-gray-200">
@@ -37,7 +38,7 @@ export default function ProfessionalCard({ professional, onClick }: Professional
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-100 to-green-100">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 to-green-100">
             <span className="text-6xl text-gray-400">👤</span>
           </div>
         )}

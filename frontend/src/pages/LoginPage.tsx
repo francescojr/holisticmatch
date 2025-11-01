@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { pageVariants, itemVariants } from '../lib/animations'
 
 function LoginPage() {
   const [email, setEmail] = useState('')
@@ -31,16 +32,25 @@ function LoginPage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      variants={pageVariants}
+      initial="hidden"
+      animate="visible"
       className="min-h-screen bg-gradient-to-br from-primary to-green-500 flex items-center justify-center px-4"
     >
-      <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
+      <motion.div
+        variants={itemVariants}
+        className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md"
+      >
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-black">
-            <span className="text-gray-900">holistic</span>
-            <span className="text-gray-900/80">match</span>
-          </h1>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white">
+              <span className="material-symbols-outlined text-2xl">spa</span>
+            </div>
+            <h1 className="text-3xl font-black">
+              <span className="text-gray-900">holistic</span>
+              <span className="text-gray-900/80">match</span>
+            </h1>
+          </div>
           <p className="text-gray-600 mt-2">Faça login ou crie sua conta</p>
         </div>
 
@@ -96,7 +106,7 @@ function LoginPage() {
             </Link>
           </p>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   )
 }

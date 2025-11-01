@@ -4,6 +4,7 @@
  */
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { pageVariants, itemVariants } from '../lib/animations'
 
 function DashboardPage() {
   const [activeTab, setActiveTab] = useState('profile')
@@ -45,7 +46,12 @@ function DashboardPage() {
       {/* Header is already included in App.tsx */}
 
       <main className="flex-1 w-full max-w-7xl mx-auto p-6 md:p-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <motion.div
+          variants={pageVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 lg:grid-cols-12 gap-8"
+        >
           {/* Left Sidebar */}
           <aside className="lg:col-span-3">
             <div className="sticky top-28 flex flex-col gap-6">
@@ -112,8 +118,7 @@ function DashboardPage() {
 
             {/* Personal Information Card */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              variants={itemVariants}
               className="bg-white dark:bg-[#182c22] rounded-xl shadow-sm p-6"
             >
               <h2 className="text-[#111814] dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">Personal Information</h2>
@@ -156,9 +161,7 @@ function DashboardPage() {
 
             {/* About Me Card */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
+              variants={itemVariants}
               className="bg-white dark:bg-[#182c22] rounded-xl shadow-sm p-6"
             >
               <h2 className="text-[#111814] dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em] pb-5">About Me</h2>
@@ -175,9 +178,7 @@ function DashboardPage() {
 
             {/* Services Card */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              variants={itemVariants}
               className="bg-white dark:bg-[#182c22] rounded-xl shadow-sm p-6"
             >
               <div className="flex justify-between items-center pb-5">
@@ -221,7 +222,7 @@ function DashboardPage() {
               </div>
             </motion.div>
           </div>
-        </div>
+        </motion.div>
       </main>
     </div>
   )

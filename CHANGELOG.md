@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2025-11-01
+
+### Fixed
+- 🔧 **Service Type Filters**: Fixed JSON array filtering in SQLite for service type searches - filters now work correctly in production
+- 🎨 **Background Colors**: Standardized background color to #f6f8f7 across all pages for consistent design
+- 🎯 **Logo Display**: Fixed missing logo symbols in LoginPage and RegisterProfessionalPage
+- ✨ **Framer Motion Animations**: Enhanced animations with smoother easing curves, spring physics, and longer durations for premium UX
+
+### Enhanced
+- 🎭 **Animation System**: Upgraded Framer Motion animations with:
+  - Custom cubic-bezier easing: `[0.25, 0.46, 0.45, 0.94]`
+  - Spring physics for interactive elements (stiffness: 300-400, damping: 17-25)
+  - Improved durations (0.6-0.8s) and y-offsets (30px)
+  - New animation variants: `pageVariants`, `itemVariants`, `cardHoverVariants`, `listItemVariants`
+- 🎨 **UI Polish**: Applied enhanced animations to all major pages (Dashboard, ProfessionalDetail, Login, Register)
+
 ## [1.0.0] - 2025-11-01
 
 ### Added

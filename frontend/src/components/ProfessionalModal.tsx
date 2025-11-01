@@ -69,7 +69,7 @@ export default function ProfessionalModal({ professional, isOpen, onClose }: Pro
               </button>
 
               {/* Header with Photo */}
-              <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-purple-100 to-green-100">
+              <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-primary/20 to-green-100">
                 {professional.photo_url ? (
                   <img
                     src={professional.photo_url}

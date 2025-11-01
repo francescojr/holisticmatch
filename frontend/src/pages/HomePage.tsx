@@ -28,7 +28,7 @@ function HomePage() {
         variants={fadeInVariants}
         initial="hidden"
         animate="visible"
-        className="relative overflow-hidden bg-gradient-to-br from-purple-600 to-green-500 py-20 text-white"
+        className="relative overflow-hidden bg-gradient-to-br from-primary to-green-500 py-20 text-white"
       >
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-black tracking-tight sm:text-5xl md:text-6xl mb-4">

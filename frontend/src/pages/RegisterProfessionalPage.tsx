@@ -4,6 +4,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { pageVariants, itemVariants } from '../lib/animations'
 
 function RegisterProfessionalPage() {
   const [step, setStep] = useState(1)
@@ -57,14 +58,24 @@ function RegisterProfessionalPage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      variants={pageVariants}
+      initial="hidden"
+      animate="visible"
       className="min-h-screen bg-background-light dark:bg-background-dark py-12 px-4"
     >
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-gray-900">Cadastre-se como Profissional</h1>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-white">
+              <span className="material-symbols-outlined text-2xl">spa</span>
+            </div>
+            <h1 className="text-3xl font-black">
+              <span className="text-gray-900">holistic</span>
+              <span className="text-gray-900/80">match</span>
+            </h1>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-700">Cadastre-se como Profissional</h2>
           <p className="text-gray-600 mt-2">Passo {step} de 2</p>
         </div>
 
@@ -88,7 +99,10 @@ function RegisterProfessionalPage() {
         )}
 
         {/* Forms */}
-        <div className="bg-white rounded-lg shadow p-8">
+        <motion.div
+          variants={itemVariants}
+          className="bg-white rounded-lg shadow p-8"
+        >
           {step === 1 && (
             <form onSubmit={handleAccountSubmit} className="space-y-4">
               <h2 className="text-2xl font-bold mb-6">Criar Conta</h2>
@@ -231,7 +245,7 @@ function RegisterProfessionalPage() {
               </div>
             </form>
           )}
-        </div>
+        </motion.div>
 
         {/* Link */}
         <p className="text-center mt-6 text-gray-600">

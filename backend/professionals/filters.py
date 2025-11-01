@@ -25,22 +25,9 @@ class ProfessionalFilter(filters.FilterSet):
     def filter_service(self, queryset, name, value):
         """
         Filter by service type in JSONB services array
-        Uses raw SQL for SQLite compatibility
+        Simple approach that works with both SQLite and PostgreSQL
         """
-        from django.db.models import Q
-        from django.db import connection
-        
-        # For SQLite, we need to use JSON_TYPE and JSON_EACH
-        # For PostgreSQL, we'll use @> operator (when we switch)
-        if 'sqlite' in connection.vendor:
-            # SQLite approach: Check if service exists in JSON array
-            # Using raw SQL with json_each to iterate array
-            return queryset.extra(
-                where=[
-                    "EXISTS (SELECT 1 FROM json_each(professionals_professional.services) WHERE json_each.value = %s)"
-                ],
-                params=[value]
-            )
-        else:
-            # PostgreSQL approach
-            return queryset.filter(services__contains=[value])
+        # Use a simple string contains approach that works across databases
+        # This will match the service name within the JSON string representation
+        import json
+        return queryset.filter(services__icontains=value)

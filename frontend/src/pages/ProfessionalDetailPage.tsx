@@ -3,6 +3,7 @@
  */
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { pageVariants, itemVariants } from '../lib/animations'
 import { useProfessional } from '../hooks/useProfessionals'
 
 function ProfessionalDetailPage() {
@@ -36,8 +37,9 @@ function ProfessionalDetailPage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
+      variants={pageVariants}
+      initial="hidden"
+      animate="visible"
       className="min-h-screen bg-background-light dark:bg-background-dark py-8"
     >
       <div className="max-w-4xl mx-auto px-4">
@@ -51,7 +53,10 @@ function ProfessionalDetailPage() {
         </button>
 
         {/* Card */}
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <motion.div
+          variants={itemVariants}
+          className="bg-white rounded-lg shadow-lg overflow-hidden"
+        >
           {/* Header */}
           <div className="bg-gradient-to-r from-primary to-green-500 h-32" />
 
@@ -134,7 +139,7 @@ function ProfessionalDetailPage() {
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </motion.div>
   )
