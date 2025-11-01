@@ -45,8 +45,9 @@ export const itemVariants: Variants = {
     scale: 1.02,
     boxShadow: "0 10px 25px -5px rgb(0 0 0 / 0.15)",
     transition: {
-      duration: 0.2,
-      ease: [0.25, 0.46, 0.45, 0.94],
+      type: "spring",
+      stiffness: 400,
+      damping: 17,
     },
   },
 }
@@ -215,7 +216,7 @@ export const contentVariants: Variants = {
  * Scroll-triggered animation variants
  * For cards that animate in when they come into view
  */
-export const scrollItemVariants: Variants = {
+export const scrollItemVariants = (index: number = 0): Variants => ({
   hidden: {
     opacity: 0,
     scale: 0.8,
@@ -227,7 +228,8 @@ export const scrollItemVariants: Variants = {
     y: 0,
     transition: {
       duration: 0.6,
+      delay: index * 0.15, // Stagger delay based on index
       ease: [0.25, 0.46, 0.45, 0.94],
     },
   },
-}
+})

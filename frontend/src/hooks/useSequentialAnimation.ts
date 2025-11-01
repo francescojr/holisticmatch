@@ -4,32 +4,25 @@
  */
 import { useEffect, useRef, useState } from 'react'
 
-export function useSequentialAnimation<T extends HTMLElement>(
-  totalItems: number,
-  staggerDelay: number = 0.1
-) {
+export function useSequentialAnimation<T extends HTMLElement>() {
   const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set())
   const containerRef = useRef<T>(null)
   const itemRefs = useRef<(HTMLElement | null)[]>([])
 
   useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry, index) => {
-          if (entry.isIntersecting && !visibleItems.has(index)) {
-            // Add item to visible set with staggered delay
-            setTimeout(() => {
-              setVisibleItems(prev => new Set([...prev, index]))
-            }, index * staggerDelay * 1000)
+        entries.forEach((entry) => {
+          const index = itemRefs.current.findIndex(ref => ref === entry.target)
+          if (entry.isIntersecting && index !== -1 && !visibleItems.has(index)) {
+            // Add item to visible set immediately when it comes into view
+            setVisibleItems(prev => new Set([...prev, index]))
           }
         })
       },
       {
         root: null,
-        rootMargin: '0px 0px -50px 0px', // Trigger when item is 50px from bottom
+        rootMargin: '0px 0px -100px 0px', // Trigger when item is 100px from bottom
         threshold: 0.1,
       }
     )
@@ -40,7 +33,7 @@ export function useSequentialAnimation<T extends HTMLElement>(
     })
 
     return () => observer.disconnect()
-  }, [totalItems, staggerDelay, visibleItems])
+  }, [visibleItems])
 
   const setItemRef = (index: number) => (el: HTMLElement | null) => {
     itemRefs.current[index] = el
