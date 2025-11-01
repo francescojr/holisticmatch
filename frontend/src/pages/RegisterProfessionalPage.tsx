@@ -74,7 +74,7 @@ function RegisterProfessionalPage() {
             <div
               key={s}
               className={`flex-1 h-2 rounded-full transition-colors ${
-                s <= step ? 'bg-purple-600' : 'bg-gray-200'
+                s <= step ? 'bg-primary' : 'bg-gray-200'
               }`}
             />
           ))}
@@ -100,7 +100,7 @@ function RegisterProfessionalPage() {
                   value={accountData.email}
                   onChange={(e) => setAccountData({ ...accountData, email: e.target.value })}
                   placeholder="seu@email.com"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                   required
                 />
               </div>
@@ -112,7 +112,7 @@ function RegisterProfessionalPage() {
                   value={accountData.password}
                   onChange={(e) => setAccountData({ ...accountData, password: e.target.value })}
                   placeholder="••••••••"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                   required
                 />
               </div>
@@ -128,14 +128,14 @@ function RegisterProfessionalPage() {
                     setAccountData({ ...accountData, confirmPassword: e.target.value })
                   }
                   placeholder="••••••••"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                   required
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-purple-600 text-white font-semibold py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-purple-700 transition-colors"
               >
                 Próximo
               </button>
@@ -155,7 +155,7 @@ function RegisterProfessionalPage() {
                   value={profileData.fullName}
                   onChange={(e) => setProfileData({ ...profileData, fullName: e.target.value })}
                   placeholder="Seu Nome"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                   required
                 />
               </div>
@@ -166,7 +166,7 @@ function RegisterProfessionalPage() {
                   value={profileData.bio}
                   onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
                   placeholder="Fale sobre você e sua experiência..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 h-24"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary h-24"
                 />
               </div>
 
@@ -178,7 +178,7 @@ function RegisterProfessionalPage() {
                     value={profileData.city}
                     onChange={(e) => setProfileData({ ...profileData, city: e.target.value })}
                     placeholder="São Paulo"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                     required
                   />
                 </div>
@@ -190,7 +190,7 @@ function RegisterProfessionalPage() {
                     onChange={(e) => setProfileData({ ...profileData, state: e.target.value })}
                     placeholder="SP"
                     maxLength={2}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                     required
                   />
                 </div>
@@ -208,7 +208,7 @@ function RegisterProfessionalPage() {
                   }
                   placeholder="150.00"
                   step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                   required
                 />
               </div>
@@ -224,7 +224,7 @@ function RegisterProfessionalPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 bg-purple-600 text-white font-semibold py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+                  className="flex-1 bg-primary text-white font-semibold py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
                 >
                   {loading ? 'Cadastrando...' : 'Cadastrar'}
                 </button>
@@ -236,7 +236,7 @@ function RegisterProfessionalPage() {
         {/* Link */}
         <p className="text-center mt-6 text-gray-600">
           Já tem conta?{' '}
-          <Link to="/login" className="text-purple-600 font-semibold hover:underline">
+          <Link to="/login" className="text-primary font-semibold hover:underline">
             Faça login
           </Link>
         </p>

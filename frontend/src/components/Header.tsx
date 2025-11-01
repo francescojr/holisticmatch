@@ -16,7 +16,7 @@ export default function Header() {
           </div>
           <h1 className="text-2xl font-black tracking-tight">
             <span className="text-gray-900">holistic</span>
-            <span className="text-gray-900/65">match</span>
+            <span className="text-gray-900/80">match</span>
           </h1>
         </Link>
 
@@ -26,8 +26,8 @@ export default function Header() {
             to="/register"
             className={`rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
               location.pathname === '/register'
-                ? 'bg-purple-600 text-white'
-                : 'bg-purple-50 text-purple-600 hover:bg-purple-100'
+                ? 'bg-primary text-text-light'
+                : 'bg-primary/20 text-primary hover:bg-primary/30'
             }`}
           >
             Para Profissionais

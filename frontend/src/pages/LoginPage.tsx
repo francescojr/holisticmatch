@@ -33,13 +33,13 @@ function LoginPage() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen bg-gradient-to-br from-purple-600 to-green-500 flex items-center justify-center px-4"
+      className="min-h-screen bg-gradient-to-br from-primary to-green-500 flex items-center justify-center px-4"
     >
       <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black">
             <span className="text-gray-900">holistic</span>
-            <span className="text-gray-900/65">match</span>
+            <span className="text-gray-900/80">match</span>
           </h1>
           <p className="text-gray-600 mt-2">Faça login ou crie sua conta</p>
         </div>
@@ -60,7 +60,7 @@ function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="seu@email.com"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             />
           </div>
@@ -74,7 +74,7 @@ function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               required
             />
           </div>
@@ -82,7 +82,7 @@ function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-purple-600 text-white font-semibold py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+            className="w-full bg-primary text-white font-semibold py-2 rounded-lg hover:bg-primary transition-colors disabled:opacity-50"
           >
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
@@ -91,7 +91,7 @@ function LoginPage() {
         <div className="mt-6 text-center">
           <p className="text-gray-600">
             Não tem conta?{' '}
-            <Link to="/register" className="text-purple-600 font-semibold hover:underline">
+            <Link to="/register" className="text-primary font-semibold hover:underline">
               Cadastre-se
             </Link>
           </p>

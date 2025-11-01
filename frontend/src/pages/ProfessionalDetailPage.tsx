@@ -13,7 +13,7 @@ function ProfessionalDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
       </div>
     )
   }
@@ -25,7 +25,7 @@ function ProfessionalDetailPage() {
           <p className="text-red-600 font-semibold mb-4">Erro ao carregar profissional</p>
           <button
             onClick={() => navigate('/')}
-            className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700"
+            className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-purple-700"
           >
             Voltar para Home
           </button>
@@ -44,7 +44,7 @@ function ProfessionalDetailPage() {
         {/* Back Button */}
         <button
           onClick={() => navigate('/')}
-          className="mb-6 text-purple-600 hover:text-purple-700 font-semibold flex items-center gap-2"
+          className="mb-6 text-primary hover:text-primary font-semibold flex items-center gap-2"
         >
           <span className="material-symbols-outlined">arrow_back</span>
           Voltar
@@ -53,7 +53,7 @@ function ProfessionalDetailPage() {
         {/* Card */}
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-green-500 h-32" />
+          <div className="bg-gradient-to-r from-primary to-green-500 h-32" />
 
           {/* Content */}
           <div className="px-6 pb-6 relative">
@@ -90,7 +90,7 @@ function ProfessionalDetailPage() {
                 {professional.services.map((service: string) => (
                   <span
                     key={service}
-                    className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium"
+                    className="px-4 py-2 bg-primary/20 text-primary rounded-full text-sm font-medium"
                   >
                     {service}
                   </span>
@@ -128,7 +128,7 @@ function ProfessionalDetailPage() {
                 <span className="material-symbols-outlined">phone</span>
                 WhatsApp
               </button>
-              <button className="flex-1 bg-purple-600 text-white font-semibold py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2">
+              <button className="flex-1 bg-primary text-white font-semibold py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2">
                 <span className="material-symbols-outlined">mail</span>
                 Email
               </button>

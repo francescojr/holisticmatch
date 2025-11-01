@@ -113,7 +113,7 @@ export default function ProfessionalModal({ professional, isOpen, onClose }: Pro
                     {professional.services.map((service) => (
                       <span
                         key={service}
-                        className="inline-flex items-center rounded-full bg-purple-50 px-4 py-2 text-sm font-semibold text-purple-700"
+                        className="inline-flex items-center rounded-full bg-primary/20 px-4 py-2 text-sm font-semibold text-primary"
                       >
                         {service}
                       </span>
@@ -164,7 +164,7 @@ export default function ProfessionalModal({ professional, isOpen, onClose }: Pro
                   {/* Email */}
                   <button
                     onClick={handleEmailClick}
-                    className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-purple-500 bg-white px-6 py-4 text-purple-600 font-bold transition-colors hover:bg-purple-50"
+                    className="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-primary bg-white px-6 py-4 text-purple-600 font-bold transition-colors hover:bg-primary/20"
                   >
                     <span className="material-symbols-outlined">email</span>
                     <span>Enviar Email</span>
