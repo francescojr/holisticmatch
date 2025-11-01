@@ -35,8 +35,9 @@ jobs:
         env:
           SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
           DEBUG: False
+          DATABASE_URL: sqlite:///test.db
         run: |
-          python -m pytest tests/ -v
+          pytest tests/ -v --tb=short
       
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@v21
