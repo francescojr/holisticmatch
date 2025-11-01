@@ -95,7 +95,7 @@ export default function ProfessionalCard({ professional, onClick }: Professional
           <div className="flex flex-col">
             <span className="text-xs text-gray-500">A partir de</span>
             <span className="text-2xl font-bold text-green-600">
-              R$ {professional.price_per_session.toFixed(0)}
+              R$ {Number(professional.price_per_session).toFixed(2).replace('.', ',')}
             </span>
             <span className="text-xs text-gray-500">/sessão</span>
           </div>
