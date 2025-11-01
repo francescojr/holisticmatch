@@ -13,27 +13,44 @@ export const containerVariants: Variants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.2,
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
     },
   },
 }
 
 /**
  * Item variant for individual cards/items
- * Fade in with slide up effect
+ * Fade in with slide up effect and scale
  */
 export const itemVariants: Variants = {
   hidden: {
     opacity: 0,
-    y: 30,
+    y: 50,
+    scale: 0.9,
+    filter: "blur(4px)",
   },
   visible: {
     opacity: 1,
     y: 0,
+    scale: 1,
+    filter: "blur(0px)",
     transition: {
-      duration: 0.6,
+      duration: 0.9,
       ease: [0.25, 0.46, 0.45, 0.94], // Custom cubic-bezier for smooth easing
+      filter: {
+        duration: 0.6,
+      },
+    },
+  },
+  hover: {
+    y: -12,
+    scale: 1.03,
+    boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.25)",
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 20,
     },
   },
 }
@@ -179,20 +196,21 @@ export const cardHoverVariants: Variants = {
 }
 
 /**
- * Staggered list variant for better visual flow
+ * Content fade in variant for card content
+ * Subtle animation for text and elements inside cards
  */
-export const listItemVariants: Variants = {
+export const contentVariants: Variants = {
   hidden: {
     opacity: 0,
-    x: -20,
+    y: 10,
   },
-  visible: (index: number) => ({
+  visible: {
     opacity: 1,
-    x: 0,
+    y: 0,
     transition: {
-      delay: index * 0.1,
-      duration: 0.5,
+      delay: 0.2,
+      duration: 0.6,
       ease: [0.25, 0.46, 0.45, 0.94],
     },
-  }),
+  },
 }

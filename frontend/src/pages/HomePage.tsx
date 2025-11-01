@@ -28,13 +28,13 @@ function HomePage() {
         variants={fadeInVariants}
         initial="hidden"
         animate="visible"
-        className="relative overflow-hidden bg-gradient-to-br from-primary to-green-500 py-20 text-white"
+        className="relative overflow-hidden bg-background-light dark:bg-background-dark py-20 text-gray-900 dark:text-white"
       >
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-black tracking-tight sm:text-5xl md:text-6xl mb-4">
             Encontre Seu Caminho para o Bem-Estar
           </h2>
-          <p className="mx-auto max-w-2xl text-lg text-purple-50">
+          <p className="mx-auto max-w-2xl text-gray-600 dark:text-gray-300">
             Descubra profissionais de terapias holísticas confiáveis perto de você. 
             Comece sua jornada para uma vida equilibrada hoje.
           </p>

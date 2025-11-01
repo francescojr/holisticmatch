@@ -35,7 +35,7 @@ function LoginPage() {
       variants={pageVariants}
       initial="hidden"
       animate="visible"
-      className="min-h-screen bg-gradient-to-br from-primary to-green-500 flex items-center justify-center px-4"
+      className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center px-4"
     >
       <motion.div
         variants={itemVariants}

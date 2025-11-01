@@ -3,7 +3,7 @@
  * Displays a professional's summary in a card format
  */
 import { motion } from 'framer-motion'
-import { itemVariants } from '../lib/animations'
+import { itemVariants, contentVariants } from '../lib/animations'
 import type { ProfessionalSummary } from '../types/Professional'
 
 interface ProfessionalCardProps {
@@ -23,8 +23,6 @@ export default function ProfessionalCard({ professional, onClick }: Professional
   return (
     <motion.div
       variants={itemVariants}
-      initial="hidden"
-      animate="visible"
       whileHover="hover"
       onClick={onClick}
       className="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all cursor-pointer"
@@ -53,7 +51,10 @@ export default function ProfessionalCard({ professional, onClick }: Professional
       </div>
 
       {/* Card Content */}
-      <div className="flex flex-1 flex-col p-5">
+      <motion.div
+        variants={contentVariants}
+        className="flex flex-1 flex-col p-5"
+      >
         {/* Professional Name */}
         <h3 className="text-xl font-bold text-gray-900 mb-1 line-clamp-1">
           {professional.name}
@@ -110,7 +111,7 @@ export default function ProfessionalCard({ professional, onClick }: Professional
             Ver Perfil
           </button>
         </div>
-      </div>
+      </motion.div>
     </motion.div>
   )
 }
