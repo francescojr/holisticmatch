@@ -1,0 +1,597 @@
+openapi: 3.0.3
+info:
+  title: HolisticMatch Professionals API
+  description: API endpoints for browsing professionals, managing profiles, and accessing service types
+  version: 1.0.0
+  contact:
+    name: HolisticMatch API Team
+
+servers:
+  - url: https://api.holisticmatch.com/api/v1
+    description: Production server
+  - url: http://localhost:8000/api/v1
+    description: Development server
+
+tags:
+  - name: Professionals
+    description: Professional discovery and profile management
+  - name: Service Types
+    description: Service type enumeration
+
+paths:
+  /professionals/:
+    get:
+      summary: List professionals
+      description: Browse professionals with filtering, pagination, and search
+      operationId: listProfessionals
+      tags:
+        - Professionals
+      parameters:
+        - name: service
+          in: query
+          description: Filter by service type
+          schema:
+            type: string
+            enum:
+              - Reiki
+              - Acupuntura
+              - Aromaterapia
+              - Massagem
+              - Meditação Guiada
+              - Tai Chi
+              - Reflexologia
+              - Cristaloterapia
+              - Florais
+              - Yoga
+              - Pilates Holístico
+          example: Reiki
+        - name: city
+          in: query
+          description: Filter by city
+          schema:
+            type: string
+            maxLength: 100
+          example: São Paulo
+        - name: price_min
+          in: query
+          description: Minimum price per session
+          schema:
+            type: number
+            format: decimal
+            minimum: 0
+          example: 50
+        - name: price_max
+          in: query
+          description: Maximum price per session
+          schema:
+            type: number
+            format: decimal
+            minimum: 0
+          example: 300
+        - name: attendance_type
+          in: query
+          description: Filter by attendance type
+          schema:
+            type: string
+            enum: [home, office, both]
+          example: both
+        - name: limit
+          in: query
+          description: Number of results per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 12
+          example: 12
+        - name: offset
+          in: query
+          description: Number of results to skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+      responses:
+        '200':
+          description: List of professionals retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalListResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "ValidationError"
+                message: "Invalid query parameters"
+                details:
+                  price_min: ["Must be a positive number"]
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /professionals/{id}/:
+    get:
+      summary: Get professional detail
+      description: Retrieve complete profile information for a specific professional
+      operationId: getProfessional
+      tags:
+        - Professionals
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Professional ID
+          schema:
+            type: integer
+          example: 456
+      responses:
+        '200':
+          description: Professional detail retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalDetail'
+        '404':
+          description: Professional not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "NotFound"
+                message: "Professional não encontrado"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      summary: Update professional profile (full)
+      description: Replace entire professional profile (authenticated)
+      operationId: updateProfessionalFull
+      tags:
+        - Professionals
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Professional ID
+          schema:
+            type: integer
+          example: 456
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProfessionalUpdateRequest'
+      responses:
+        '200':
+          description: Professional profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalDetail'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Unauthorized"
+                message: "Token inválido ou expirado"
+        '403':
+          description: Forbidden - not profile owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Forbidden"
+                message: "Você não tem permissão para editar este perfil"
+        '404':
+          description: Professional not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    patch:
+      summary: Update professional profile (partial)
+      description: Update specific fields of professional profile (authenticated)
+      operationId: updateProfessionalPartial
+      tags:
+        - Professionals
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Professional ID
+          schema:
+            type: integer
+          example: 456
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProfessionalPartialUpdateRequest'
+      responses:
+        '200':
+          description: Professional profile updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfessionalDetail'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - not profile owner
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Professional not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /service-types/:
+    get:
+      summary: List service types
+      description: Get available service types for filtering
+      operationId: listServiceTypes
+      tags:
+        - Service Types
+      responses:
+        '200':
+          description: Service types retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceTypesResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ProfessionalListResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 47
+          description: Total number of professionals matching filters
+        next:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://api.holisticmatch.com/api/v1/professionals/?limit=12&offset=12"
+          description: URL for next page (null if last page)
+        previous:
+          type: string
+          format: uri
+          nullable: true
+          example: null
+          description: URL for previous page (null if first page)
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProfessionalSummary'
+
+    ProfessionalSummary:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 456
+        full_name:
+          type: string
+          example: Maria Silva
+        photo_url:
+          type: string
+          format: uri
+          example: "https://holisticmatch-photos.s3.amazonaws.com/456/profile.jpg"
+        services:
+          type: array
+          items:
+            type: string
+          example: ["Reiki", "Cristaloterapia"]
+        price_per_session:
+          type: number
+          format: decimal
+          example: 150.00
+        attendance_type:
+          type: string
+          enum: [home, office, both]
+          example: both
+        city:
+          type: string
+          example: São Paulo
+        neighborhood:
+          type: string
+          example: Pinheiros
+
+    ProfessionalDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 456
+        full_name:
+          type: string
+          example: Maria Silva
+        photo_url:
+          type: string
+          format: uri
+          example: "https://holisticmatch-photos.s3.amazonaws.com/456/profile.jpg"
+        bio:
+          type: string
+          example: Terapeuta com 10 anos de experiência em terapias holísticas
+        services:
+          type: array
+          items:
+            type: string
+          example: ["Reiki", "Cristaloterapia"]
+        price_per_session:
+          type: number
+          format: decimal
+          example: 150.00
+        attendance_type:
+          type: string
+          enum: [home, office, both]
+          example: both
+        city:
+          type: string
+          example: São Paulo
+        neighborhood:
+          type: string
+          example: Pinheiros
+        whatsapp:
+          type: string
+          example: "+5511999999999"
+        instagram:
+          type: string
+          nullable: true
+          example: maria.terapia
+        email:
+          type: string
+          format: email
+          example: maria@example.com
+        is_active:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-01-20T14:45:00Z"
+
+    ProfessionalUpdateRequest:
+      type: object
+      required:
+        - full_name
+        - services
+        - price_per_session
+        - attendance_type
+        - city
+        - neighborhood
+        - bio
+        - whatsapp
+        - email
+      properties:
+        full_name:
+          type: string
+          minLength: 2
+          maxLength: 200
+          example: Maria Silva
+        services:
+          type: array
+          items:
+            type: string
+            enum:
+              - Reiki
+              - Acupuntura
+              - Aromaterapia
+              - Massagem
+              - Meditação Guiada
+              - Tai Chi
+              - Reflexologia
+              - Cristaloterapia
+              - Florais
+              - Yoga
+              - Pilates Holístico
+          minItems: 1
+          example: ["Reiki", "Cristaloterapia"]
+        price_per_session:
+          type: number
+          format: decimal
+          minimum: 50
+          maximum: 500
+          example: 150.00
+        attendance_type:
+          type: string
+          enum: [home, office, both]
+          example: both
+        city:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: São Paulo
+        neighborhood:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Pinheiros
+        bio:
+          type: string
+          minLength: 10
+          maxLength: 500
+          example: Terapeuta com 10 anos de experiência em terapias holísticas
+        whatsapp:
+          type: string
+          pattern: '^\+55\d{11}$'
+          example: "+5511999999999"
+        email:
+          type: string
+          format: email
+          example: maria@example.com
+        instagram:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: maria.terapia
+        photo:
+          type: string
+          format: binary
+          description: Profile photo (JPEG/PNG, max 5MB, optional)
+
+    ProfessionalPartialUpdateRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+          minLength: 2
+          maxLength: 200
+          example: Maria Silva
+        services:
+          type: array
+          items:
+            type: string
+            enum:
+              - Reiki
+              - Acupuntura
+              - Aromaterapia
+              - Massagem
+              - Meditação Guiada
+              - Tai Chi
+              - Reflexologia
+              - Cristaloterapia
+              - Florais
+              - Yoga
+              - Pilates Holístico
+          minItems: 1
+          example: ["Reiki", "Cristaloterapia", "Florais"]
+        price_per_session:
+          type: number
+          format: decimal
+          minimum: 50
+          maximum: 500
+          example: 175.00
+        attendance_type:
+          type: string
+          enum: [home, office, both]
+          example: home
+        city:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Rio de Janeiro
+        neighborhood:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Copacabana
+        bio:
+          type: string
+          minLength: 10
+          maxLength: 500
+          example: Terapeuta especializada em Reiki e cristais
+        whatsapp:
+          type: string
+          pattern: '^\+55\d{11}$'
+          example: "+5521988888888"
+        email:
+          type: string
+          format: email
+          example: maria.silva@example.com
+        instagram:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: maria.terapias
+        photo:
+          type: string
+          format: binary
+          description: Profile photo (JPEG/PNG, max 5MB, optional)
+
+    ServiceTypesResponse:
+      type: object
+      properties:
+        service_types:
+          type: array
+          items:
+            type: string
+          example:
+            - Reiki
+            - Acupuntura
+            - Aromaterapia
+            - Massagem
+            - Meditação Guiada
+            - Tai Chi
+            - Reflexologia
+            - Cristaloterapia
+            - Florais
+            - Yoga
+            - Pilates Holístico
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: ValidationError
+          description: Error type/code
+        message:
+          type: string
+          example: Invalid input data
+          description: Human-readable error message
+        details:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            price_per_session: ["Ensure this value is less than or equal to 500"]
+          description: Field-level validation errors (optional)

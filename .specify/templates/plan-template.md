@@ -31,7 +31,18 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Verify compliance with `.specify/memory/constitution.md`:
+
+- [ ] **Code Quality**: Type hints (Python) / TypeScript strict mode planned?
+- [ ] **Test-First**: TDD approach confirmed? Tests written before implementation?
+- [ ] **User Experience**: Mobile-responsive design? Framer Motion animations considered?
+- [ ] **Performance**: API response times < 500ms? Frontend bundle < 200KB?
+- [ ] **API Design**: REST conventions followed? Pagination/filtering planned?
+- [ ] **Architecture**: Using Supabase PostgreSQL, AWS S3, proper secrets management?
+- [ ] **Simplicity**: YAGNI applied? No speculative features? Dependencies justified?
+- [ ] **Security**: Input validation, HTTPS, rate limiting considered?
+
+*If any gate fails, document justification in Complexity Tracking section.*
 
 ## Project Structure
 

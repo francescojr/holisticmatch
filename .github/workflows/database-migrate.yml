@@ -1,0 +1,47 @@
+name: Database Migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      migration_command:
+        description: 'Migration command to run'
+        required: true
+        default: 'migrate'
+        type: choice
+        options:
+          - migrate
+          - makemigrations
+          - seed_professionals
+
+jobs:
+  migrate:
+    name: Run Database Migration
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run Migration
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          DEBUG: False
+        run: |
+          python manage.py ${{ inputs.migration_command }}
+      
+      - name: Notify Success
+        if: success()
+        run: echo "✅ Migration '${{ inputs.migration_command }}' completed successfully!"

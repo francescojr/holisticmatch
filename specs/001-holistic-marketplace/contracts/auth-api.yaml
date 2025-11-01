@@ -1,0 +1,392 @@
+openapi: 3.0.3
+info:
+  title: HolisticMatch Authentication API
+  description: Authentication endpoints for professional registration, login, logout, and token refresh
+  version: 1.0.0
+  contact:
+    name: HolisticMatch API Team
+
+servers:
+  - url: https://api.holisticmatch.com/api/v1
+    description: Production server
+  - url: http://localhost:8000/api/v1
+    description: Development server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+
+paths:
+  /auth/register/:
+    post:
+      summary: Register new professional
+      description: Create a new professional account with profile information
+      operationId: registerProfessional
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Professional account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emailTaken:
+                  value:
+                    error: "ValidationError"
+                    message: "Email já cadastrado"
+                    details:
+                      email: ["Email já cadastrado"]
+                weakPassword:
+                  value:
+                    error: "ValidationError"
+                    message: "Password requirements not met"
+                    details:
+                      password: ["Password must be at least 8 characters with at least one letter and one number"]
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "FileTooLarge"
+                message: "Foto deve ser menor que 5MB"
+
+  /auth/login/:
+    post:
+      summary: Login professional
+      description: Authenticate professional and obtain JWT tokens
+      operationId: loginProfessional
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "InvalidCredentials"
+                message: "Email ou senha incorretos"
+        '429':
+          description: Too many failed attempts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "TooManyAttempts"
+                message: "Conta temporariamente bloqueada. Tente novamente em 15 minutos"
+          headers:
+            Retry-After:
+              description: Number of seconds until lockout expires
+              schema:
+                type: integer
+                example: 900
+
+  /auth/logout/:
+    post:
+      summary: Logout professional
+      description: Blacklist JWT tokens and log out professional
+      operationId: logoutProfessional
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Unauthorized"
+                message: "Token inválido ou expirado"
+
+  /auth/refresh/:
+    post:
+      summary: Refresh access token
+      description: Obtain new access token using refresh token
+      operationId: refreshToken
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "InvalidToken"
+                message: "Refresh token inválido ou expirado"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - full_name
+        - services
+        - price_per_session
+        - attendance_type
+        - city
+        - neighborhood
+        - bio
+        - whatsapp
+        - email
+        - photo
+      properties:
+        email:
+          type: string
+          format: email
+          example: maria@example.com
+          description: Professional's email for login
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: SecurePass123
+          description: Password (8+ chars, at least one letter and one number)
+        full_name:
+          type: string
+          minLength: 2
+          maxLength: 200
+          example: Maria Silva
+          description: Professional's full name
+        services:
+          type: array
+          items:
+            type: string
+            enum:
+              - Reiki
+              - Acupuntura
+              - Aromaterapia
+              - Massagem
+              - Meditação Guiada
+              - Tai Chi
+              - Reflexologia
+              - Cristaloterapia
+              - Florais
+              - Yoga
+              - Pilates Holístico
+          minItems: 1
+          example: ["Reiki", "Cristaloterapia"]
+          description: Array of service types offered
+        price_per_session:
+          type: number
+          format: decimal
+          minimum: 50
+          maximum: 500
+          example: 150.00
+          description: Price per session in Brazilian Reais
+        attendance_type:
+          type: string
+          enum: [home, office, both]
+          example: both
+          description: Where professional provides services
+        city:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: São Paulo
+          description: City where professional operates
+        neighborhood:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Pinheiros
+          description: Neighborhood/district
+        bio:
+          type: string
+          minLength: 10
+          maxLength: 500
+          example: Terapeuta com 10 anos de experiência em terapias holísticas
+          description: Professional bio/description
+        whatsapp:
+          type: string
+          pattern: '^\+55\d{11}$'
+          example: "+5511999999999"
+          description: WhatsApp number in international format
+        instagram:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: maria.terapia
+          description: Instagram handle (without @)
+        photo:
+          type: string
+          format: binary
+          description: Profile photo (JPEG/PNG, max 5MB)
+
+    RegisterResponse:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 123
+        professional_id:
+          type: integer
+          example: 456
+        access_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: JWT access token (24-hour expiry)
+        refresh_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: JWT refresh token (7-day expiry)
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: maria@example.com
+        password:
+          type: string
+          format: password
+          example: SecurePass123
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refresh_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 123
+            email:
+              type: string
+              example: maria@example.com
+            professional_id:
+              type: integer
+              example: 456
+
+    LogoutRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: Refresh token to blacklist
+
+    LogoutResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: Logged out successfully
+
+    RefreshRequest:
+      type: object
+      required:
+        - refresh
+      properties:
+        refresh:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: Refresh token
+
+    RefreshResponse:
+      type: object
+      properties:
+        access:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          description: New access token (24-hour expiry)
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: ValidationError
+          description: Error type/code
+        message:
+          type: string
+          example: Invalid input data
+          description: Human-readable error message
+        details:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+          example:
+            email: ["Email já cadastrado"]
+            password: ["Password too weak"]
+          description: Field-level validation errors (optional)
