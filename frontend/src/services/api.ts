@@ -4,7 +4,8 @@
  */
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/api/v1'
+// Use relative path /api which Vercel will proxy to backend
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
 // Create axios instance
 export const api = axios.create({
