@@ -464,3 +464,5 @@ npm run preview
 ---
 
 **Next Steps**: Run `npm install` in frontend and `pip install -r requirements.txt` in backend, then proceed with Phase 2 tasks!
+
+##
