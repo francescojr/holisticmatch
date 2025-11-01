@@ -4,8 +4,9 @@
  */
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
 
-// Use relative path /api which Vercel will proxy to backend
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+// Always use /api which Vercel will proxy to backend
+// DO NOT use environment variables as they get hardcoded during build
+const API_BASE_URL = '/api'
 
 // Create axios instance
 export const api = axios.create({
