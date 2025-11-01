@@ -21,36 +21,32 @@ export const containerVariants: Variants = {
 
 /**
  * Item variant for individual cards/items
- * Fade in with slide up effect and scale
+ * Scale and fade from center
  */
 export const itemVariants: Variants = {
   hidden: {
     opacity: 0,
-    y: 50,
-    scale: 0.9,
-    filter: "blur(4px)",
+    scale: 0.8,
+    filter: "blur(8px)",
   },
   visible: {
     opacity: 1,
-    y: 0,
     scale: 1,
     filter: "blur(0px)",
     transition: {
-      duration: 0.9,
-      ease: [0.25, 0.46, 0.45, 0.94], // Custom cubic-bezier for smooth easing
+      duration: 0.7,
+      ease: [0.25, 0.46, 0.45, 0.94],
       filter: {
-        duration: 0.6,
+        duration: 0.5,
       },
     },
   },
   hover: {
-    y: -12,
-    scale: 1.03,
-    boxShadow: "0 25px 50px -12px rgb(0 0 0 / 0.25)",
+    scale: 1.02,
+    boxShadow: "0 10px 25px -5px rgb(0 0 0 / 0.15)",
     transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 20,
+      duration: 0.2,
+      ease: [0.25, 0.46, 0.45, 0.94],
     },
   },
 }
@@ -209,6 +205,27 @@ export const contentVariants: Variants = {
     y: 0,
     transition: {
       delay: 0.2,
+      duration: 0.6,
+      ease: [0.25, 0.46, 0.45, 0.94],
+    },
+  },
+}
+
+/**
+ * Scroll-triggered animation variants
+ * For cards that animate in when they come into view
+ */
+export const scrollItemVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    scale: 0.8,
+    y: 30,
+  },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
       duration: 0.6,
       ease: [0.25, 0.46, 0.45, 0.94],
     },

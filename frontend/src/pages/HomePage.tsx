@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { containerVariants, fadeInVariants } from '../lib/animations'
+import { containerVariants, fadeInVariants, scrollItemVariants } from '../lib/animations'
 import { useProfessionals } from '../hooks/useProfessionals'
+import { useSequentialAnimation } from '../hooks/useSequentialAnimation'
 import SearchFilters from '../components/SearchFilters'
 import ProfessionalCard from '../components/ProfessionalCard'
 import type { ProfessionalFilters } from '../types/Professional'
@@ -12,6 +13,8 @@ function HomePage() {
   const [filters, setFilters] = useState<ProfessionalFilters>({})
   
   const { data: professionalsData, isLoading, error } = useProfessionals(filters)
+  const totalCards = professionalsData?.results?.length || 0
+  const { containerRef, setItemRef, isItemVisible } = useSequentialAnimation<HTMLDivElement>(totalCards, 0.15)
 
   const handleFilterChange = (newFilters: ProfessionalFilters) => {
     setFilters(newFilters)
@@ -22,13 +25,13 @@ function HomePage() {
   }
 
   return (
-    <div className="bg-background-light dark:bg-background-dark">
+    <div className="bg-background-light">
       {/* Hero Section */}
       <motion.section
         variants={fadeInVariants}
         initial="hidden"
         animate="visible"
-        className="relative overflow-hidden bg-background-light dark:bg-background-dark py-20 text-gray-900 dark:text-white"
+        className="relative overflow-hidden bg-background-light py-20 text-gray-900 dark:text-white"
       >
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl font-black tracking-tight sm:text-5xl md:text-6xl mb-4">
@@ -82,20 +85,25 @@ function HomePage() {
 
         {/* Professionals Grid */}
         {professionalsData && professionalsData.results && professionalsData.results.length > 0 && (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
+          <div
+            ref={containerRef}
             className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           >
-            {professionalsData.results.map((professional) => (
-              <ProfessionalCard
+            {professionalsData.results.map((professional, index) => (
+              <motion.div
                 key={professional.id}
-                professional={professional}
+                ref={setItemRef(index)}
+                variants={scrollItemVariants}
+                initial="hidden"
+                animate={isItemVisible(index) ? "visible" : "hidden"}
+                whileHover="hover"
                 onClick={() => handleCardClick(professional.id)}
-              />
+                className="cursor-pointer"
+              >
+                <ProfessionalCard professional={professional} />
+              </motion.div>
             ))}
-          </motion.div>
+          </div>
         )}
 
         {/* Empty State */}
