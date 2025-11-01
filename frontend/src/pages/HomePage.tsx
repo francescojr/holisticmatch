@@ -22,7 +22,7 @@ function HomePage() {
   }
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-background-light dark:bg-background-dark">
       {/* Hero Section */}
       <motion.section
         variants={fadeInVariants}

@@ -14,7 +14,10 @@ export default function Header() {
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500 text-white">
             <span className="material-symbols-outlined text-2xl">spa</span>
           </div>
-          <h1 className="text-2xl font-black tracking-tight text-gray-900">HolisticMatch</h1>
+          <h1 className="text-2xl font-black tracking-tight">
+            <span className="text-gray-900">holistic</span>
+            <span className="text-gray-900/65">match</span>
+          </h1>
         </Link>
 
         {/* Navigation */}

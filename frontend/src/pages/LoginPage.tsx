@@ -37,7 +37,10 @@ function LoginPage() {
     >
       <div className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-black text-gray-900">HolisticMatch</h1>
+          <h1 className="text-3xl font-black">
+            <span className="text-gray-900">holistic</span>
+            <span className="text-gray-900/65">match</span>
+          </h1>
           <p className="text-gray-600 mt-2">Faça login ou crie sua conta</p>
         </div>
 

@@ -12,7 +12,7 @@ function ProfessionalDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
       </div>
     )
@@ -20,7 +20,7 @@ function ProfessionalDetailPage() {
 
   if (error || !professional) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center">
         <div className="text-center">
           <p className="text-red-600 font-semibold mb-4">Erro ao carregar profissional</p>
           <button
@@ -38,7 +38,7 @@ function ProfessionalDetailPage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-gray-50 py-8"
+      className="min-h-screen bg-background-light dark:bg-background-dark py-8"
     >
       <div className="max-w-4xl mx-auto px-4">
         {/* Back Button */}
