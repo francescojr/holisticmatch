@@ -6,6 +6,7 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/deploy-frontend.yml'
+      - 'vercel.json'
   workflow_dispatch:
 
 jobs:
@@ -40,7 +41,6 @@ jobs:
           ls -la dist/ || echo "dist folder not found"
       
       - name: Deploy to Vercel
-        working-directory: frontend
         run: npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
