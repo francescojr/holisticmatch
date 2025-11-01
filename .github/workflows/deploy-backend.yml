@@ -76,6 +76,11 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       
+      - name: Run Database Migrations
+        run: |
+          eb ssh -c "cd /var/app/current && source /var/app/venv/*/bin/activate && python manage.py migrate"
+
+      
       - name: Notify Success
         if: success()
         run: echo "Backend deployed successfully to AWS EB!"
