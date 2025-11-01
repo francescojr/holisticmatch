@@ -41,8 +41,9 @@ jobs:
       
       - name: Create deployment package
         run: |
+          cd backend
+          zip -r ../backend.zip . -x ".git*" ".env*" ".pytest_cache/*" "htmlcov/*" "db.sqlite3" "venv/*" "__pycache__/*"
           cd ..
-          zip -r backend.zip backend/ -x "backend/.git*" "backend/.env*" "backend/.pytest_cache/*" "backend/htmlcov/*" "backend/db.sqlite3"
           ls -lh backend.zip
       
       - name: Deploy to Elastic Beanstalk
