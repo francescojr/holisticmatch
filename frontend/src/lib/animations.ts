@@ -46,8 +46,8 @@ export const itemVariants: Variants = {
     boxShadow: "0 10px 25px -5px rgb(0 0 0 / 0.15)",
     transition: {
       type: "spring",
-      stiffness: 300,
-      damping: 20,
+      duration: 0.6,
+      bounce: 0.52,
     },
   },
 }
