@@ -1,1 +1,36 @@
 .vercel
+
+# Credentials and secrets (NEVER commit these!)
+holistic match.txt
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+secrets/
+credentials/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+venv/
+env/
+.pytest_cache/
+
+# Node
+node_modules/
+.yarn/
+
+# Build
+dist/
+build/
