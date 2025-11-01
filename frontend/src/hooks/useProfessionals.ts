@@ -18,7 +18,11 @@ export function useProfessionals(
 ): UseQueryResult<ProfessionalListResponse, Error> {
   return useQuery({
     queryKey: ['professionals', filters],
-    queryFn: () => professionalService.getProfessionals(filters),
+    queryFn: async () => {
+      const data = await professionalService.getProfessionals(filters)
+      console.log('Professionals API Response:', data)
+      return data
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 }

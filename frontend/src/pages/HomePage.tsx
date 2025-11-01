@@ -108,7 +108,7 @@ function HomePage() {
         )}
 
         {/* Professionals Grid */}
-        {professionalsData && professionalsData.results.length > 0 && (
+        {professionalsData && professionalsData.results && professionalsData.results.length > 0 && (
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -126,7 +126,7 @@ function HomePage() {
         )}
 
         {/* Empty State */}
-        {professionalsData && professionalsData.results.length === 0 && (
+        {professionalsData && professionalsData.results && professionalsData.results.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <span className="material-symbols-outlined text-9xl text-gray-300 mb-4">search_off</span>
             <h3 className="text-2xl font-bold text-gray-700 mb-2">
