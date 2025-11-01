@@ -53,8 +53,8 @@ jobs:
       
       - name: Notify Success
         if: success()
-        run: echo "✅ Backend deployed successfully to AWS EB!"
+        run: echo "Backend deployed successfully to AWS EB!"
       
       - name: Notify Failure
         if: failure()
-        run: echo "❌ Backend deployment failed!"
+        run: echo "Backend deployment failed!"

@@ -77,23 +77,34 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Using SQLite for development - switch to PostgreSQL/Supabase for production
 
 # Production: Use DATABASE_URL from environment (dj-database-url)
-if config('DATABASE_URL', default=None):
+database_url = config('DATABASE_URL', default=None)
+if database_url and database_url.startswith('postgresql'):
     import dj_database_url
     DATABASES = {
         'default': dj_database_url.config(
-            default=config('DATABASE_URL'),
+            default=database_url,
             conn_max_age=600,
             ssl_require=True
         )
     }
+elif database_url and database_url.startswith('sqlite'):
+    # SQLite from DATABASE_URL (for tests)
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=database_url,
+            conn_max_age=0
+        )
+    }
 else:
-    # Development: SQLite
+    # Development: SQLite default
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
