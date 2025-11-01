@@ -41,14 +41,12 @@ jobs:
           ls -la dist/ || echo "dist folder not found"
       
       - name: Deploy to Vercel
-        uses: vercel/actions/cli@v1
-        with:
-          args: deploy --prod --cwd=frontend
+        run: |
+          cd frontend
+          npx vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
         env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
       
       - name: Notify Success
         if: success()
