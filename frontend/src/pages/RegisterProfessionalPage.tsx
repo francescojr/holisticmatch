@@ -2,11 +2,10 @@
  * Professional registration page with multi-step form
  */
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 function RegisterProfessionalPage() {
-  const navigate = useNavigate()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
