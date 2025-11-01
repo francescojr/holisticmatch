@@ -4,6 +4,10 @@
   "installCommand": "cd frontend && npm ci",
   "routes": [
     {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
       "src": "/api/(.*)",
       "dest": "http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/api/v1/$1",
       "headers": {
