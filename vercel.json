@@ -1,5 +1,8 @@
 {
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
-  "installCommand": "cd frontend && npm ci"
+  "installCommand": "cd frontend && npm ci",
+  "env": {
+    "VITE_API_BASE_URL": "http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/api/v1"
+  }
 }
