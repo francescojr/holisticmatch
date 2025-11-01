@@ -13,7 +13,7 @@ function HomePage() {
   const [filters, setFilters] = useState<ProfessionalFilters>({})
   
   const { data: professionalsData, isLoading, error } = useProfessionals(filters)
-  const { containerRef, setItemRef, isItemVisible } = useSequentialAnimation<HTMLDivElement>()
+  const { containerRef, isContainerVisible } = useSequentialAnimation<HTMLDivElement>()
 
   const handleFilterChange = (newFilters: ProfessionalFilters) => {
     setFilters(newFilters)
@@ -91,10 +91,9 @@ function HomePage() {
             {professionalsData.results.map((professional, index) => (
               <motion.div
                 key={professional.id}
-                ref={setItemRef(index)}
                 variants={scrollItemVariants(index)}
                 initial="hidden"
-                animate={isItemVisible(index) ? "visible" : "hidden"}
+                animate={isContainerVisible ? "visible" : "hidden"}
                 whileHover="hover"
                 onClick={() => handleCardClick(professional.id)}
                 className="cursor-pointer"
