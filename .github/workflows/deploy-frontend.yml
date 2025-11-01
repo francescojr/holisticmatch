@@ -55,4 +55,4 @@ jobs:
       
       - name: Notify Failure
         if: failure()
-        run: echo "Frontend deployment failed!"
+        run: echo "Frontend deployment failed!!"
