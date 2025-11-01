@@ -23,7 +23,7 @@ export const professionalService = {
     if (filters.limit) params.append('limit', filters.limit.toString())
     if (filters.offset) params.append('offset', filters.offset.toString())
 
-    const response = await api.get<ProfessionalListResponse>(`/v1/professionals/?${params}`)
+    const response = await api.get<ProfessionalListResponse>(`/professionals/?${params}`)
     return response.data
   },
 
@@ -31,7 +31,7 @@ export const professionalService = {
    * Get single professional by ID
    */
   async getProfessionalById(id: number): Promise<Professional> {
-    const response = await api.get<Professional>(`/v1/professionals/${id}/`)
+    const response = await api.get<Professional>(`/professionals/${id}/`)
     return response.data
   },
 
@@ -39,7 +39,7 @@ export const professionalService = {
    * Get available service types
    */
   async getServiceTypes(): Promise<string[]> {
-    const response = await api.get<string[]>(`/v1/professionals/service_types/`)
+    const response = await api.get<string[]>(`/professionals/service_types/`)
     return response.data
   },
 
@@ -47,7 +47,7 @@ export const professionalService = {
    * Update professional profile (authenticated)
    */
   async updateProfessional(id: number, data: Partial<Professional>): Promise<Professional> {
-    const response = await api.patch<Professional>(`/v1/professionals/${id}/`, data)
+    const response = await api.patch<Professional>(`/professionals/${id}/`, data)
     return response.data
   },
 }
