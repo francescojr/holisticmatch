@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/api/v1/:path*"
+      "destination": "http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/api/v1/:path*"
     }
   ]
 }
