@@ -23,7 +23,6 @@ export default function ProfessionalCard({ professional, onClick }: Professional
   return (
     <motion.div
       variants={itemVariants}
-      whileHover="hover"
       onClick={onClick}
       className="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all cursor-pointer"
     >
