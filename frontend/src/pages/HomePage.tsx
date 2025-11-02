@@ -129,7 +129,7 @@ function HomePage() {
                 initial="hidden"
                 animate={isContainerVisible ? "visible" : "hidden"}
                 whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                /*whileTap={{ scale: 0.9 }}*/
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 onClick={() => handleCardClick(professional.id)}
               >
