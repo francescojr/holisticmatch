@@ -133,16 +133,22 @@ function HomePage() {
                   scale: 1.02,
                   transition: {
                     type: "spring",
-                    stiffness: 400,
-                    damping: 25,
-                    duration: 0.15
+                    stiffness: 88,
+                    damping: 5,
+                    mass: 1.1,
+                    velocity: 2,
+                    restDelta: 0.04,
+                    restSpeed: 0.04
                   }
                 }}
                 transition={{
                   type: "spring",
-                  stiffness: 400,
-                  damping: 25,
-                  duration: 0.15
+                  stiffness: 88,
+                  damping: 5,
+                  mass: 1.1,
+                  velocity: 2,
+                  restDelta: 0.04,
+                  restSpeed: 0.04
                 }}
               >
                 <ProfessionalCard professional={professional} />
