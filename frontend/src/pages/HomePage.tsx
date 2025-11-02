@@ -131,7 +131,18 @@ function HomePage() {
                 onClick={() => handleCardClick(professional.id)}
                 whileHover={{
                   scale: 1.02,
-                  transition: { duration: 0.2 }
+                  transition: {
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 25,
+                    duration: 0.15
+                  }
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 25,
+                  duration: 0.15
                 }}
               >
                 <ProfessionalCard professional={professional} />
