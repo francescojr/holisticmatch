@@ -3,6 +3,7 @@
  */
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useEffect } from 'react'
 import { pageVariants, itemVariants } from '../lib/animations'
 import { useProfessional } from '../hooks/useProfessionals'
 
@@ -10,6 +11,11 @@ function ProfessionalDetailPage() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const { data: professional, isLoading, error } = useProfessional(Number(id) || 0)
+
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
 
   if (isLoading) {
     return (
@@ -46,7 +52,7 @@ function ProfessionalDetailPage() {
         {/* Back Button */}
         <button
           onClick={() => navigate('/')}
-          className="mb-6 text-primary hover:text-primary font-semibold flex items-center gap-2"
+          className="mb-6 mt-20 text-primary hover:text-primary font-semibold flex items-center gap-2"
         >
           <span className="material-symbols-outlined">arrow_back</span>
           Voltar
@@ -65,9 +71,9 @@ function ProfessionalDetailPage() {
             {/* Avatar */}
             <div className="flex items-end gap-6 mb-6 -mt-16">
               <img
-                src={professional.photo_url || 'https://via.placeholder.com/120'}
+                src={professional.photo_url || 'https://via.placeholder.com/160'}
                 alt={professional.name}
-                className="w-32 h-32 rounded-lg border-4 border-white shadow-lg object-cover"
+                className="w-40 h-40 rounded-lg border-4 border-white shadow-lg object-cover"
               />
               <div className="pb-2">
                 <h1 className="text-3xl font-black text-gray-900">{professional.name}</h1>
@@ -95,7 +101,7 @@ function ProfessionalDetailPage() {
                 {professional.services.map((service: string) => (
                   <span
                     key={service}
-                    className="px-4 py-2 bg-primary/20 text-primary rounded-full text-sm font-medium"
+                    className="px-4 py-2 bg-primary/20 text-gray-900/80 rounded-full text-sm font-medium"
                   >
                     {service}
                   </span>

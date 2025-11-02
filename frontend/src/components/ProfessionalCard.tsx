@@ -100,15 +100,9 @@ export default function ProfessionalCard({ professional, onClick }: Professional
             </span>
             <span className="text-xs text-gray-500">/sessão</span>
           </div>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              onClick?.()
-            }}
-            className="rounded-lg bg-green-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-600"
-          >
+          <div className="rounded-lg bg-green-500 px-4 py-2 text-sm font-semibold text-white opacity-75 cursor-default">
             Ver Perfil
-          </button>
+          </div>
         </div>
       </motion.div>
     </motion.div>
