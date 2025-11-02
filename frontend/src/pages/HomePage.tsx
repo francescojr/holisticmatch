@@ -129,11 +129,10 @@ function HomePage() {
                 initial="hidden"
                 animate={isContainerVisible ? "visible" : "hidden"}
                 onClick={() => handleCardClick(professional.id)}
-                style={{
-                  transition: 'transform 0.3s ease-out !important',
-                  transform: 'scale(1)'
+                whileHover={{
+                  scale: 1.02,
+                  transition: { duration: 0.2 }
                 }}
-                className="cursor-pointer hover:!scale-105"
               >
                 <ProfessionalCard professional={professional} />
               </motion.div>
