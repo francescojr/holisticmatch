@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { containerVariants, fadeInVariants, scrollItemVariants } from '../lib/animations'
 import { useProfessionals } from '../hooks/useProfessionals'
 import { useSequentialAnimation } from '../hooks/useSequentialAnimation'
@@ -8,12 +8,27 @@ import SearchFilters from '../components/SearchFilters'
 import ProfessionalCard from '../components/ProfessionalCard'
 import type { ProfessionalFilters } from '../types/Professional'
 
+// Import hero images
+import hero01 from '../assets/images/hero01.jpg'
+import hero02 from '../assets/images/hero02.jpg'
+
 function HomePage() {
   const navigate = useNavigate()
   const [filters, setFilters] = useState<ProfessionalFilters>({})
+  const [heroImage, setHeroImage] = useState<string>(hero01) // Default to first image
+  
+  const { scrollY } = useScroll()
+  const y = useTransform(scrollY, [0, 500], [0, -150]) // Parallax effect
   
   const { data: professionalsData, isLoading, error } = useProfessionals(filters)
   const { containerRef, isContainerVisible } = useSequentialAnimation<HTMLDivElement>()
+
+  // Select random hero image on component mount
+  useEffect(() => {
+    const images = [hero01, hero02]
+    const randomImage = images[Math.floor(Math.random() * images.length)] || hero01
+    setHeroImage(randomImage)
+  }, [])
 
   const handleFilterChange = (newFilters: ProfessionalFilters) => {
     setFilters(newFilters)
@@ -25,23 +40,42 @@ function HomePage() {
 
   return (
     <div className="bg-background-light">
-      {/* Hero Section */}
-      <motion.section
-        variants={fadeInVariants}
-        initial="hidden"
-        animate="visible"
-        className="relative overflow-hidden bg-background-light py-20 text-gray-900 dark:text-white"
-      >
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-black tracking-tight sm:text-5xl md:text-6xl mb-4">
-            Encontre Seu Caminho para o Bem-Estar
-          </h2>
-          <p className="mx-auto max-w-2xl text-gray-600 dark:text-gray-300">
-            Descubra profissionais de terapias holísticas confiáveis perto de você. 
-            Comece sua jornada para uma vida equilibrada hoje.
-          </p>
-        </div>
-      </motion.section>
+      {/* Hero Section with Parallax */}
+      <section className="relative h-screen overflow-hidden">
+        {/* Parallax Background Image */}
+        {heroImage && (
+          <motion.div 
+            className="absolute inset-0"
+            style={{ y }}
+          >
+            <img
+              src={heroImage}
+              alt="HolisticMatch Hero"
+              className="w-full h-full object-cover object-center"
+            />
+            {/* Overlay for better text readability */}
+            <div className="absolute inset-0 bg-black/40" />
+          </motion.div>
+        )}
+
+        {/* Hero Content */}
+        <motion.div
+          variants={fadeInVariants}
+          initial="hidden"
+          animate="visible"
+          className="relative z-10 flex items-center justify-center h-full text-white"
+        >
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-4xl font-black tracking-tight sm:text-5xl md:text-6xl mb-4">
+              Encontre Seu Caminho para o Bem-Estar
+            </h2>
+            <p className="mx-auto max-w-2xl text-gray-200 text-lg sm:text-xl">
+              Descubra profissionais de terapias holísticas confiáveis perto de você. 
+              Comece sua jornada para uma vida equilibrada hoje.
+            </p>
+          </div>
+        </motion.div>
+      </section>
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
@@ -100,7 +134,7 @@ function HomePage() {
                   transition: {
                     type: "spring",
                     duration: 0.6,
-                    bounce: 0.52,
+                    bounce: 0.65,
                   },
                 }}
                 onClick={() => handleCardClick(professional.id)}
