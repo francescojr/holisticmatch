@@ -41,7 +41,7 @@ function HomePage() {
   return (
     <div className="bg-background-light">
       {/* Hero Section with Parallax */}
-      <section className="relative h-screen overflow-hidden">
+      <section className="relative h-[400px] overflow-hidden">
         {/* Parallax Background Image */}
         {heroImage && (
           <motion.div 
