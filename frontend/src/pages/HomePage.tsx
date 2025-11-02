@@ -129,10 +129,9 @@ function HomePage() {
                 initial="hidden"
                 animate={isContainerVisible ? "visible" : "hidden"}
                 onClick={() => handleCardClick(professional.id)}
-                whileHover={{
-                  scale: 1.02,
-                  transition: { type: "spring", bounce: 0.25 }
-                }}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 400, damping: 10 }}
               >
                 <ProfessionalCard professional={professional} />
               </motion.div>
