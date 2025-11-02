@@ -52,7 +52,7 @@ function ProfessionalDetailPage() {
         {/* Back Button */}
         <button
           onClick={() => navigate('/')}
-          className="mb-6 mt-20 text-primary hover:text-primary font-semibold flex items-center gap-2"
+          className="mb-6 mt-16 text-primary hover:text-primary font-semibold flex items-center gap-2"
         >
           <span className="material-symbols-outlined">arrow_back</span>
           Voltar
@@ -71,9 +71,9 @@ function ProfessionalDetailPage() {
             {/* Avatar */}
             <div className="flex items-end gap-6 mb-6 -mt-16">
               <img
-                src={professional.photo_url || 'https://via.placeholder.com/160'}
+                src={professional.photo_url || 'https://via.placeholder.com/224'}
                 alt={professional.name}
-                className="w-40 h-40 rounded-lg border-4 border-white shadow-lg object-cover"
+                className="w-56 h-56 rounded-lg border-4 border-white shadow-lg object-cover"
               />
               <div className="pb-2">
                 <h1 className="text-3xl font-black text-gray-900">{professional.name}</h1>
