@@ -10,7 +10,8 @@ class ProfilePhotoStorage(S3Boto3Storage):
     Custom storage for professional profile photos.
     Uploads to S3 with public-read ACL.
     """
-    location = 'photos'
+    location = ''  # Root of bucket, not 'photos/'
     default_acl = 'public-read'
     file_overwrite = False
     custom_domain = False
+    querystring_auth = False  # Don't use signed URLs for public objects
