@@ -52,7 +52,7 @@ function ProfessionalDetailPage() {
         {/* Back Button */}
         <button
           onClick={() => navigate('/')}
-          className="mb-6 mt-16 text-primary hover:text-primary font-semibold flex items-center gap-2"
+          className="mb-6 mt-8 text-primary hover:text-primary font-semibold flex items-center gap-2"
         >
           <span className="material-symbols-outlined">arrow_back</span>
           Voltar
