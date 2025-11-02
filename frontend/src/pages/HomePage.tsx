@@ -16,6 +16,7 @@ function HomePage() {
   const navigate = useNavigate()
   const [filters, setFilters] = useState<ProfessionalFilters>({})
   const [heroImage, setHeroImage] = useState<string>(hero01) // Default to first image
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null)
   
   const { scrollY } = useScroll()
   const y = useTransform(scrollY, [0, 500], [0, -150]) // Parallax effect
@@ -127,11 +128,15 @@ function HomePage() {
                 key={professional.id}
                 variants={scrollItemVariants(index)}
                 initial="hidden"
-                animate={isContainerVisible ? "visible" : "hidden"}
-                onClick={() => handleCardClick(professional.id)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                animate={{
+                  ...(isContainerVisible ? scrollItemVariants(index).visible : scrollItemVariants(index).hidden),
+                  scale: hoveredCard === professional.id ? 1.1 : 1,
+                }}
                 transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                onMouseEnter={() => setHoveredCard(professional.id)}
+                onMouseLeave={() => setHoveredCard(null)}
+                onClick={() => handleCardClick(professional.id)}
+                whileTap={{ scale: 0.9 }}
               >
                 <ProfessionalCard professional={professional} />
               </motion.div>
