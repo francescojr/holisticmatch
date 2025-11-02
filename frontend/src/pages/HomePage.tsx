@@ -133,9 +133,16 @@ function HomePage() {
                   boxShadow: "0 10px 25px -5px rgb(0 0 0 / 0.15)",
                   transition: {
                     type: "spring",
-                    duration: 0.6,
+                    stiffness: 300,
+                    damping: 20,
                     bounce: 0.65,
                   },
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 20,
+                  bounce: 0.65,
                 }}
                 onClick={() => handleCardClick(professional.id)}
                 className="cursor-pointer"
