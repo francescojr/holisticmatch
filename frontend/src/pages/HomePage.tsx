@@ -25,8 +25,8 @@ function HomePage() {
 
   // Select random hero image on component mount
   useEffect(() => {
-    const images = [hero01, hero02]
-    const randomImage = images[Math.floor(Math.random() * images.length)] || hero01
+    const images = [hero01, hero02].filter(Boolean) // Remove any undefined values
+    const randomImage = images[Math.floor(Math.random() * images.length)] || hero01 || hero02 || ''
     setHeroImage(randomImage)
   }, [])
 
@@ -128,9 +128,9 @@ function HomePage() {
                 variants={scrollItemVariants(index)}
                 initial="hidden"
                 animate={isContainerVisible ? "visible" : "hidden"}
-                whileHover={{ scale: 1.1 }}
+                whileHover={{ scale: 1.05 }}
                 /*whileTap={{ scale: 0.9 }}*/
-                transition={{ type: "spring", stiffness: 400, damping: 10 }}
+                transition={{ type: "spring", stiffness: 400, damping: 8 }}
                 onClick={() => handleCardClick(professional.id)}
               >
                 <ProfessionalCard professional={professional} />

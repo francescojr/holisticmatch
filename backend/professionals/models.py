@@ -5,6 +5,8 @@ Defines the Professional model for holistic therapy service providers.
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
+from django.conf import settings
+from storage.backends import ProfilePhotoStorage
 
 
 class Professional(models.Model):
@@ -57,7 +59,8 @@ class Professional(models.Model):
     photo = models.ImageField(
         upload_to='photos/',
         blank=True,
-        null=True
+        null=True,
+        storage=ProfilePhotoStorage() if settings.USE_S3 else None
     )
     
     # Timestamps
