@@ -128,9 +128,8 @@ function HomePage() {
                 variants={scrollItemVariants(index)}
                 initial="hidden"
                 animate={isContainerVisible ? "visible" : "hidden"}
-                whileHover={{ scale: 1.02 }}
                 onClick={() => handleCardClick(professional.id)}
-                className="cursor-pointer"
+                className="cursor-pointer hover:scale-[1.02] transition-transform duration-300 ease-out"
               >
                 <ProfessionalCard professional={professional} />
               </motion.div>
