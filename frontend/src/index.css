@@ -10,10 +10,10 @@
 
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors;
+    @apply px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80;
   }
 
   .card {
-    @apply bg-white rounded-lg shadow-md p-6 transition-shadow hover:shadow-lg;
+    @apply bg-white rounded-lg shadow-md p-6 hover:shadow-lg;
   }
 }
