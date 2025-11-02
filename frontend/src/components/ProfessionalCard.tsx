@@ -24,7 +24,7 @@ export default function ProfessionalCard({ professional, onClick }: Professional
     <motion.div
       variants={itemVariants}
       onClick={onClick}
-      className="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all cursor-pointer"
+      className="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm cursor-pointer"
     >
       {/* Profile Image */}
       <div className="relative h-64 w-full overflow-hidden bg-gray-200">
@@ -32,7 +32,7 @@ export default function ProfessionalCard({ professional, onClick }: Professional
           <img
             src={professional.photo_url}
             alt={professional.name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+            className="h-full w-full object-cover"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 to-green-100">
