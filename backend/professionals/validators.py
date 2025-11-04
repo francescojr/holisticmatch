@@ -8,6 +8,20 @@ from django.core.files.images import get_image_dimensions
 from .constants import SERVICE_TYPES
 
 
+def validate_city_state_pair(city, state):
+    """
+    Validate that city and state are a valid pair from City model.
+    This is a module-level function used in serializer validation.
+    """
+    from .models import City  # Import here to avoid circular imports
+    
+    if not City.objects.filter(state=state, name__iexact=city).exists():
+        raise ValidationError(
+            f'Cidade "{city}" não encontrada para o estado "{state}". '
+            'Selecione uma cidade válida da lista de cidades disponíveis.'
+        )
+
+
 def validate_phone_number(value):
     """
     Validate Brazilian phone number format.

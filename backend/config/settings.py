@@ -198,3 +198,9 @@ EMAIL_BACKEND = config(
     'EMAIL_BACKEND',
     default='django.core.mail.backends.console.EmailBackend'
 )
+
+# Frontend URL for password reset and email verification links
+FRONTEND_URL = config(
+    'FRONTEND_URL',
+    default='http://localhost:5173'
+)

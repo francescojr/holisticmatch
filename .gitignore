@@ -10,6 +10,9 @@ holistic match.txt
 secrets/
 credentials/
 
+# Internal documentation (DO NOT DEPLOY)
+__claudio/
+
 # IDE
 .vscode/
 .idea/

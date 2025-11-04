@@ -8,31 +8,40 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { pageVariants, itemVariants } from '../lib/animations'
 import { useFormValidation } from '../hooks/useFormValidation'
+import { useCities } from '../hooks/useCities'
 import { useToast } from '../hooks/useToast'
-import { FormInput, FormTextarea, FileUpload, ToastContainer } from '../components'
+import { FormInput, FileUpload, FormSelect, ToastContainer } from '../components'
 import { professionalService } from '../services/professionalService'
+
+const BRAZILIAN_STATES = [
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
+  'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
+  'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+]
 
 interface Step1FormData {
   fullName: string
   email: string
   phone: string
   cpf: string
+  password: string
+  passwordConfirm: string
   photo: File | null
+  state: string
+  city: string
 }
 
 interface ServiceData {
   id: string
-  serviceType: string
-  price: number
-  description: string
+  service_type: string
+  price_per_session: number
 }
 
 interface Step2FormData {
   services: ServiceData[]
   newService: {
-    serviceType: string
-    price: number
-    description: string
+    service_type: string
+    price_per_session: number
   }
 }
 
@@ -48,15 +57,21 @@ function RegisterProfessionalPage() {
     email: '',
     phone: '',
     cpf: '',
+    password: '',
+    passwordConfirm: '',
     photo: null,
+    state: '',
+    city: '',
   })
+
+  // Use hook to manage cities based on selected state
+  const { cities, loading: citiesLoading, error: citiesError } = useCities(step1Data.state)
 
   const [step2Data, setStep2Data] = useState<Step2FormData>({
     services: [],
     newService: {
-      serviceType: '',
-      price: 0,
-      description: ''
+      service_type: '',
+      price_per_session: 0
     }
   })
 
@@ -96,8 +111,16 @@ function RegisterProfessionalPage() {
         return { required: true, email: true }
       case 'phone':
         return { required: true, phone: true }
+      case 'password':
+        return { required: true, password: true }
+      case 'passwordConfirm':
+        return { required: true, minLength: 8 }
       case 'cpf':
         return { required: false } // CPF is optional
+      case 'state':
+        return { required: true }
+      case 'city':
+        return { required: true }
       default:
         return { required: true }
     }
@@ -148,6 +171,12 @@ function RegisterProfessionalPage() {
       }
     })
 
+    // Validate password confirmation
+    if (step1Data.password !== step1Data.passwordConfirm) {
+      toast.error('Erro de validação', { message: 'As senhas não conferem' })
+      isFormValid = false
+    }
+
     // Validate photo
     const photoError = validatePhoto(step1Data.photo)
     if (photoError) {
@@ -195,26 +224,21 @@ function RegisterProfessionalPage() {
 
   // Service management functions
   const addService = () => {
-    const { serviceType, price, description } = step2Data.newService
+    const { service_type, price_per_session } = step2Data.newService
 
     // Validation
-    if (!serviceType) {
+    if (!service_type) {
       toast.error('Selecione um tipo de serviço')
       return
     }
 
-    if (!price || price <= 0) {
+    if (!price_per_session || price_per_session <= 0) {
       toast.error('Preço deve ser maior que zero')
       return
     }
 
-    if (!description || description.trim().length < 10) {
-      toast.error('Descrição deve ter pelo menos 10 caracteres')
-      return
-    }
-
     // Check for duplicates
-    if (step2Data.services.some(s => s.serviceType === serviceType)) {
+    if (step2Data.services.some(s => s.service_type === service_type)) {
       toast.error('Este tipo de serviço já foi adicionado')
       return
     }
@@ -225,18 +249,17 @@ function RegisterProfessionalPage() {
       return
     }
 
-    // Add service
+    // Add service with correct structure matching backend
     const newService: ServiceData = {
       id: Date.now().toString(),
-      serviceType,
-      price,
-      description: description.trim()
+      service_type,
+      price_per_session
     }
 
     setStep2Data(prev => ({
       ...prev,
       services: [...prev.services, newService],
-      newService: { serviceType: '', price: 0, description: '' }
+      newService: { service_type: '', price_per_session: 0 }
     }))
 
     toast.success('Serviço adicionado com sucesso!')
@@ -284,18 +307,20 @@ function RegisterProfessionalPage() {
     setLoading(true)
 
     try {
-      // Prepare data for API
+      // Prepare data for API - matching backend schema exactly
       const registrationData = {
-        fullName: step1Data.fullName,
+        name: step1Data.fullName,
         email: step1Data.email,
         phone: step1Data.phone,
-        cpf: step1Data.cpf,
-        ...(step1Data.photo && { photo: step1Data.photo }),
-        services: step2Data.services.map(service => ({
-          serviceType: service.serviceType,
-          price: service.price,
-          description: service.description
-        }))
+        password: step1Data.password,
+        services: step2Data.services.map(service => service.service_type),
+        price_per_session: Math.min(...step2Data.services.map(s => s.price_per_session)), // Use lowest service price
+        city: step1Data.city,
+        state: step1Data.state,
+        attendance_type: 'ambos',
+        whatsapp: step1Data.phone,
+        bio: `Profissional de terapias holísticas especializado em ${step2Data.services.map(s => s.service_type).join(', ')}.`,
+        ...(step1Data.photo && { photo: step1Data.photo })
       }
 
       // Show loading message
@@ -303,8 +328,8 @@ function RegisterProfessionalPage() {
         message: 'Por favor, aguarde enquanto processamos seu cadastro.'
       })
 
-      // Create professional profile
-      const result = await professionalService.createProfessional(registrationData)
+      // Create professional profile with password
+      const result = await professionalService.createProfessionalWithPassword(registrationData)
 
       // If photo exists, upload it separately
       if (step1Data.photo && result.professional.id) {
@@ -316,53 +341,45 @@ function RegisterProfessionalPage() {
           await professionalService.uploadProfessionalPhoto(result.professional.id, step1Data.photo)
         } catch (photoError: any) {
           console.warn('Photo upload failed, but professional was created:', photoError)
-          // Don't fail the entire registration if photo upload fails
           toast.warning('Perfil criado, mas houve um problema com a foto', {
             message: 'Você pode fazer upload da foto depois no seu perfil.'
           })
         }
       }
 
-      // Store auth token if provided
-      if (result.token) {
-        localStorage.setItem('access_token', result.token)
-        // Also store refresh token if available in response
-        if ('refresh_token' in result) {
-          localStorage.setItem('refresh_token', (result as any).refresh_token)
-        }
+      // Don't store auth token yet - user needs to verify email first
+      // Token will be stored after email verification
+
+      // Store professional ID
+      if (result.professional.id) {
+        localStorage.setItem('professional_id', result.professional.id.toString())
       }
 
       // Clear session storage
       sessionStorage.removeItem('registerStep1')
 
       // Show success message
-      toast.success('Cadastro realizado com sucesso!', {
-        message: 'Bem-vindo ao HolisticMatch! Redirecionando para o dashboard...'
+      toast.success('Verifique seu e-mail!', {
+        message: 'Um link de verificação foi enviado para ' + step1Data.email
       })
 
-      // Navigate to dashboard after a short delay
+      // Redirect to email verification page with email as query parameter
       setTimeout(() => {
-        navigate('/dashboard')
-      }, 2000)
+        navigate(`/verify-email?email=${encodeURIComponent(step1Data.email)}`)
+      }, 1500)
 
     } catch (error: any) {
       console.error('Registration error:', error)
 
-      // Handle different error types
       if (error.response?.status === 400) {
-        // Validation errors
         const errors = error.response.data
         if (errors.email) {
           toast.error('E-mail já cadastrado', {
-            message: 'Este e-mail já está sendo usado. Tente fazer login ou use outro e-mail.'
+            message: 'Este e-mail já está sendo usado. Tente fazer login.'
           })
-        } else if (errors.phone) {
-          toast.error('Telefone inválido', {
-            message: 'Verifique o formato do telefone.'
-          })
-        } else if (errors.services) {
-          toast.error('Erro nos serviços', {
-            message: 'Verifique os dados dos serviços informados.'
+        } else if (errors.password) {
+          toast.error('Senha inválida', {
+            message: 'Verifique os requisitos de senha.'
           })
         } else {
           toast.error('Dados inválidos', {
@@ -370,22 +387,18 @@ function RegisterProfessionalPage() {
           })
         }
       } else if (error.response?.status === 409) {
-        // Conflict - email already exists
         toast.error('E-mail já cadastrado', {
-          message: 'Este e-mail já está sendo usado. Tente fazer login ou use outro e-mail.'
+          message: 'Este e-mail já está sendo usado. Tente fazer login.'
         })
       } else if (error.response?.status === 500) {
-        // Server error
         toast.error('Erro no servidor', {
           message: 'Ocorreu um erro interno. Tente novamente em alguns minutos.'
         })
       } else if (error.code === 'NETWORK_ERROR' || !error.response) {
-        // Network error
         toast.error('Erro de conexão', {
           message: 'Verifique sua conexão com a internet e tente novamente.'
         })
       } else {
-        // Generic error
         toast.error('Erro no cadastro', {
           message: error.message || 'Ocorreu um erro inesperado. Tente novamente.'
         })
@@ -491,6 +504,65 @@ function RegisterProfessionalPage() {
                 placeholder="000.000.000-00"
               />
 
+              {/* Estado */}
+              <FormSelect
+                label="Estado"
+                value={step1Data.state}
+                onChange={(value) => {
+                  handleStep1InputChange('state', value)
+                  // Reset city when state changes
+                  handleStep1InputChange('city', '')
+                }}
+                options={BRAZILIAN_STATES}
+                placeholder="Selecione seu estado"
+                error={errors.state}
+                required
+                helperText="Escolha o estado onde você atua"
+              />
+
+              {/* Cidade */}
+              <FormSelect
+                label="Cidade"
+                value={step1Data.city}
+                onChange={(value) => handleStep1InputChange('city', value)}
+                options={cities}
+                placeholder={
+                  step1Data.state
+                    ? citiesLoading
+                      ? 'Carregando cidades...'
+                      : 'Selecione sua cidade'
+                    : 'Selecione um estado primeiro'
+                }
+                error={errors.city || citiesError || undefined}
+                required
+                disabled={!step1Data.state || citiesLoading}
+                helperText={
+                  step1Data.state ? `${cities.length} cidades disponíveis` : 'Selecione um estado primeiro'
+                }
+              />
+
+              {/* Senha */}
+              <FormInput
+                label="Senha"
+                type="password"
+                value={step1Data.password}
+                onChange={(value) => handleStep1InputChange('password', value)}
+                error={errors.password}
+                placeholder="Mínimo 8 caracteres"
+                required
+              />
+
+              {/* Confirmação de Senha */}
+              <FormInput
+                label="Confirmar Senha"
+                type="password"
+                value={step1Data.passwordConfirm}
+                onChange={(value) => handleStep1InputChange('passwordConfirm', value)}
+                error={errors.passwordConfirm}
+                placeholder="Repita sua senha"
+                required
+              />
+
               {/* Foto de Perfil */}
               <FileUpload
                 label="Foto de Perfil"
@@ -545,9 +617,8 @@ function RegisterProfessionalPage() {
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
-                          <h5 className="font-medium text-gray-900">{service.serviceType}</h5>
-                          <p className="text-sm text-gray-600 mt-1">R$ {service.price.toFixed(2)}</p>
-                          <p className="text-sm text-gray-500 mt-2">{service.description}</p>
+                          <h5 className="font-medium text-gray-900">{service.service_type}</h5>
+                          <p className="text-sm text-gray-600 mt-1">R$ {service.price_per_session.toFixed(2)}</p>
                         </div>
                         <button
                           type="button"
@@ -573,8 +644,8 @@ function RegisterProfessionalPage() {
                       Tipo de Serviço
                     </label>
                     <select
-                      value={step2Data.newService.serviceType}
-                      onChange={(e) => handleStep2InputChange('serviceType', e.target.value)}
+                      value={step2Data.newService.service_type}
+                      onChange={(e) => handleStep2InputChange('service_type', e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                     >
                       <option value="">Selecione um serviço</option>
@@ -590,20 +661,11 @@ function RegisterProfessionalPage() {
                   <FormInput
                     label="Preço (R$)"
                     type="number"
-                    value={step2Data.newService.price || ''}
-                    onChange={(value) => handleStep2InputChange('price', parseFloat(value) || 0)}
+                    value={step2Data.newService.price_per_session || ''}
+                    onChange={(value) => handleStep2InputChange('price_per_session', parseFloat(value) || 0)}
                     placeholder="0.00"
                     min="0"
                     step="0.01"
-                  />
-
-                  {/* Description Textarea */}
-                  <FormTextarea
-                    label="Descrição do Serviço"
-                    value={step2Data.newService.description}
-                    onChange={(value) => handleStep2InputChange('description', value)}
-                    placeholder="Descreva o serviço oferecido..."
-                    rows={3}
                   />
 
                   {/* Add Service Button */}

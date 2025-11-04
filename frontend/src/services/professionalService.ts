@@ -52,6 +52,41 @@ export const professionalService = {
   },
 
   /**
+   * Create new professional profile with registration and password
+   */
+  async createProfessionalWithPassword(data: {
+    name: string
+    email: string
+    phone: string
+    password: string
+    services: string[]
+    price_per_session: number
+    city: string
+    state: string
+    attendance_type: string
+    whatsapp: string
+    bio: string
+    photo?: File
+  }): Promise<{ professional: Professional; token?: string; refresh_token?: string }> {
+    const professionalData = {
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      password: data.password, // Password will be handled by backend to create User
+      services: data.services,
+      bio: data.bio,
+      city: data.city,
+      state: data.state,
+      price_per_session: data.price_per_session,
+      attendance_type: data.attendance_type,
+      whatsapp: data.whatsapp,
+    }
+
+    const response = await api.post<{ professional: Professional; token?: string; refresh_token?: string }>('/professionals/', professionalData)
+    return response.data
+  },
+
+  /**
    * Create new professional profile with registration
    */
   async createProfessional(data: {
@@ -105,6 +140,26 @@ export const professionalService = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+    })
+    return response.data
+  },
+
+  /**
+   * Verify email with token (TASK 6.2)
+   */
+  async verifyEmailToken(token: string): Promise<{ message: string; email: string }> {
+    const response = await api.post<{ message: string; email: string }>('/professionals/verify-email/', {
+      token,
+    })
+    return response.data
+  },
+
+  /**
+   * Resend verification email (TASK 6.2)
+   */
+  async resendVerificationEmail(email: string): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>('/professionals/resend-verification/', {
+      email,
     })
     return response.data
   },

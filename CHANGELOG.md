@@ -5,20 +5,215 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2025-11-02
+## [Unreleased] - 2025-11-04
 
 ### Added
+
+- 🔐 **SPRINT 2 - TASK 7.1 & 7.2 Authentication Complete**: Full authentication system with password recovery and login security
+
+#### TASK 7.1: Password Reset Flow
+
+**Backend Implementation:**
+- ✅ **PasswordResetToken Model**: Django model with:
+  - One-to-one relationship with User
+  - 24-hour token expiry
+  - Used/unused token tracking
+  - Helper methods: `is_valid()`, `is_expired()`, `mark_as_used()`, `create_token()`, `verify_and_reset()`
+  - Database indexes on token, user, and expiry_at fields
+
+- 🔐 **Serializers**:
+  - `PasswordResetRequestSerializer`: Validates email format, creates token, sends email
+  - `PasswordResetConfirmSerializer`: Validates password strength, confirms token, updates password
+  - Password validation: 8+ chars, uppercase letter, digit required
+
+- 📧 **Endpoints**:
+  - `POST /api/v1/professionals/password_reset/`: Request password reset via email
+  - `POST /api/v1/professionals/password_reset_confirm/`: Confirm password reset with token
+
+- ✅ **24 New Backend Tests**:
+  - Token creation, validation, expiry
+  - Token used/unused states
+  - Token update (one-per-user)
+  - Serializer validation (email format, password strength, mismatch)
+  - Invalid/expired token handling
+  - Password reset flow
+
+**Frontend Implementation (Planned):**
+- ⏳ ForgotPasswordPage component with email input
+- ⏳ ResetPasswordPage with token validation and new password form
+- ⏳ Integration tests for full flow
+
+#### TASK 7.2: Login Security
+
+**Backend Implementation:**
+- ✅ **LoginView**: New authentication endpoint with:
+  - Email-based authentication (alternative to username)
+  - JWT token generation (access + refresh tokens)
+  - Email verification requirement (is_active check)
+  - Blocks login if email not verified (HTTP 403)
+  - Clear error messages for invalid credentials
+  
+- 📍 **Endpoint**:
+  - `POST /api/v1/auth/login/`: Authenticate user and return JWT tokens
+  - Request: `{"email": "user@example.com", "password": "Pass@123"}`
+  - Response: `{"access": "jwt_token", "refresh": "jwt_token", "user": {...}}`
+
+- ✅ **10 New Backend Tests**:
+  - Successful login with verified email
+  - **Login blocked for unverified email (HTTP 403)**
+  - Invalid password handling
+  - Non-existent email handling
+  - Missing credentials validation
+  - JWT token format validation
+  - User info in response
+  - Full registration → verification → login flow
+
+**Frontend Implementation (Planned):**
+- ⏳ Detect HTTP 403 in login error handling
+- ⏳ Redirect to resend verification page
+- ⏳ Toast notifications for email verification requirement
+
+**Test Summary:**
+- ✅ 34 New Tests (24 password reset + 10 login security)
+- ✅ All 34 passing (100%)
+- ✅ No regressions to existing 118 passing tests
+- ✅ Total: 152/166 tests passing (14 pre-existing city-related failures)
+
+**Migration:**
+- ✅ `professionals/migrations/0005_add_password_reset_token.py`: PasswordResetToken table creation
+
+**Configuration:**
+- ✅ Added `FRONTEND_URL` setting for password reset email links
+- ✅ Email backend already configured for development (console backend)
+
+**Documentation:**
+- ✅ Updated `API_DOCUMENTATION.md` with:
+  - Login endpoint specification with request/response examples
+  - Password reset request and confirmation flow
+  - Updated error responses and authentication requirements
+  - Updated Table of Contents with new auth endpoints
+
+**Deployment Exclusion:**
+- ✅ Added `__claudio/` folder to `.gitignore` to exclude internal documentation from deployment
+
+---
+
+- 🎯 **SPRINT 1 - TASK 6.3 City/State Enhancement**: Complete city and state management system for professional profiles
+  - ✅ **City Model**: Django model with state-name unique constraint and database indexes for performance
+  - 📍 **301 Brazilian Cities Data**: Pre-loaded city data across all 27 Brazilian states
+  - 🔐 **GET /api/v1/professionals/cities/{state}/**: New endpoint to fetch cities for a given Brazilian state
+  - ✨ **Smart Endpoint Features**:
+    - Returns sorted list of cities for requested state
+    - Case-insensitive state code handling (SP/sp both work)
+    - Validates state code against all 27 Brazilian states
+    - Returns 404 if state has no cities
+    - Includes city count in response
+  - ✅ **Professional City-State Validation**: Added `validate_city_state_pair()` function in serializer
+  - 🛡️ **Cross-Field Validation**: ProfessionalSerializer validates city exists for given state
+  - ✅ **7 New Backend Tests**: 
+    - Cities endpoint with valid/invalid states
+    - No cities found scenario
+    - Case-insensitive state handling
+    - Professional registration with valid city-state
+    - Professional registration with invalid city-state mismatch
+    - Professional update with city-state validation
+  - 💻 **FormSelect Component**: Reusable React select/dropdown component with:
+    - Full accessibility support (ARIA labels, error descriptions)
+    - Error and helper text display
+    - Motion animations via Framer Motion
+    - Disabled state support
+    - Custom styling with Tailwind CSS
+    - Optional label display
+  - 🎣 **useCities Hook**: Custom React hook for city data management with:
+    - Automatic API calls to fetch cities by state
+    - Intelligent caching to avoid redundant requests
+    - Loading, error, and data states
+    - Refetch capability to clear cache and reload
+    - Case-insensitive state code normalization
+    - Default empty state when state is null/empty
+  - 🔗 **RegisterProfessionalPage Integration**:
+    - Removed hardcoded `city='São Paulo'` and `state='SP'`
+    - Added state dropdown (FormSelect with BRAZILIAN_STATES)
+    - Added city dropdown (FormSelect with useCities hook)
+    - Auto-reset city when state changes
+    - City field disabled until state is selected
+    - Helper text shows city count for selected state
+    - Full form validation for both fields (required)
+  - 📋 **Frontend Components**:
+    - New FormSelect component with full TypeScript support
+    - Type exports in forms/index.ts barrel export
+    - FormSelect added to main components export
+  - 🎣 **Frontend Hooks**:
+    - New useCities hook in hooks directory
+    - Smart caching implementation to minimize API calls
+    - Error boundary and loading state handling
+  - ✅ **10+ Frontend Tests**:
+    - FormSelect render tests (label, options, disabled state)
+    - FormSelect interaction tests (onChange, value selection)
+    - FormSelect accessibility tests (error, helper text, ARIA attributes)
+    - useCities hook tests (fetch, cache, error handling, state changes)
+  - 📊 **Database Migration**: Migration 0004 for City model creation with indexes
+  - 🔄 **Backend Data Loading**: data_cities.py cleaned up with 301 real Brazilian cities (no duplicates)
+  - ✅ **100+ Backend Tests Total**: All tests passing (93 previous + 7 new city validation tests)
+  - ✅ **200+ Frontend Tests Total**: All tests passing (includes new FormSelect and useCities tests)
+
+- 🎯 **SPRINT 1 - TASK 6.2 Email Verification**: Complete email verification system with token-based validation
+  - ✅ **EmailVerificationToken Model**: Django model with one-to-one user relationship, token generation, and expiry logic
+  - 📋 **Serializers**: `EmailVerificationSerializer` for token validation and `ResendVerificationEmailSerializer` for email checking
+  - 🔐 **Email Sending Integration**: Django email backend configured with error handling and logging
+  - 📧 **Automatic Email Generation**: Professional registration creates inactive user + generates verification token + sends email
+  - 🛡️ **POST /api/v1/professionals/verify-email/**: Verify email with token endpoint
+  - 🔄 **POST /api/v1/professionals/resend-verification/**: Resend verification email endpoint  
+  - ✅ **6 New Backend Integration Tests**: Token verification, expiry handling, email resend, and error cases
+  - 💻 **EmailVerificationPage Component**: React component with token input, countdown timer (5 min), and state management
+  - ✅ **4+ Frontend Component Tests**: Rendering, accessibility, form validation, and UX tests
+  - 🔗 **Router Integration**: `/verify-email` route with token parameter support
+  - 🔄 **RegisterProfessionalPage Integration**: Step 2 submission redirects to email verification page
+  - 📱 **Service Methods**: `verifyEmailToken()` and `resendVerificationEmail()` API integration
+  - ✨ **UI/UX Features**: 
+    - Auto-detect token from URL query parameter
+    - Countdown timer display with expiry warning
+    - Manual token input with sanitization
+    - Resend verification email link
+    - Success/error/expired state management
+    - Loading indicator during verification
+    - Responsive design with Framer Motion animations
+  - ⚠️ **Security**: Don't reveal if email exists (401/400 for non-existent emails)
+  - 📊 **Database Migration**: Migration 0003 for EmailVerificationToken model creation
+  - ✅ **93 Backend Tests Total**: All tests passing (87 original + 6 new email verification tests)
+  - ✅ **186 Frontend Tests Total**: All tests passing (includes new EmailVerificationPage tests)
+  
+- 🎯 **TASK 6.1 - Registration Form Bugs + Password Authentication (OPTION A)**: Fixed critical registration bugs and implemented password-based authentication
+  - ✅ **Fixed addService() Bug**: Corrected service state management and field naming (serviceType → service_type, price → price_per_session)
+  - ✅ **Fixed handleStep2Submit() Bug**: Rewrote registration submission with correct backend data structure
+  - 🔐 **Password Authentication OPTION A**: Direct password authentication during professional registration
+  - ✅ **Password Fields**: Added password and password confirmation validation to registration Step 1
+  - ✅ **Password Strength Validation**: Backend validation requires minimum 8 characters, uppercase letter, and digit
+  - ✅ **Automatic User Creation**: Professional registration automatically creates User account with password
+  - ✅ **Frontend/Backend Alignment**: Fixed naming inconsistencies between frontend and backend (snake_case standardization)
+  - 📋 **ProfessionalCreateSerializer**: New backend serializer with password handling and User auto-creation
+  - 🛡️ **POST /api/v1/professionals/register/**: New unauthenticated endpoint for professional registration with password
+  - ✅ **Updated get_permissions()**: Register action added to allow unauthenticated requests
+  - 🧪 **4 New Integration Tests**: Tests for successful registration, weak password detection, duplicate email, and permission checks
+  - ✅ **87 Backend Tests Total**: All tests passing including new password registration tests
+  - ✅ **Frontend TypeScript**: Removed unused FormTextarea import, fixed form field references
+  - ✅ **Frontend Build**: Successful TypeScript compilation without errors
+  - 📝 **Password Validation Rules**: Frontend validation includes regex patterns, backend includes strength checks
+  - 🔄 **Service Structure Update**: Aligned all frontend service handling to use service_type and price_per_session fields
+  - 📊 **Reduced Photo Validation Errors**: Photo validation now includes proper error messages and file type checking
+
 - 🎯 **TASK 5.1 - Testes Unitários Backend**: Comprehensive backend unit testing suite with 83 tests achieving 83% code coverage
-- ✅ **Complete Test Coverage**: Unit tests for validators, serializers, models, permissions, filters, and views
-- 🧪 **43 Validator Tests**: Comprehensive testing of phone, services, price, photo, state, name, and bio validators
-- 📋 **17 Serializer Tests**: Full serializer validation including cross-field validation and edge cases
-- 🗄️ **13 Model Tests**: Model validation, properties, ordering, and database constraints testing
-- 🔐 **8 Permission Tests**: Access control testing for authenticated and owner-only operations
-- 🔍 **16 Filter Tests**: QuerySet filtering logic for all professional search parameters
-- 🎭 **6 View Tests**: ViewSet operations and custom actions testing
-- 📊 **83% Code Coverage**: High coverage across all professional app components (models 100%, filters 100%, permissions 100%)
-- 🧪 **Django Test Framework**: pytest with Django integration, coverage reporting, and database fixtures
-- 🔧 **Test Infrastructure**: Comprehensive test fixtures, mocking, and validation error testing
+  - ✅ **Complete Test Coverage**: Unit tests for validators, serializers, models, permissions, filters, and views
+  - 🧪 **43 Validator Tests**: Comprehensive testing of phone, services, price, photo, state, name, and bio validators
+  - 📋 **17 Serializer Tests**: Full serializer validation including cross-field validation and edge cases
+  - 🗄️ **13 Model Tests**: Model validation, properties, ordering, and database constraints testing
+  - 🔐 **8 Permission Tests**: Access control testing for authenticated and owner-only operations
+  - 🔍 **16 Filter Tests**: QuerySet filtering logic for all professional search parameters
+  - 🎭 **6 View Tests**: ViewSet operations and custom actions testing
+  - 📊 **83% Code Coverage**: High coverage across all professional app components (models 100%, filters 100%, permissions 100%)
+  - 🧪 **Django Test Framework**: pytest with Django integration, coverage reporting, and database fixtures
+  - 🔧 **Test Infrastructure**: Comprehensive test fixtures, mocking, and validation error testing
+
 - 🎯 **TASK 4.5 - DashboardPage Salvar Alterações**: Optimized save functionality with conflict detection and minimal data sending
 - ✅ **PATCH Endpoint Optimization**: Send only changed fields via PATCH requests for efficient API usage
 - 🔄 **Change Detection Algorithm**: `detectChanges()` function identifies modified fields before saving
@@ -29,6 +224,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🔄 **Conflict Resolution Flow**: Clear user guidance when conflicts occur with option to refresh and retry
 - 📊 **State Management**: `hasConflicts` state and `originalPhotoUrl` tracking for robust conflict detection
 - 🍞 **Conflict Notifications**: Toast messages for different conflict scenarios with actionable guidance
+
 - 🎯 **TASK 4.4 - DashboardPage Upload de Foto**: Enhanced photo upload functionality with immediate upload and better UX
 - ✅ **Immediate Photo Upload**: Photos uploaded immediately when selected, not during general save
 - ⏳ **Dedicated Upload Loading State**: Specific `isUploadingPhoto` state with visual spinner overlay

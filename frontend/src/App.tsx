@@ -4,6 +4,7 @@ import Header from './components/Header'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import RegisterProfessionalPage from './pages/RegisterProfessionalPage'
+import EmailVerificationPage from './pages/EmailVerificationPage'
 import ProfessionalDetailPage from './pages/ProfessionalDetailPage'
 import DashboardPage from './pages/DashboardPage'
 
@@ -16,6 +17,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterProfessionalPage />} />
+          <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/professionals/:id" element={<ProfessionalDetailPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
         </Routes>

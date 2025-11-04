@@ -3,6 +3,10 @@
 ## 📋 Table of Contents
 - [Overview](#overview)
 - [Authentication](#authentication)
+  - [Login Endpoint](#login-endpoint)
+  - [Password Reset Request](#password-reset-request)
+  - [Password Reset Confirmation](#password-reset-confirmation)
+  - [Permissions](#permissions)
 - [Base URL](#base-url)
 - [Response Format](#response-format)
 - [Error Handling](#error-handling)
@@ -48,12 +52,122 @@ Authorization: Bearer <your_jwt_token>
 ```
 
 ### Obtaining a Token
-Currently, authentication endpoints are not yet implemented in this phase. JWT tokens will be provided through the authentication system (Phase 4-5).
+
+#### Login Endpoint
+**POST** `/api/v1/auth/login/`
+
+Authenticate with email and password to receive JWT tokens.
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com",
+  "password": "Password@123"
+}
+```
+
+**Success Response (200)**:
+```json
+{
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "user": {
+    "id": 1,
+    "email": "user@example.com",
+    "username": "user@example.com"
+  }
+}
+```
+
+**Error Response (403 - Email not verified)**:
+```json
+{
+  "detail": "Por favor, verifique seu email antes de fazer login"
+}
+```
+
+**Error Response (401 - Invalid credentials)**:
+```json
+{
+  "detail": "Email ou senha inválidos"
+}
+```
+
+**Notes**:
+- Email must be verified before login is allowed (TASK 7.2: Login Security)
+- User receives both `access` (short-lived) and `refresh` (long-lived) tokens
+- Access token should be included in Authorization header: `Authorization: Bearer <access_token>`
+
+#### Password Reset Request
+**POST** `/api/v1/professionals/password_reset/`
+
+Request a password reset email.
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com"
+}
+```
+
+**Success Response (200)**:
+```json
+{
+  "detail": "Se este email estiver cadastrado, você receberá um link de reset de senha"
+}
+```
+
+**Notes**:
+- Response is the same whether email exists or not (security best practice)
+- Reset link expires after 24 hours
+- Link format: `https://frontend.com/reset-password?token=<token>`
+
+#### Password Reset Confirmation
+**POST** `/api/v1/professionals/password_reset_confirm/`
+
+Confirm password reset with new password.
+
+**Request Body**:
+```json
+{
+  "token": "token_from_email_link",
+  "password": "NewPassword@123",
+  "password_confirm": "NewPassword@123"
+}
+```
+
+**Success Response (200)**:
+```json
+{
+  "detail": "Senha atualizada com sucesso"
+}
+```
+
+**Error Response (400 - Invalid token)**:
+```json
+{
+  "token": ["Token inválido ou expirado"]
+}
+```
+
+**Error Response (400 - Password validation)**:
+```json
+{
+  "password": ["Senha deve conter pelo menos uma letra maiúscula"],
+  "password_confirm": ["Senhas não conferem"]
+}
+```
+
+**Notes**:
+- Password must be 8+ characters with uppercase letter and digit
+- Token can only be used once
+- Token expires after 24 hours
 
 ### Permissions
-- **Public Access**: Reading professional data (list, detail, service types)
+- **Public Access**: Reading professional data (list, detail, service types), password reset, login
 - **Authenticated Access**: Creating and managing professional profiles
 - **Ownership Required**: Updating/deleting professional profiles (owners only)
+- **Email Verification Required**: Login only allowed with verified email
 
 ## 🌐 Base URL
 
