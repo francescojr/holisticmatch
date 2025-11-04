@@ -6,7 +6,7 @@
 import React, { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 
-interface FormSelectProps {
+export interface FormSelectProps {
   label: string
   value: string
   onChange: (value: string) => void

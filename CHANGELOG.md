@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-11-04
 
+### Fixed
+
+- 🔧 **CI/CD Pipeline Fixes**:
+  - ✅ Added `freezegun==1.5.1` to backend `requirements.txt` (required by password reset tests)
+  - ✅ Fixed frontend TypeScript build issues:
+    - Added `beforeEach` import to `FormSelect.test.tsx` 
+    - Exported `FormSelectProps` interface from `FormSelect.tsx`
+    - Removed unused `container` variable from test
+    - Fixed `tsconfig.json`: Added test file exclusion (`**/*.test.ts`, `**/*.test.tsx`)
+    - Added `vitest/globals` types configuration
+    - Created `vitest.d.ts` for Jest-DOM matcher type definitions
+  - ✅ Frontend build now completes successfully: `✓ 459 modules transformed`
+  - ✅ Backend tests pass: `34 passed, 1 warning in 101.23s`
+
 ### Added
 
 - 🔐 **SPRINT 2 - TASK 7.1 & 7.2 Authentication Complete**: Full authentication system with password recovery and login security

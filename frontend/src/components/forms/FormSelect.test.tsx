@@ -2,7 +2,7 @@
  * FormSelect Component Tests
  * Tests for the FormSelect reusable component
  */
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { FormSelect } from './FormSelect'
 
@@ -132,7 +132,7 @@ describe('FormSelect Component', () => {
   })
 
   it('should apply error styles when error is present', () => {
-    const { container } = render(
+    render(
       <FormSelect
         label="Cidade"
         value=""
