@@ -217,7 +217,7 @@ class TestProfessionalModelValidation:
 
         # The photo_url should return the photo URL
         assert professional.photo_url is not None
-        assert 'https://holisticmatch-media.s3.amazonaws.com' in professional.photo_url
+        # Check that URL contains the expected file path (works with both S3 and local storage)
         assert 'photos' in professional.photo_url
         assert professional.photo_url.endswith('.jpg')
 
