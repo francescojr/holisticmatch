@@ -28,6 +28,7 @@ def valid_professional_data():
 class TestProfessionalSerializerValidation:
     """Test Professional serializer validations"""
 
+    @pytest.mark.django_db
     def test_valid_professional_serialization(self, valid_professional_data):
         """Test serializing valid professional data"""
         serializer = ProfessionalSerializer(data=valid_professional_data)
@@ -141,6 +142,7 @@ class TestProfessionalSerializerValidation:
         # Email validation will be handled by Django's EmailField
         assert 'email' in serializer.errors
 
+    @pytest.mark.django_db
     def test_optional_fields_allowed(self, valid_professional_data):
         """Test that optional fields work correctly"""
         # Test with empty phone/whatsapp
@@ -150,6 +152,7 @@ class TestProfessionalSerializerValidation:
         serializer = ProfessionalSerializer(data=data)
         assert serializer.is_valid()
 
+    @pytest.mark.django_db
     def test_case_insensitive_state_conversion(self, valid_professional_data):
         """Test state codes are converted to uppercase"""
         data = valid_professional_data.copy()
@@ -159,6 +162,7 @@ class TestProfessionalSerializerValidation:
         assert serializer.is_valid()
         assert serializer.validated_data['state'] == 'SP'
 
+    @pytest.mark.django_db
     def test_valid_services_all_types(self, valid_professional_data):
         """Test all valid service types are accepted"""
         data = valid_professional_data.copy()
@@ -187,6 +191,7 @@ class TestProfessionalSerializerValidation:
         expected_fields = ['id', 'name', 'services', 'city', 'state', 'price_per_session', 'attendance_type', 'photo_url']
         assert set(serializer.validated_data.keys()).issubset(set(expected_fields))
 
+    @pytest.mark.django_db
     def test_get_photo_url_method(self, valid_professional_data):
         """Test get_photo_url method returns photo URL"""
         from professionals.serializers import ProfessionalSerializer, ProfessionalSummarySerializer
@@ -257,6 +262,7 @@ class TestProfessionalSerializerValidation:
         with pytest.raises(serializers.ValidationError):
             serializer.validate_state('XX')  # Invalid state
 
+    @pytest.mark.django_db
     def test_cross_field_validation_different_phones(self, valid_professional_data):
         """Test cross-field validation with different phone numbers"""
         data = valid_professional_data.copy()
@@ -266,6 +272,7 @@ class TestProfessionalSerializerValidation:
         serializer = ProfessionalSerializer(data=data)
         assert serializer.is_valid(), f"Serializer errors: {serializer.errors}"
 
+    @pytest.mark.django_db
     def test_cross_field_validation_city_state_consistency(self, valid_professional_data):
         """Test city and state consistency validation"""
         data = valid_professional_data.copy()

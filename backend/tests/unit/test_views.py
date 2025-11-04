@@ -434,11 +434,7 @@ class TestProfessionalViewSet:
     @pytest.mark.django_db
     def test_cities_endpoint_case_insensitive(self, api_client):
         """Test cities endpoint accepts lowercase state code"""
-        from professionals.models import City
-        
-        City.objects.create(state='MG', name='Belo Horizonte')
-        
-        # Test with lowercase
+        # Test with lowercase - Belo Horizonte is already loaded in the test fixture
         response = api_client.get('/api/v1/professionals/cities/mg/')
         
         assert response.status_code == 200

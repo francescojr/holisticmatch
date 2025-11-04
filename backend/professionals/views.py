@@ -227,14 +227,14 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    @action(detail=False, methods=['get'], url_path='cities/(?P<state>[A-Z]{2})')
+    @action(detail=False, methods=['get'], url_path='cities/(?P<state>[A-Za-z]{2})')
     def cities(self, request, state=None):
         """
         GET /api/professionals/cities/{state}/
         Returns list of cities for a given Brazilian state
         
         Args:
-            state: Two-letter state code (e.g., 'SP', 'RJ', 'MG')
+            state: Two-letter state code (e.g., 'SP', 'RJ', 'MG') - case insensitive
         
         Returns:
             List of city names for the state, sorted alphabetically
