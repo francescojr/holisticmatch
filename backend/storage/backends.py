@@ -11,7 +11,7 @@ class ProfilePhotoStorage(S3Boto3Storage):
     Uploads to S3 with public-read ACL.
     """
     location = ''  # Root of bucket, not 'photos/'
-    default_acl = 'public-read'
+    default_acl = None  # Don't use ACLs for modern S3 buckets
     file_overwrite = False
     custom_domain = False
     querystring_auth = False  # Don't use signed URLs for public objects
