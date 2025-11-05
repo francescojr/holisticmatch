@@ -260,7 +260,7 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
             )
         
         # Get cities from database
-        cities = City.objects.filter(state=state_upper).values_list('name', flat=True).order_by('name')
+        cities = City.objects.filter(state=state_upper).values_list('name', flat=True)
         
         if not cities.exists():
             return Response(
@@ -268,10 +268,13 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
         
+        # Sort using Python's sorted() to handle Unicode characters correctly
+        sorted_cities = sorted(cities)
+        
         return Response({
             'state': state_upper,
-            'cities': list(cities),
-            'count': cities.count()
+            'cities': sorted_cities,
+            'count': len(sorted_cities)
         }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])

@@ -19,7 +19,7 @@ SERVICE_TYPES = [
 
 # Attendance type choices
 ATTENDANCE_CHOICES = [
-    ('home', 'Domicílio'),
-    ('office', 'Espaço Próprio'),
-    ('both', 'Ambos'),
+    ('presencial', 'Presencial'),
+    ('online', 'Online'),
+    ('ambos', 'Ambos'),
 ]

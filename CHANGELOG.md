@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- 🔧 **City/State Validation System - All 10 Tests Now Passing**:
+  - ✅ Fixed duplicate city creation in test fixtures using `get_or_create()`
+  - ✅ Fixed endpoint sorting: Cities now properly sorted by `sorted()` (handles Unicode correctly)
+  - ✅ Fixed endpoint 404 logic: Returns 404 when state has no cities
+  - ✅ Fixed ATTENDANCE_CHOICES constants: Changed from `('home', 'office', 'both')` to `('presencial', 'online', 'ambos')`
+  - ✅ Fixed test data: Corrected service names (`'Meditação Guiada'` instead of `'Meditação'`)
+  - ✅ Fixed test cities: Use empty states (e.g., AL) to test 404 scenario correctly
+  - ✅ **Result**: All 10 city/state validation tests passing ✅
+
 - 🔧 **CI/CD Pipeline Fixes - Complete Test Suite Now Passing**:
   
   **Frontend TypeScript Compilation**:

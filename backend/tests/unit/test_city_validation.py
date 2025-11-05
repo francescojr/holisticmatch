@@ -16,11 +16,16 @@ def api_client():
 
 @pytest.fixture
 def city_data():
-    """Create test city data"""
-    City.objects.create(state='SP', name='São Paulo')
-    City.objects.create(state='SP', name='Campinas')
-    City.objects.create(state='RJ', name='Rio de Janeiro')
-    City.objects.create(state='MG', name='Belo Horizonte')
+    """Create test city data using get_or_create to avoid duplicates"""
+    cities_to_create = [
+        ('SP', 'São Paulo'),
+        ('SP', 'Campinas'),
+        ('RJ', 'Rio de Janeiro'),
+        ('MG', 'Belo Horizonte'),
+    ]
+    
+    for state, name in cities_to_create:
+        City.objects.get_or_create(state=state, name=name)
     
     return {
         'SP': ['São Paulo', 'Campinas'],
@@ -120,11 +125,11 @@ class TestCityStateValidation:
                 'name': 'Maria Silva',
                 'phone': '(21) 99999-9999',
                 'bio': 'Especialista em Reiki com mais de 10 anos de experiência em terapias holísticas.',
-                'services': ['Meditação'],
+                'services': ['Meditação Guiada'],
                 'price_per_session': 120.00,
                 'city': 'Rio de Janeiro',
                 'state': 'RJ',
-                'attendance_type': 'online',
+                'attendance_type': 'presencial',
                 'whatsapp': '(21) 98888-8888',
             },
             format='json'
