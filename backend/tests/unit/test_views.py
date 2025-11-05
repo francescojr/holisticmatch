@@ -217,10 +217,7 @@ class TestProfessionalViewSet:
 
     @pytest.mark.django_db
     def test_register_action_duplicate_email(self, api_client, user):
-        """Test registration succeeds even if another Professional has same email (edge case)"""
-        # Note: The unique constraint is on User.email, not Professional.email
-        # This test checks that two different Professionals cannot share the same User email
-        
+        """Test registration fails with duplicate email - validates unique constraint"""
         # Try to register with an email that's already used by a User
         data = {
             'name': 'Another Professional',
@@ -237,12 +234,10 @@ class TestProfessionalViewSet:
         
         response = api_client.post('/api/v1/professionals/register/', data, format='json')
         
-        # Should fail because email is already taken
-        # This depends on the User model's email field being unique
-        assert response.status_code == 400 or response.status_code == 201  # May depend on DB integrity checks
-        
-        if response.status_code == 400:
-            assert 'email' in response.data or 'non_field_errors' in response.data
+        # Must fail with 400 (not 500 IntegrityError)
+        assert response.status_code == 400, f"Expected 400, got {response.status_code}. Response: {response.data}"
+        # Must have email field or non_field_errors
+        assert 'email' in response.data or 'non_field_errors' in response.data
 
     @pytest.mark.django_db
     def test_register_action_allows_any(self, api_client):
@@ -267,6 +262,35 @@ class TestProfessionalViewSet:
         # Should succeed (201) or fail validation (400), but NOT 401 (Unauthorized)
         assert response.status_code in [201, 400]
         assert response.status_code != 401
+
+    @pytest.mark.django_db
+    def test_register_returns_jwt_tokens(self, api_client):
+        """Test that register action returns JWT access and refresh tokens"""
+        data = {
+            'name': 'JWT Test Professional',
+            'email': 'jwt@example.com',
+            'password': 'SecurePass123',
+            'bio': 'A bio with at least 50 characters to pass validation. This is a longer bio that should satisfy the minimum.',
+            'services': ['Reiki'],
+            'city': 'São Paulo',
+            'state': 'SP',
+            'price_per_session': 150.00,
+            'attendance_type': 'presencial',
+            'whatsapp': '11999999999',
+        }
+        
+        response = api_client.post('/api/v1/professionals/register/', data, format='json')
+        
+        assert response.status_code == 201
+        # Verify JWT tokens are present
+        assert 'access' in response.data, "JWT access token missing from register response"
+        assert 'refresh' in response.data, "JWT refresh token missing from register response"
+        # Verify tokens are non-empty strings
+        assert isinstance(response.data['access'], str) and len(response.data['access']) > 0
+        assert isinstance(response.data['refresh'], str) and len(response.data['refresh']) > 0
+        # Verify User was created but is inactive (pending email verification)
+        user = User.objects.get(email='jwt@example.com')
+        assert user.is_active is False, "New user should be inactive until email verification"
 
     @pytest.mark.django_db
     def test_verify_email_action_success(self, api_client):

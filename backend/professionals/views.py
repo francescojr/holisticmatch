@@ -73,18 +73,38 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
         """
         POST /api/professionals/register/
         Register a new professional with password authentication
-        Creates user account automatically
+        Creates user account automatically and returns JWT tokens
         """
-        serializer = ProfessionalCreateSerializer(data=request.data)
+        from rest_framework_simplejwt.tokens import RefreshToken
+        from django.db import IntegrityError
+        
+        serializer = ProfessionalCreateSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
-            professional = serializer.save()
-            return Response(
-                {
-                    'message': 'Profissional criado com sucesso',
-                    'professional': ProfessionalSerializer(professional).data,
-                },
-                status=status.HTTP_201_CREATED
-            )
+            try:
+                professional = serializer.save()
+                
+                # Generate JWT tokens for immediate use
+                # Note: User is inactive until email verification
+                # Login endpoint will enforce is_active check
+                refresh = RefreshToken.for_user(professional.user)
+                
+                return Response(
+                    {
+                        'message': 'Profissional criado com sucesso. Verifique seu email para ativar a conta.',
+                        'professional': ProfessionalSerializer(professional).data,
+                        'access': str(refresh.access_token),
+                        'refresh': str(refresh),
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+            except IntegrityError as e:
+                # Handle race condition: email registered between validation and creation
+                if 'email' in str(e).lower():
+                    return Response(
+                        {'email': 'Este email já está registrado'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                raise
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny], url_path='verify-email')

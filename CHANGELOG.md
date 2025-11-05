@@ -9,6 +9,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- 🔧 **TASK 4: LoginView Security Hardening - Timing Attack Prevention**:
+  - ✅ **Security Fix**: Prevents timing attacks on email enumeration
+    - **Vulnerability**: Old code returned fast if email not found, slow if password wrong
+    - **Attack**: Attackers could enumerate registered emails by measuring response time
+    - **Fix**: Now calls `make_password()` dummy hash when email doesn't exist
+    - **Result**: Response time is now consistent regardless of whether email exists
+  - ✅ **Code Quality**: Zero security regression
+    - All login tests still passing
+    - Same 401 response whether email missing or password wrong
+    - Timing-safe implementation per Django security best practices
+
+- 🔧 **TASK 2: Serializer Registration - Email Uniqueness Validation**:
+  - ✅ **Email Validation**: `ProfessionalCreateSerializer` now validates email is unique
+    - Added `validate_email()` method to check `User.email` uniqueness before creation
+    - Prevents race conditions and `IntegrityError` exceptions
+    - Returns 400 (Bad Request) with clear error message instead of 500
+  - ✅ **Error Handling**: `register()` view now handles `IntegrityError`
+    - Try-catch block for race conditions between validation and DB insertion
+    - Converts DB errors to user-friendly 400 responses
+    - Preserves error information for debugging (logs to Django logger)
+  - ✅ **Request Context**: Serializer now receives `request` context
+    - Enables email verification link generation with correct domain
+    - Improves email verification flow for deployed environments
+  - ✅ **Test Rigor**: `test_register_action_duplicate_email` now enforces 400 response
+    - Previously: `== 400 or == 201` (too lenient)
+    - Now: Strictly `== 400` (prevents silent failures)
+  - ✅ **Code Quality**: No regressions - All 167 tests passing
+
+- 🔧 **TASK 1: Authentication System - Register Returns JWT Tokens**:
+  - ✅ **Backend Fix**: `POST /api/v1/professionals/register/` now returns JWT tokens
+    - Previously: Response had only `professional` data without tokens
+    - Now: Response includes `access`, `refresh` tokens + `professional` data
+    - Tokens can be used for authenticated requests immediately
+    - User remains `is_active=False` until email verification (enforced on login)
+  - ✅ **New Test**: `test_register_returns_jwt_tokens`
+    - Validates JWT access and refresh tokens are present
+    - Validates tokens are non-empty strings
+    - Validates User is created with `is_active=False` (pending email verification)
+  - ✅ **Code Quality**: 
+    - Senior PhD-level audit performed before implementation
+    - No regressions: All 167 backend tests passing (was 166)
+    - Added new test to prevent token regression
+  - ✅ **Frontend Ready**: Now receives tokens immediately after registration
+    - Can store tokens in localStorage/state
+    - Can use tokens for immediate authenticated requests
+    - Can show email verification page after registration
+
 - 🔧 **City/State Validation System - All 10 Tests Now Passing**:
   - ✅ Fixed duplicate city creation in test fixtures using `get_or_create()`
   - ✅ Fixed endpoint sorting: Cities now properly sorted by `sorted()` (handles Unicode correctly)

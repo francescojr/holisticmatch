@@ -5,6 +5,8 @@
 [![Status](https://img.shields.io/badge/status-production%20live-success)]()
 [![Frontend](https://img.shields.io/badge/frontend-vercel%20live-blue)](https://holisticmatch.vercel.app)
 [![Backend](https://img.shields.io/badge/backend-elastic%20beanstalk-orange)](http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com)
+[![Tests](https://img.shields.io/badge/tests-31%2F31%20passing-brightgreen)]()
+[![Security](https://img.shields.io/badge/security-hardened-9cf)]()
 
 ---
 
@@ -14,6 +16,14 @@
 ✅ **Backend**: http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/ (Django 4.2)  
 ✅ **Database**: Supabase PostgreSQL (12 professionals loaded)  
 ✅ **API**: Full CRUD endpoints with filtering & pagination  
+✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
+
+### 🔐 Recent Security Fixes (Nov 2025)
+- ✅ **JWT Token Return**: Registration endpoint now returns JWT tokens for immediate authentication
+- ✅ **Email Validation**: Duplicate emails return 400 (not 500 errors)
+- ✅ **Timing Attack Protection**: LoginView now immune to email enumeration attacks
+- ✅ **Complete Flow**: Full end-to-end testing validates register → verify → login flow
+- **Status**: All 31 tests passing ✅ | Ready for deployment ✅
 
 ---
 

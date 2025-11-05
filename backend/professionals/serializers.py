@@ -253,6 +253,12 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         except DjangoValidationError as e:
             raise serializers.ValidationError(e.message)
     
+    def validate_email(self, value):
+        """Validate email is unique (not already registered)"""
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError('Este email já está registrado')
+        return value
+    
     def validate(self, data):
         """Cross-field validation including city-state pair"""
         # Validate city and state pair

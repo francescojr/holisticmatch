@@ -65,6 +65,10 @@ class LoginView(views.APIView):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
+            # Use a dummy hash to prevent timing attacks
+            # This makes the response time similar whether user exists or not
+            from django.contrib.auth.hashers import make_password
+            make_password(password)  # Simulate password check timing
             return Response(
                 {'detail': 'Email ou senha inválidos'},
                 status=status.HTTP_401_UNAUTHORIZED
