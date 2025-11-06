@@ -189,17 +189,28 @@ function RegisterProfessionalPage() {
 
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('[RegisterPage.Step1] 📝 Step 1 form submitted')
 
     if (!validateStep1Form()) {
+      console.log('[RegisterPage.Step1] ❌ Validation failed')
       toast.error('Por favor, corrija os erros no formulário')
       return
     }
 
+    console.log('[RegisterPage.Step1] ✅ Validation passed')
     setLoading(true)
 
     try {
+      console.log('[RegisterPage.Step1] 📝 Preparing Step 1 data...')
+      console.log('[RegisterPage.Step1]    Name:', step1Data.fullName)
+      console.log('[RegisterPage.Step1]    Email:', step1Data.email)
+      console.log('[RegisterPage.Step1]    State:', step1Data.state)
+      console.log('[RegisterPage.Step1]    City:', step1Data.city)
+      console.log('[RegisterPage.Step1]    Photo:', step1Data.photo ? '✅ present' : '❌ not present')
+
       // For now, just show success and navigate to next step
       // In a real implementation, this would validate email uniqueness
+      console.log('[RegisterPage.Step1] 💾 Storing Step 1 data to sessionStorage...')
       toast.success('Dados validados com sucesso!', {
         message: 'Prosseguindo para o próximo passo...'
       })
@@ -210,10 +221,15 @@ function RegisterProfessionalPage() {
         photo: step1Data.photo ? { name: step1Data.photo.name, size: step1Data.photo.size } : null
       }))
 
+      console.log('[RegisterPage.Step1] ✅ Step 1 data stored')
+      
       // Navigate to next step
+      console.log('[RegisterPage.Step1] 🎯 Navigating to Step 2...')
       setCurrentStep(2)
+      console.log('[RegisterPage.Step1] 🎉 Step 1 complete!')
 
     } catch (error: any) {
+      console.error('[RegisterPage.Step1] ❌ Error in Step 1:', error.message)
       toast.error('Erro na validação', {
         message: error.message || 'Ocorreu um erro inesperado'
       })
@@ -299,15 +315,20 @@ function RegisterProfessionalPage() {
 
   const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('[RegisterPage.Step2] 📝 Step 2 form submitted')
 
     if (!validateStep2Form()) {
+      console.log('[RegisterPage.Step2] ❌ Services validation failed')
       return
     }
 
+    console.log('[RegisterPage.Step2] ✅ Services validation passed')
     setLoading(true)
 
     try {
       // Prepare data for API - matching backend schema exactly
+      console.log('[RegisterPage.Step2] 📦 Preparing registration data...')
+      
       const registrationData = {
         name: step1Data.fullName,
         email: step1Data.email,
@@ -323,7 +344,15 @@ function RegisterProfessionalPage() {
         ...(step1Data.photo && { photo: step1Data.photo })
       }
 
+      console.log('[RegisterPage.Step2] 📊 Registration data prepared:')
+      console.log('[RegisterPage.Step2]    Email:', registrationData.email)
+      console.log('[RegisterPage.Step2]    Name:', registrationData.name)
+      console.log('[RegisterPage.Step2]    Services:', registrationData.services.join(', '))
+      console.log('[RegisterPage.Step2]    City:', registrationData.city, registrationData.state)
+      console.log('[RegisterPage.Step2]    Photo:', step1Data.photo ? '✅ will be uploaded' : '❌ no photo')
+
       // Show loading message
+      console.log('[RegisterPage.Step2] 🚀 Calling API to create professional...')
       toast.info('Criando seu perfil profissional...', {
         message: 'Por favor, aguarde enquanto processamos seu cadastro.'
       })
@@ -331,16 +360,22 @@ function RegisterProfessionalPage() {
       // Create professional profile with password
       const result = await professionalService.createProfessionalWithPassword(registrationData)
 
+      console.log('[RegisterPage.Step2] ✅ Professional created successfully!')
+      console.log('[RegisterPage.Step2] 🆔 Professional ID:', result.professional.id)
+      console.log('[RegisterPage.Step2] 👤 User ID:', result.professional.id)
+
       // If photo exists, upload it separately
       if (step1Data.photo && result.professional.id) {
         try {
+          console.log('[RegisterPage.Step2] 📸 Uploading photo...')
           toast.info('Fazendo upload da foto...', {
             message: 'Quase lá!'
           })
 
           await professionalService.uploadProfessionalPhoto(result.professional.id, step1Data.photo)
+          console.log('[RegisterPage.Step2] ✅ Photo uploaded successfully')
         } catch (photoError: any) {
-          console.warn('Photo upload failed, but professional was created:', photoError)
+          console.warn('[RegisterPage.Step2] ⚠️ Photo upload failed, but professional was created:', photoError.message)
           toast.warning('Perfil criado, mas houve um problema com a foto', {
             message: 'Você pode fazer upload da foto depois no seu perfil.'
           })
@@ -352,53 +387,67 @@ function RegisterProfessionalPage() {
 
       // Store professional ID
       if (result.professional.id) {
+        console.log('[RegisterPage.Step2] 💾 Storing professional_id:', result.professional.id)
         localStorage.setItem('professional_id', result.professional.id.toString())
       }
 
       // Clear session storage
       sessionStorage.removeItem('registerStep1')
+      console.log('[RegisterPage.Step2] 🧹 Cleared session storage')
 
       // Show success message
+      console.log('[RegisterPage.Step2] 🎉 Registration complete! Redirecting to email verification...')
       toast.success('Verifique seu e-mail!', {
         message: 'Um link de verificação foi enviado para ' + step1Data.email
       })
 
       // Redirect to email verification page with email as query parameter
       setTimeout(() => {
+        console.log('[RegisterPage.Step2] 🔄 Redirecting to /verify-email')
         navigate(`/verify-email?email=${encodeURIComponent(step1Data.email)}`)
       }, 1500)
 
     } catch (error: any) {
-      console.error('Registration error:', error)
+      console.error('[RegisterPage.Step2] ❌ Registration error!')
+      console.error('[RegisterPage.Step2] Status:', error.response?.status)
+      console.error('[RegisterPage.Step2] Data:', error.response?.data)
+      console.error('[RegisterPage.Step2] Message:', error.message)
 
       if (error.response?.status === 400) {
         const errors = error.response.data
         if (errors.email) {
+          console.warn('[RegisterPage.Step2] Email already exists')
           toast.error('E-mail já cadastrado', {
             message: 'Este e-mail já está sendo usado. Tente fazer login.'
           })
         } else if (errors.password) {
+          console.warn('[RegisterPage.Step2] Invalid password')
           toast.error('Senha inválida', {
             message: 'Verifique os requisitos de senha.'
           })
         } else {
+          console.warn('[RegisterPage.Step2] Invalid data:', errors)
           toast.error('Dados inválidos', {
             message: 'Verifique os dados informados e tente novamente.'
           })
         }
       } else if (error.response?.status === 409) {
+        console.warn('[RegisterPage.Step2] Conflict: email already registered')
         toast.error('E-mail já cadastrado', {
           message: 'Este e-mail já está sendo usado. Tente fazer login.'
         })
       } else if (error.response?.status === 500) {
+        console.warn('[RegisterPage.Step2] Server error')
         toast.error('Erro no servidor', {
           message: 'Ocorreu um erro interno. Tente novamente em alguns minutos.'
         })
       } else if (error.code === 'NETWORK_ERROR' || !error.response) {
+        console.warn('[RegisterPage.Step2] Network error')
         toast.error('Erro de conexão', {
           message: 'Verifique sua conexão com a internet e tente novamente.'
         })
       } else {
+        console.warn('[RegisterPage.Step2] Unknown error:', error.message)
         toast.error('Erro no cadastro', {
           message: error.message || 'Ocorreu um erro inesperado. Tente novamente.'
         })

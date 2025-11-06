@@ -33,37 +33,51 @@ function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log('[LoginPage] 🚀 Login form submitted')
+    console.log('[LoginPage] 📧 Email:', email)
+    
     setError('')
     setLoading(true)
 
     try {
+      console.log('[LoginPage] 🔐 Calling login from auth context...')
       // Call login from auth context (which calls authService.login)
       await login({ email, password })
       
+      console.log('[LoginPage] ✅ Login successful!')
+      console.log('[LoginPage] 🧹 Clearing verification flag...')
       // Clear verified email flag
       localStorage.removeItem('just_verified_email')
       
+      console.log('[LoginPage] 🔄 Navigating to dashboard...')
       // Navigate to dashboard on successful login
       navigate('/dashboard')
     } catch (err: any) {
+      console.error('[LoginPage] ❌ Login error!')
+      console.error('[LoginPage] Status:', err.response?.status)
+      console.error('[LoginPage] Data:', err.response?.data)
+      console.error('[LoginPage] Message:', err.message)
+      
       // Handle specific error messages from backend
       const errorMessage = err.response?.data?.detail || err.message || 'Erro ao fazer login'
+      console.warn('[LoginPage] Error message:', errorMessage)
       
       // Check if error is due to unverified email (403)
       if (err.response?.status === 403 && errorMessage.toLowerCase().includes('email')) {
+        console.warn('[LoginPage] Email not verified')
         setError('Por favor, verifique seu email antes de fazer login')
         toast.info('Email não verificado', {
           message: 'Procure pela mensagem de verificação em seu email ou solicite um novo código'
         })
         // Optionally redirect to verify page
         setTimeout(() => {
+          console.log('[LoginPage] 🔄 Redirecting to verify-email...')
           navigate('/verify-email', { replace: false })
         }, 3000)
       } else {
+        console.warn('[LoginPage] Setting error state:', errorMessage)
         setError(errorMessage)
       }
-      
-      console.error('Login error:', err)
     } finally {
       setLoading(false)
     }

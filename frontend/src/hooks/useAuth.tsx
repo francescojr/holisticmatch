@@ -25,20 +25,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if user is authenticated on mount
     const checkAuth = async () => {
       try {
+        console.log('[useAuth.checkAuth] 🔍 Checking authentication status on mount...')
+        
         if (authService.isAuthenticated()) {
+          console.log('[useAuth.checkAuth] ✅ Token found, fetching user profile...')
+          
           // Try to fetch user profile from API
           const userProfile = await authService.getCurrentUser()
+          
           if (userProfile) {
+            console.log('[useAuth.checkAuth] ✅ User profile loaded:', userProfile.email)
             setUser(userProfile)
           } else {
+            console.warn('[useAuth.checkAuth] ⚠️ API endpoint returned no user, using minimal data')
             // If API endpoint doesn't exist, user is still authenticated but we'll use minimal data
             setUser({ id: 0, email: '' })
           }
+        } else {
+          console.log('[useAuth.checkAuth] ℹ️ No authentication token found')
         }
-      } catch (error) {
-        console.error('Failed to check auth:', error)
+      } catch (error: any) {
+        console.error('[useAuth.checkAuth] ❌ Failed to check auth:', error.message)
         // On error, still mark as loading done
       } finally {
+        console.log('[useAuth.checkAuth] ✅ Auth check complete, loading = false')
         setIsLoading(false)
       }
     }
@@ -47,22 +57,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async (credentials: LoginRequest) => {
+    console.log('[useAuth.login] 🚀 Calling authService.login...')
     const response = await authService.login(credentials)
+    console.log('[useAuth.login] ✅ Login response received, setting user:', response.user?.email)
     setUser(response.user)
+    console.log('[useAuth.login] 👤 User state updated')
   }
 
   const register = async (data: RegisterRequest) => {
+    console.log('[useAuth.register] 🚀 Calling authService.register...')
     const response = await authService.register(data)
-    setUser({
+    console.log('[useAuth.register] ✅ Register response received')
+    console.log('[useAuth.register] 📊 User ID:', response.user_id)
+    console.log('[useAuth.register] 📊 Professional ID:', response.professional_id)
+    
+    const newUser = {
       id: response.user_id,
       email: data.email,
       professional_id: response.professional_id,
-    })
+    }
+    setUser(newUser)
+    console.log('[useAuth.register] 👤 User state updated')
   }
 
   const logout = async () => {
+    console.log('[useAuth.logout] 🚀 Calling authService.logout...')
     await authService.logout()
+    console.log('[useAuth.logout] ✅ Logout complete, clearing user state')
     setUser(null)
+    console.log('[useAuth.logout] 👤 User state cleared')
   }
 
   return (
