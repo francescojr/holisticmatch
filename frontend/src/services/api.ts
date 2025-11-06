@@ -1,8 +1,22 @@
 /**
  * Axios API client configuration
  * Base setup for all API calls with authentication
+ * Includes request/response interceptors for auth and error handling
  */
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
+import { parseApiError, logError } from '../utils/errorHandler'
+
+// Store reference to error handler callback
+// Set by App.tsx after ErrorHandler is initialized
+let errorHandlerCallback: ((error: { title: string; message: string; type: 'error' | 'warning' | 'info' }) => void) | null = null
+
+/**
+ * Register error handler callback for displaying errors via toast
+ * Called during app initialization
+ */
+export const registerErrorHandler = (callback: (error: { title: string; message: string; type: 'error' | 'warning' | 'info' }) => void) => {
+  errorHandlerCallback = callback
+}
 
 // Always use /api which Vercel will proxy to backend
 // DO NOT use environment variables as they get hardcoded during build
@@ -31,7 +45,7 @@ api.interceptors.request.use(
   }
 )
 
-// Response interceptor - handle token refresh
+// Response interceptor - handle token refresh and API errors
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -64,10 +78,21 @@ api.interceptors.response.use(
         // Refresh failed - clear tokens and redirect to login
         localStorage.removeItem('access_token')
         localStorage.removeItem('refresh_token')
+        localStorage.removeItem('professional_id')
+        localStorage.removeItem('just_verified_email')
         window.location.href = '/login'
         return Promise.reject(refreshError)
       }
     }
+
+    // Parse error and display via toast (if handler is registered)
+    const appError = parseApiError(error)
+    
+    if (errorHandlerCallback) {
+      errorHandlerCallback(appError)
+    }
+    
+    logError(error, 'API Response Error')
 
     return Promise.reject(error)
   }

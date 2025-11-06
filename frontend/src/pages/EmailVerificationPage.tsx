@@ -67,24 +67,29 @@ function EmailVerificationPage() {
       const result = await professionalService.verifyEmailToken(tokenToVerify)
       setEmail(result.email)
       setState('success')
+      
+      // Store email in localStorage for login redirect
+      localStorage.setItem('just_verified_email', result.email)
+      
       toast.success('Email verificado com sucesso!', {
-        message: 'Redirecionando para login...'
+        message: 'Você pode fazer login agora'
       })
       
-      // Redirect to login after 2 seconds
+      // Redirect to login after 3 seconds
       setTimeout(() => {
+        localStorage.removeItem('just_verified_email')
         navigate('/login')
-      }, 2000)
+      }, 3000)
     } catch (error: any) {
       console.error('Email verification error:', error)
-      setErrorMessage(
+      const errorMsg = 
         error.response?.data?.message ||
         error.response?.data?.error ||
         'Token inválido ou expirado'
-      )
+      setErrorMessage(errorMsg)
       setState('error')
       toast.error('Falha na verificação', {
-        message: errorMessage
+        message: errorMsg
       })
     }
   }

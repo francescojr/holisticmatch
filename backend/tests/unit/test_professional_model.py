@@ -234,6 +234,9 @@ class TestProfessionalModelValidation:
     @pytest.mark.django_db
     def test_model_ordering(self, valid_user):
         """Test that professionals are ordered by created_at descending"""
+        # Clear any existing professionals to ensure consistent test state
+        Professional.objects.all().delete()
+        
         # Create professionals with different creation times
         prof1 = Professional.objects.create(
             user=valid_user,

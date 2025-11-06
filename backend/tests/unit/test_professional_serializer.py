@@ -25,10 +25,10 @@ def valid_professional_data():
     }
 
 
+@pytest.mark.django_db
 class TestProfessionalSerializerValidation:
     """Test Professional serializer validations"""
 
-    @pytest.mark.django_db
     def test_valid_professional_serialization(self, valid_professional_data):
         """Test serializing valid professional data"""
         serializer = ProfessionalSerializer(data=valid_professional_data)
@@ -171,6 +171,7 @@ class TestProfessionalSerializerValidation:
         serializer = ProfessionalSerializer(data=data)
         assert serializer.is_valid()
 
+    @pytest.mark.django_db
     def test_duplicate_services_rejected(self, valid_professional_data):
         """Test duplicate services are rejected"""
         data = valid_professional_data.copy()

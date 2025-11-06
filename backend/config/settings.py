@@ -204,3 +204,33 @@ FRONTEND_URL = config(
     'FRONTEND_URL',
     default='http://localhost:5173'
 )
+
+# ============================================================================
+# PYTEST PERFORMANCE OPTIMIZATION
+# ============================================================================
+import os
+
+# Check if running pytest
+IS_PYTEST_TEST = 'pytest' in os.environ.get('_', '') or 'pytest' in ' '.join(__import__('sys').argv)
+
+if IS_PYTEST_TEST:
+    # Use SQLite in-memory for tests instead of PostgreSQL (massive speed improvement)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': ':memory:',
+            'ATOMIC_REQUESTS': False,
+        }
+    }
+    
+    # Faster password hashing for test speed
+    PASSWORD_HASHERS = [
+        'django.contrib.auth.hashers.MD5PasswordHasher',
+    ]
+    
+    # Disable unnecessary middleware during tests
+    MIDDLEWARE = [m for m in MIDDLEWARE if m not in [
+        'corsheaders.middleware.CorsMiddleware',
+    ]]
+
+

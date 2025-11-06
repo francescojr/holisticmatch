@@ -36,7 +36,7 @@ class TestCompleteAuthenticationFlow:
         print("\n[STEP 1] Registering new professional...")
         
         register_data = {
-            'name': 'E2E Test Professional',
+            'name': 'Profissional Teste',
             'email': test_email,
             'password': test_password,
             'bio': 'A bio with at least 50 characters to pass validation. This is a longer bio that should satisfy the minimum.',

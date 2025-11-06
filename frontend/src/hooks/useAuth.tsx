@@ -23,13 +23,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Check if user is authenticated on mount
-    const checkAuth = () => {
-      if (authService.isAuthenticated()) {
-        // TODO: Fetch user profile from API
-        // For now, just mark as authenticated
-        setUser({ id: 0, email: '' })
+    const checkAuth = async () => {
+      try {
+        if (authService.isAuthenticated()) {
+          // Try to fetch user profile from API
+          const userProfile = await authService.getCurrentUser()
+          if (userProfile) {
+            setUser(userProfile)
+          } else {
+            // If API endpoint doesn't exist, user is still authenticated but we'll use minimal data
+            setUser({ id: 0, email: '' })
+          }
+        }
+      } catch (error) {
+        console.error('Failed to check auth:', error)
+        // On error, still mark as loading done
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
 
     checkAuth()

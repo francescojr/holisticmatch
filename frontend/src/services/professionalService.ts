@@ -163,6 +163,14 @@ export const professionalService = {
     })
     return response.data
   },
+
+  /**
+   * Delete professional profile (authenticated)
+   * TASK F5: Delete Flow
+   */
+  async deleteProfessional(id: number): Promise<void> {
+    await api.delete(`/professionals/${id}/`)
+  },
 }
 
 export default professionalService

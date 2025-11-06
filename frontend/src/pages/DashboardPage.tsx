@@ -3,6 +3,7 @@
  * Edit profile, services, pricing
  */
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { pageVariants, itemVariants } from '../lib/animations'
 import { useAuth } from '../hooks/useAuth'
@@ -15,12 +16,15 @@ import FormInput from '../components/forms/FormInput'
 import FormTextarea from '../components/forms/FormTextarea'
 import AddServiceModal from '../components/AddServiceModal'
 import ConfirmDialog from '../components/ConfirmDialog'
+import { useDeleteProfessional } from '../hooks/useDeleteProfessional'
 import type { Professional } from '../types/Professional'
 
 function DashboardPage() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const { toast } = useToast()
   const { confirm, confirmState } = useConfirm()
+  const deleteProfessional = useDeleteProfessional()
   const [activeTab, setActiveTab] = useState('profile')
   const [isLoading, setIsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
@@ -32,6 +36,7 @@ function DashboardPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null)
   const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
@@ -132,6 +137,26 @@ function DashboardPage() {
 
   const addService = () => {
     setIsAddServiceModalOpen(true)
+  }
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    try {
+      await logout()
+      toast.success('Desconectado com sucesso', {
+        message: 'Até logo!'
+      })
+      // Redirect to home after short delay
+      setTimeout(() => {
+        navigate('/')
+      }, 1500)
+    } catch (error) {
+      console.error('Logout error:', error)
+      setIsLoggingOut(false)
+      toast.error('Erro ao desconectar', {
+        message: 'Tente novamente'
+      })
+    }
   }
 
   const handleAddService = (newService: { name: string; price: number }) => {
@@ -300,12 +325,6 @@ function DashboardPage() {
     } finally {
       setIsUploadingPhoto(false)
     }
-  }
-
-  // Start editing mode
-  const startEditing = () => {
-    setIsEditing(true)
-    clearErrors()
   }
 
   // Cancel editing and restore original data
@@ -609,265 +628,352 @@ function DashboardPage() {
             {/* Main Content */}
             <main className="lg:col-span-9">
               <div className="flex flex-col gap-8">
-                {/* Profile Card */}
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-white dark:bg-[#1a2e22] rounded-xl border border-[#dbe6e0] dark:border-[#2a3f34] p-8"
-                >
-                  <div className="flex items-center justify-between mb-8">
-                    <div>
-                      <h1 className="text-[#111814] dark:text-white text-2xl font-bold leading-tight tracking-[-0.015em]">Edit Profile</h1>
-                      <p className="text-[#618975] dark:text-gray-400 text-base font-normal leading-normal">Update your professional information</p>
-                      {hasConflicts && (
-                        <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <span className="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-lg">warning</span>
-                            <p className="text-yellow-800 dark:text-yellow-200 text-sm font-medium">
-                              Dados desatualizados - Este perfil foi modificado recentemente. Recarregue a página para ver as últimas alterações.
+                {activeTab === 'profile' && (
+                  <>
+                    {/* Profile Card */}
+                    <motion.div
+                      variants={itemVariants}
+                      className="bg-white dark:bg-[#1a2e22] rounded-xl border border-[#dbe6e0] dark:border-[#2a3f34] p-8"
+                    >
+                      <div className="flex items-center justify-between mb-8">
+                        <div>
+                          <h1 className="text-[#111814] dark:text-white text-2xl font-bold leading-tight tracking-[-0.015em]">Edit Profile</h1>
+                          <p className="text-[#618975] dark:text-gray-400 text-base font-normal leading-normal">Update your professional information</p>
+                          {hasConflicts && (
+                            <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                              <div className="flex items-center gap-2">
+                                <span className="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-lg">warning</span>
+                                <p className="text-yellow-800 dark:text-yellow-200 text-sm font-medium">
+                                  Dados desatualizados - Este perfil foi modificado recentemente. Recarregue a página para ver as últimas alterações.
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex gap-3">
+                          {isEditing ? (
+                            <>
+                              <button
+                                onClick={cancelEditing}
+                                disabled={isSaving}
+                                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={saveChanges}
+                                disabled={isSaving}
+                                className="px-4 py-2 bg-primary hover:bg-primary/90 disabled:bg-primary/50 text-white rounded-lg font-medium transition-colors flex items-center gap-2 disabled:cursor-not-allowed"
+                              >
+                                {isSaving && (
+                                  <motion.span
+                                    className="material-symbols-outlined text-sm"
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                  >
+                                    refresh
+                                  </motion.span>
+                                )}
+                                {isSaving ? 'Saving...' : 'Save Changes'}
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => setIsEditing(true)}
+                              className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors"
+                            >
+                              Edit Profile
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Profile Form */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <FormInput
+                          label="Full Name"
+                          type="text"
+                          value={formData.fullName}
+                          onChange={(value) => handleFieldChange('fullName', value)}
+                          error={errors.fullName}
+                          disabled={!isEditing || isSaving}
+                          required
+                          placeholder="Seu nome completo"
+                        />
+                        <FormInput
+                          label="Professional Title"
+                          type="text"
+                          value={formData.professionalTitle}
+                          onChange={(value) => handleFieldChange('professionalTitle', value)}
+                          error={errors.professionalTitle}
+                          disabled={!isEditing || isSaving}
+                          required
+                          placeholder="Ex: Personal Trainer, Nutricionista"
+                        />
+                        <FormInput
+                          label="Email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(value) => handleFieldChange('email', value)}
+                          error={errors.email}
+                          disabled={!isEditing || isSaving}
+                          required
+                          placeholder="seu@email.com"
+                        />
+                        <FormInput
+                          label="Phone"
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(value) => handleFieldChange('phone', value)}
+                          error={errors.phone}
+                          disabled={!isEditing || isSaving}
+                          required
+                          placeholder="(11) 99999-9999"
+                        />
+                        <FormInput
+                          label="Location"
+                          type="text"
+                          value={formData.location}
+                          onChange={(value) => handleFieldChange('location', value)}
+                          error={errors.location}
+                          disabled={!isEditing || isSaving}
+                          required
+                          placeholder="City, State"
+                        />
+                      </div>
+
+                      <div className="mb-6">
+                        <FormTextarea
+                          label="Bio"
+                          value={formData.bio}
+                          onChange={(value) => handleFieldChange('bio', value)}
+                          error={errors.bio}
+                          maxLength={500}
+                          minLength={10}
+                          disabled={!isEditing || isSaving}
+                          required
+                          showCounter={true}
+                        />
+                      </div>
+
+                      {/* Photo Upload Section */}
+                      <div className="mb-6">
+                        <p className="text-[#111814] dark:text-gray-300 text-sm font-medium leading-normal pb-3">Profile Photo</p>
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            <div
+                              className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-20 border-4 border-white dark:border-[#2a3f34] shadow-md"
+                              style={{
+                                backgroundImage: photoPreview
+                                  ? `url("${photoPreview}")`
+                                  : professional?.photo_url
+                                    ? `url("${professional.photo_url}")`
+                                    : 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCmmERGYXMdWyDRvCoMoGT8wsCudBrbcqSIyW7aVAFFhZmAjIf7cawAN9cz4qtkbkp5hWVpNEfsDFb0ox5R6LDbAMG9jC04rW3Y1fUJT32nzxtKcorXCNwRBGJWp8JXy8lIPNURFkIcK-FzlxDiUi3xW3VwYLx48oD6NdIbab5otxoTAGRhgy8oGvbM_IZ0hy_gmrHZt7fGoORiSyiMOKfNegkWqEqtE_VJimkFugFQG7AwPgs4Wl7AHWmmy43ZKp0rFaoOMyDq5w")'
+                              }}
+                            ></div>
+                            {isEditing && !isUploadingPhoto && (
+                              <button
+                                onClick={() => fileInputRef.current?.click()}
+                                className="absolute -bottom-1 -right-1 bg-primary hover:bg-primary/90 text-white rounded-full p-2 shadow-md transition-colors"
+                              >
+                                <span className="material-symbols-outlined text-sm">edit</span>
+                              </button>
+                            )}
+                            {isUploadingPhoto && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                                <motion.span
+                                  className="material-symbols-outlined text-white text-lg"
+                                  animate={{ rotate: 360 }}
+                                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                >
+                                  refresh
+                                </motion.span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                              {isUploadingPhoto
+                                ? 'Enviando foto...'
+                                : selectedPhoto
+                                  ? `Selecionado: ${selectedPhoto.name} (${(selectedPhoto.size / 1024 / 1024).toFixed(1)}MB)`
+                                  : 'Clique no botão editar para alterar sua foto de perfil'
+                              }
                             </p>
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept="image/*"
+                              onChange={handlePhotoSelect}
+                              className="hidden"
+                              disabled={!isEditing || isSaving || isUploadingPhoto}
+                            />
+                            <div className="flex gap-2">
+                              {selectedPhoto && !isUploadingPhoto && (
+                                <>
+                                  <button
+                                    onClick={uploadPhotoNow}
+                                    className="text-sm bg-primary hover:bg-primary/90 text-white px-3 py-1 rounded transition-colors"
+                                  >
+                                    Enviar Foto
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedPhoto(null)
+                                      setPhotoPreview(null)
+                                      if (fileInputRef.current) fileInputRef.current.value = ''
+                                    }}
+                                    className="text-sm text-red-500 hover:text-red-700 transition-colors"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      )}
-                    </div>
-                    <div className="flex gap-3">
-                      {isEditing ? (
-                        <>
-                          <button
-                            onClick={cancelEditing}
-                            disabled={isSaving}
-                            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={saveChanges}
-                            disabled={isSaving}
-                            className="px-4 py-2 bg-primary hover:bg-primary/90 disabled:bg-primary/50 text-white rounded-lg font-medium transition-colors flex items-center gap-2 disabled:cursor-not-allowed"
-                          >
-                            {isSaving && (
-                              <motion.span
-                                className="material-symbols-outlined text-sm"
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                              >
-                                refresh
-                              </motion.span>
-                            )}
-                            {isSaving ? 'Saving...' : 'Save Changes'}
-                          </button>
-                        </>
-                      ) : (
+                      </div>
+                    </motion.div>
+
+                    {/* Services Card */}
+                    <motion.div
+                      variants={itemVariants}
+                      className="bg-white dark:bg-[#182c22] rounded-xl shadow-sm p-6"
+                    >
+                      <div className="flex justify-between items-center pb-5">
+                        <h2 className="text-[#111814] dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">Services &amp; Pricing</h2>
                         <button
-                          onClick={startEditing}
+                          onClick={addService}
+                          className="flex items-center gap-2 min-w-[84px] cursor-pointer justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary/20 dark:bg-primary/30 text-primary dark:text-primary text-sm font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 active:scale-95"
+                        >
+                          <span className="material-symbols-outlined text-lg">add</span>
+                          <span className="truncate">Add Service</span>
+                        </button>
+                      </div>
+                      <div className="flex flex-col gap-4">
+                        {formData.services.map((service, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="flex flex-col md:flex-row items-center gap-4 p-4 rounded-lg bg-background-light dark:bg-[#102219] border border-gray-200 dark:border-[#2a3f34]"
+                          >
+                            <div className="flex-1 w-full">
+                              <p className="text-[#111814] dark:text-gray-300 text-sm font-medium leading-normal pb-1">Service Name</p>
+                              <input
+                                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-md text-[#111814] dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary/50 border border-[#dbe6e0] dark:border-[#2a3f34] bg-white dark:bg-[#182c22] focus:border-primary/50 h-12 p-3 text-base font-normal leading-normal transition-all"
+                                value={service?.name || ''}
+                                onChange={(e) => updateService(index, 'name', e.target.value)}
+                                placeholder="Nome do serviço"
+                              />
+                            </div>
+                            <div className="w-full md:w-40">
+                              <p className="text-[#111814] dark:text-gray-300 text-sm font-medium leading-normal pb-1">Price (R$)</p>
+                              <input
+                                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-md text-[#111814] dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary/50 border border-[#dbe6e0] dark:border-[#2a3f34] bg-white dark:bg-[#182c22] focus:border-primary/50 h-12 p-3 text-base font-normal leading-normal transition-all"
+                                type="number"
+                                value={service?.price || 0}
+                                onChange={(e) => updateService(index, 'price', parseFloat(e.target.value) || 0)}
+                                placeholder="0.00"
+                                step="0.01"
+                                min="0"
+                              />
+                            </div>
+                            <button
+                              onClick={() => removeService(index)}
+                              className="self-end p-2 text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
+                              title="Remover serviço"
+                            >
+                              <span className="material-symbols-outlined">delete</span>
+                            </button>
+                          </motion.div>
+                        ))}
+                      </div>
+
+                      {formData.services.length === 0 && (
+                        <div className="text-center py-8">
+                          <span className="material-symbols-outlined text-gray-400 text-4xl mb-2 block">work</span>
+                          <p className="text-gray-500 dark:text-gray-400">Nenhum serviço cadastrado</p>
+                          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Adicione seu primeiro serviço clicando em "Add Service"</p>
+                        </div>
+                      )}
+                    </motion.div>
+                  </>
+                )}
+
+                {activeTab === 'settings' && (
+                  <motion.div
+                    variants={itemVariants}
+                    className="bg-white dark:bg-[#1a2e22] rounded-xl border border-[#dbe6e0] dark:border-[#2a3f34] p-8"
+                  >
+                    <h1 className="text-[#111814] dark:text-white text-2xl font-bold leading-tight tracking-[-0.015em] mb-6">Account Settings</h1>
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between p-4 rounded-lg bg-background-light dark:bg-[#102219] border border-gray-200 dark:border-[#2a3f34]">
+                        <div>
+                          <h3 className="text-[#111814] dark:text-white text-lg font-semibold">Edit Profile</h3>
+                          <p className="text-[#618975] dark:text-gray-400 text-sm">Access the full profile editing page with additional options</p>
+                        </div>
+                        <button
+                          onClick={() => window.location.href = `/edit/${user?.professional_id}`}
                           className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors"
                         >
                           Edit Profile
                         </button>
-                      )}
-                    </div>
-                  </div>
+                      </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <FormInput
-                      label="Full Name"
-                      type="text"
-                      value={formData.fullName}
-                      onChange={(value) => handleFieldChange('fullName', value)}
-                      error={errors.fullName}
-                      disabled={!isEditing || isSaving}
-                      required
-                    />
-                    <FormInput
-                      label="Email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(value) => handleFieldChange('email', value)}
-                      error={errors.email}
-                      disabled={!isEditing || isSaving}
-                      required
-                    />
-                  </div>
+                      <div className="flex items-center justify-between p-4 rounded-lg bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800">
+                        <div>
+                          <h3 className="text-red-800 dark:text-red-200 text-lg font-semibold">Delete Account</h3>
+                          <p className="text-red-600 dark:text-red-400 text-sm">Permanently delete your account and all associated data</p>
+                        </div>
+                        <button
+                          onClick={() => deleteProfessional.openDeleteConfirm(user?.professional_id || 0, formData.fullName)}
+                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+                        >
+                          Delete Account
+                        </button>
+                      </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <FormInput
-                      label="Phone"
-                      type="tel"
-                      value={formData.phone}
-                      onChange={(value) => handleFieldChange('phone', value)}
-                      error={errors.phone}
-                      disabled={!isEditing || isSaving}
-                      required
-                      placeholder="(11) 99999-9999"
-                    />
-                    <FormInput
-                      label="Location"
-                      type="text"
-                      value={formData.location}
-                      onChange={(value) => handleFieldChange('location', value)}
-                      error={errors.location}
-                      disabled={!isEditing || isSaving}
-                      required
-                      placeholder="City, State"
-                    />
-                  </div>
-
-                  <div className="mb-6">
-                    <FormTextarea
-                      label="Bio"
-                      value={formData.bio}
-                      onChange={(value) => handleFieldChange('bio', value)}
-                      error={errors.bio}
-                      maxLength={500}
-                      minLength={10}
-                      disabled={!isEditing || isSaving}
-                      required
-                      showCounter={true}
-                    />
-                  </div>
-
-                  {/* Photo Upload Section */}
-                  <div className="mb-6">
-                    <p className="text-[#111814] dark:text-gray-300 text-sm font-medium leading-normal pb-3">Profile Photo</p>
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <div
-                          className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-20 border-4 border-white dark:border-[#2a3f34] shadow-md"
-                          style={{
-                            backgroundImage: photoPreview
-                              ? `url("${photoPreview}")`
-                              : professional?.photo_url
-                                ? `url("${professional.photo_url}")`
-                                : 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCmmERGYXMdWyDRvCoMoGT8wsCudBrbcqSIyW7aVAFFhZmAjIf7cawAN9cz4qtkbkp5hWVpNEfsDFb0ox5R6LDbAMG9jC04rW3Y1fUJT32nzxtKcorXCNwRBGJWp8JXy8lIPNURFkIcK-FzlxDiUi3xW3VwYLx48oD6NdIbab5otxoTAGRhgy8oGvbM_IZ0hy_gmrHZt7fGoORiSyiMOKfNegkWqEqtE_VJimkFugFQG7AwPgs4Wl7AHWmmy43ZKp0rFaoOMyDq5w")'
-                          }}
-                        ></div>
-                        {isEditing && !isUploadingPhoto && (
-                          <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="absolute -bottom-1 -right-1 bg-primary hover:bg-primary/90 text-white rounded-full p-2 shadow-md transition-colors"
-                          >
-                            <span className="material-symbols-outlined text-sm">edit</span>
-                          </button>
-                        )}
-                        {isUploadingPhoto && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                      <div className="flex items-center justify-between p-4 rounded-lg bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800">
+                        <div>
+                          <h3 className="text-orange-800 dark:text-orange-200 text-lg font-semibold">Logout</h3>
+                          <p className="text-orange-600 dark:text-orange-400 text-sm">Sign out from your account on this device</p>
+                        </div>
+                        <button
+                          onClick={handleLogout}
+                          disabled={isLoggingOut}
+                          className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                          {isLoggingOut && (
                             <motion.span
-                              className="material-symbols-outlined text-white text-lg"
+                              className="material-symbols-outlined text-sm"
                               animate={{ rotate: 360 }}
                               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                             >
                               refresh
                             </motion.span>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                          {isUploadingPhoto
-                            ? 'Enviando foto...'
-                            : selectedPhoto
-                              ? `Selecionado: ${selectedPhoto.name} (${(selectedPhoto.size / 1024 / 1024).toFixed(1)}MB)`
-                              : 'Clique no botão editar para alterar sua foto de perfil'
-                          }
-                        </p>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handlePhotoSelect}
-                          className="hidden"
-                          disabled={!isEditing || isSaving || isUploadingPhoto}
-                        />
-                        <div className="flex gap-2">
-                          {selectedPhoto && !isUploadingPhoto && (
-                            <>
-                              <button
-                                onClick={uploadPhotoNow}
-                                className="text-sm bg-primary hover:bg-primary/90 text-white px-3 py-1 rounded transition-colors"
-                              >
-                                Enviar Foto
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setSelectedPhoto(null)
-                                  setPhotoPreview(null)
-                                  if (fileInputRef.current) fileInputRef.current.value = ''
-                                }}
-                                className="text-sm text-red-500 hover:text-red-700 transition-colors"
-                              >
-                                Cancelar
-                              </button>
-                            </>
                           )}
-                        </div>
+                          {isLoggingOut ? 'Saindo...' : 'Logout'}
+                        </button>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                )}
 
-                {/* Services Card */}
-                <motion.div
-                  variants={itemVariants}
-                  className="bg-white dark:bg-[#182c22] rounded-xl shadow-sm p-6"
-                >
-                  <div className="flex justify-between items-center pb-5">
-                    <h2 className="text-[#111814] dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">Services &amp; Pricing</h2>
-                    <button
-                      onClick={addService}
-                      className="flex items-center gap-2 min-w-[84px] cursor-pointer justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary/20 dark:bg-primary/30 text-primary dark:text-primary text-sm font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 active:scale-95"
-                    >
-                      <span className="material-symbols-outlined text-lg">add</span>
-                      <span className="truncate">Add Service</span>
-                    </button>
-                  </div>
-                  <div className="flex flex-col gap-4">
-                    {formData.services.map((service, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="flex flex-col md:flex-row items-center gap-4 p-4 rounded-lg bg-background-light dark:bg-[#102219] border border-gray-200 dark:border-[#2a3f34]"
-                      >
-                        <div className="flex-1 w-full">
-                          <p className="text-[#111814] dark:text-gray-300 text-sm font-medium leading-normal pb-1">Service Name</p>
-                          <input
-                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-md text-[#111814] dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary/50 border border-[#dbe6e0] dark:border-[#2a3f34] bg-white dark:bg-[#182c22] focus:border-primary/50 h-12 p-3 text-base font-normal leading-normal transition-all"
-                            value={service?.name || ''}
-                            onChange={(e) => updateService(index, 'name', e.target.value)}
-                            placeholder="Nome do serviço"
-                          />
-                        </div>
-                        <div className="w-full md:w-40">
-                          <p className="text-[#111814] dark:text-gray-300 text-sm font-medium leading-normal pb-1">Price (R$)</p>
-                          <input
-                            className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-md text-[#111814] dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary/50 border border-[#dbe6e0] dark:border-[#2a3f34] bg-white dark:bg-[#182c22] focus:border-primary/50 h-12 p-3 text-base font-normal leading-normal transition-all"
-                            type="number"
-                            value={service?.price || 0}
-                            onChange={(e) => updateService(index, 'price', parseFloat(e.target.value) || 0)}
-                            placeholder="0.00"
-                            step="0.01"
-                            min="0"
-                          />
-                        </div>
-                        <button
-                          onClick={() => removeService(index)}
-                          className="self-end p-2 text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
-                          title="Remover serviço"
-                        >
-                          <span className="material-symbols-outlined">delete</span>
-                        </button>
-                      </motion.div>
-                    ))}
-                  </div>
-
-                  {formData.services.length === 0 && (
-                    <div className="text-center py-8">
-                      <span className="material-symbols-outlined text-gray-400 text-4xl mb-2 block">work</span>
-                      <p className="text-gray-500 dark:text-gray-400">Nenhum serviço cadastrado</p>
-                      <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Adicione seu primeiro serviço clicando em "Add Service"</p>
+                {activeTab === 'bookings' && (
+                  <motion.div
+                    variants={itemVariants}
+                    className="bg-white dark:bg-[#1a2e22] rounded-xl border border-[#dbe6e0] dark:border-[#2a3f34] p-8"
+                  >
+                    <h1 className="text-[#111814] dark:text-white text-2xl font-bold leading-tight tracking-[-0.015em] mb-6">My Bookings</h1>
+                    <div className="text-center py-12">
+                      <span className="material-symbols-outlined text-gray-400 text-6xl mb-4 block">calendar_month</span>
+                      <h3 className="text-[#111814] dark:text-white text-xl font-semibold mb-2">No bookings yet</h3>
+                      <p className="text-[#618975] dark:text-gray-400">Your upcoming appointments will appear here</p>
                     </div>
-                  )}
-                </motion.div>
+                  </motion.div>
+                )}
               </div>
             </main>
           </motion.div>
@@ -894,6 +1000,18 @@ function DashboardPage() {
           onCancel={confirmState.onCancel}
         />
       )}
+
+      {/* Delete Account Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={deleteProfessional.isOpen}
+        title="Delete Account"
+        message={`Are you sure you want to delete your account "${deleteProfessional.deletingProfessionalName}"? This action cannot be undone and will permanently remove all your data.`}
+        confirmText="Delete Account"
+        cancelText="Cancel"
+        type="danger"
+        onConfirm={deleteProfessional.handleDeleteConfirm}
+        onCancel={deleteProfessional.closeDeleteConfirm}
+      />
     </div>
   )
 }
