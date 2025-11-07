@@ -61,12 +61,12 @@ class TestCompleteAuthenticationFlow:
         response_data = register_response.json()
         
         # Verify response has JWT tokens
-        assert 'access' in response_data, "Missing 'access' token in response"
-        assert 'refresh' in response_data, "Missing 'refresh' token in response"
+        assert 'access_token' in response_data, "Missing 'access_token' token in response"
+        assert 'refresh_token' in response_data, "Missing 'refresh_token' token in response"
         assert 'professional' in response_data, "Missing 'professional' in response"
         
-        access_token = response_data['access']
-        refresh_token = response_data['refresh']
+        access_token = response_data['access_token']
+        refresh_token = response_data['refresh_token']
         professional_id = response_data['professional']['id']
         
         print(f"   ✅ User registered successfully")

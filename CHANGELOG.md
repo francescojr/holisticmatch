@@ -23,10 +23,15 @@ Frontend was calling `/auth/register/` endpoint which doesn't exist in backend. 
 - `frontend/tests/integration/e2e-flow.test.ts` (line 100): Updated E2E test to use correct endpoint
 - `frontend/F10_TESTING_GUIDE.md` (line 34): Documentation updated to reflect correct endpoint
 
+**Backend Tests Fixed** ✅:
+- `backend/tests/unit/test_e2e_complete_flow.py`: Updated to expect `access_token` and `refresh_token` (not `access` and `refresh`)
+- `backend/tests/unit/test_views.py`: Updated register JWT token assertions
+
 **Impact**:
 ✅ Frontend now calls correct backend endpoint
 ✅ Backend returns `access_token` and `refresh_token`
 ✅ Tokens are properly stored in localStorage
+✅ All backend tests now pass (166/166 passing)
 ✅ Complete authentication flow now works
 
 ---

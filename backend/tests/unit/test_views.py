@@ -283,11 +283,11 @@ class TestProfessionalViewSet:
         
         assert response.status_code == 201
         # Verify JWT tokens are present
-        assert 'access' in response.data, "JWT access token missing from register response"
-        assert 'refresh' in response.data, "JWT refresh token missing from register response"
+        assert 'access_token' in response.data, "JWT access token missing from register response"
+        assert 'refresh_token' in response.data, "JWT refresh token missing from register response"
         # Verify tokens are non-empty strings
-        assert isinstance(response.data['access'], str) and len(response.data['access']) > 0
-        assert isinstance(response.data['refresh'], str) and len(response.data['refresh']) > 0
+        assert isinstance(response.data['access_token'], str) and len(response.data['access_token']) > 0
+        assert isinstance(response.data['refresh_token'], str) and len(response.data['refresh_token']) > 0
         # Verify User was created but is inactive (pending email verification)
         user = User.objects.get(email='jwt@example.com')
         assert user.is_active is False, "New user should be inactive until email verification"
