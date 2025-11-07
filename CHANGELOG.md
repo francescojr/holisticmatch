@@ -7,7 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-11-08
 
-### FIX: Password Confirmation Real-time Validation & Email Error Handling
+### FIX: Password Confirmation Real-time Validation UI & FormData Content-Type
+
+**Files Updated**:
+
+1. **frontend/src/pages/RegisterProfessionalPage.tsx**
+   - Added `setFieldError` desestruturação from `useFormValidation()` hook
+   - Enhanced `handleStep1InputChange()` to set/clear field error when password confirmation changes
+   - When user types in "Confirmar Senha": 
+     - If passwords don't match → `setFieldError('passwordConfirm', 'As senhas não conferem')`
+     - If passwords match → `setFieldError('passwordConfirm', '')` (clears error)
+   - FormInput component now shows error message in real-time (red text + visual feedback)
+
+2. **frontend/src/services/authService.ts**
+   - **CRITICAL FIX**: Removed manual `Content-Type: multipart/form-data` header from register() POST request
+   - **Why**: When you manually set Content-Type header, Axios doesn't inject the boundary marker needed for FormData
+   - **Solution**: Let Axios handle FormData encoding automatically (Axios detects FormData and sets correct headers with boundary)
+   - This fixes 502 errors in production (Elastic Beanstalk couldn't parse malformed multipart data)
+
+**Why This Matters**:
+- ✅ Users now see IMMEDIATE feedback when passwords don't match (not just on submit)
+- ✅ FormInput red error message displays instantly as they type
+- ✅ 502 gateway errors eliminated (FormData now correctly formatted with boundary marker)
+- ✅ Email field is auto-filled after verification works correctly
+- ✅ Photo upload no longer causes server errors
+
+**Technical Notes**:
+- FormData boundary is a unique marker like: `----WebKitFormBoundary7MA4YWxkTrZu0gW`
+- Manual Content-Type header prevents this boundary injection → malformed request → 502
+- Axios automatically detects FormData and handles all multipart encoding correctly
+- Same fix applies to all FormData POST requests (login, profile updates, etc)
+
+---
+
+### FIX: Password Confirmation Real-time Validation & Email Error Handling (PREVIOUS)
 
 **Files Updated**:
 1. **frontend/src/pages/RegisterProfessionalPage.tsx**

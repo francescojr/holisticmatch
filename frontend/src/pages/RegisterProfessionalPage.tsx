@@ -76,7 +76,7 @@ function RegisterProfessionalPage() {
     }
   })
 
-  const { errors, validate } = useFormValidation()
+  const { errors, validate, setFieldError } = useFormValidation()
 
   // Load available services on component mount
   useEffect(() => {
@@ -103,9 +103,14 @@ function RegisterProfessionalPage() {
       validate(field, value, getValidationRules(field))
       
       // Special validation for password confirmation
-      if (field === 'passwordConfirm' && value !== step1Data.password) {
+      if (field === 'passwordConfirm') {
         setStep1Data(prev => ({ ...prev, passwordConfirm: value }))
-        console.log('[RegisterPage.Step1] ⚠️ Password mismatch in real-time')
+        if (value !== step1Data.password) {
+          setFieldError('passwordConfirm', 'As senhas não conferem')
+          console.log('[RegisterPage.Step1] ⚠️ Password mismatch in real-time')
+        } else {
+          setFieldError('passwordConfirm', '') // Clear error when passwords match
+        }
       }
     }
   }

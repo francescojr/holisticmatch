@@ -40,11 +40,8 @@ export const authService = {
       console.log('[authService.register] 📦 Form data prepared with keys:', Array.from(formData.keys()).join(', '))
 
       // Backend endpoint: /professionals/register/ returns access_token, refresh_token, user_id, professional_id
-      const response = await api.post<any>('/professionals/register/', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
+      // Note: Do NOT set Content-Type header - Axios will handle it automatically with correct boundary
+      const response = await api.post<any>('/professionals/register/', formData)
 
       console.log('[authService.register] ✅ API Response Status:', response.status)
       console.log('[authService.register] 📥 Response Keys:', Object.keys(response.data).join(', '))
