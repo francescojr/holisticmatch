@@ -32,18 +32,9 @@ interface Step1FormData {
   city: string
 }
 
-interface ServiceData {
-  id: string
-  service_type: string
-  price_per_session: number
-}
-
 interface Step2FormData {
-  services: ServiceData[]
-  newService: {
-    service_type: string
-    price_per_session: number
-  }
+  services: string[]  // Just service names, no individual prices
+  pricePerSession: number  // Single base price for all services
 }
 
 function RegisterProfessionalPage() {
@@ -70,10 +61,7 @@ function RegisterProfessionalPage() {
 
   const [step2Data, setStep2Data] = useState<Step2FormData>({
     services: [],
-    newService: {
-      service_type: '',
-      price_per_session: 0
-    }
+    pricePerSession: 0
   })
 
   const { errors, validate, setFieldError } = useFormValidation()
@@ -284,22 +272,15 @@ function RegisterProfessionalPage() {
   }
 
   // Service management functions
-  const addService = () => {
-    const { service_type, price_per_session } = step2Data.newService
-
+  const addService = (serviceType: string) => {
     // Validation
-    if (!service_type) {
+    if (!serviceType) {
       toast.error('Selecione um tipo de serviço')
       return
     }
 
-    if (!price_per_session || price_per_session <= 0) {
-      toast.error('Preço deve ser maior que zero')
-      return
-    }
-
     // Check for duplicates
-    if (step2Data.services.some(s => s.service_type === service_type)) {
+    if (step2Data.services.includes(serviceType)) {
       toast.error('Este tipo de serviço já foi adicionado')
       return
     }
@@ -310,37 +291,27 @@ function RegisterProfessionalPage() {
       return
     }
 
-    // Add service with correct structure matching backend
-    const newService: ServiceData = {
-      id: Date.now().toString(),
-      service_type,
-      price_per_session
-    }
-
+    // Add service to list
     setStep2Data(prev => ({
       ...prev,
-      services: [...prev.services, newService],
-      newService: { service_type: '', price_per_session: 0 }
+      services: [...prev.services, serviceType]
     }))
 
     toast.success('Serviço adicionado com sucesso!')
   }
 
-  const removeService = (serviceId: string) => {
+  const removeService = (serviceType: string) => {
     setStep2Data(prev => ({
       ...prev,
-      services: prev.services.filter(s => s.id !== serviceId)
+      services: prev.services.filter(s => s !== serviceType)
     }))
     toast.success('Serviço removido')
   }
 
-  const handleStep2InputChange = (field: keyof typeof step2Data.newService, value: string | number) => {
+  const handleStep2PriceChange = (value: string) => {
     setStep2Data(prev => ({
       ...prev,
-      newService: {
-        ...prev.newService,
-        [field]: value
-      }
+      pricePerSession: parseFloat(value) || 0
     }))
   }
 
@@ -380,13 +351,13 @@ function RegisterProfessionalPage() {
         email: step1Data.email,
         phone: step1Data.phone,
         password: step1Data.password,
-        services: step2Data.services.map(service => service.service_type),
-        price_per_session: Math.min(...step2Data.services.map(s => s.price_per_session)), // Use lowest service price
+        services: step2Data.services,  // Just the service names array
+        price_per_session: step2Data.pricePerSession,  // Single base price
         city: step1Data.city,
         state: step1Data.state,
         attendance_type: 'ambos',
         whatsapp: step1Data.phone,
-        bio: `Profissional de terapias holísticas especializado em ${step2Data.services.map(s => s.service_type).join(', ')}.`,
+        bio: `Profissional de terapias holísticas especializado em ${step2Data.services.join(', ')}.`,
         ...(step1Data.photo && { photo: step1Data.photo })
       }
 
@@ -394,6 +365,7 @@ function RegisterProfessionalPage() {
       console.log('[RegisterPage.Step2]    Email:', registrationData.email)
       console.log('[RegisterPage.Step2]    Name:', registrationData.name)
       console.log('[RegisterPage.Step2]    Services:', registrationData.services.join(', '))
+      console.log('[RegisterPage.Step2]    Price (a partir de):', `R$ ${registrationData.price_per_session}`)
       console.log('[RegisterPage.Step2]    City:', registrationData.city, registrationData.state)
       console.log('[RegisterPage.Step2]    Photo:', step1Data.photo ? '✅ will be uploaded' : '❌ no photo')
 
@@ -410,12 +382,12 @@ function RegisterProfessionalPage() {
         password: step1Data.password,
         full_name: step1Data.fullName,
         photo: step1Data.photo || undefined,
-        services: step2Data.services.map(s => s.service_type),
-        price_per_session: Math.min(...step2Data.services.map(s => s.price_per_session)),
+        services: step2Data.services,  // Just the service names array
+        price_per_session: step2Data.pricePerSession,  // Single base price
         attendance_type: 'both',
         city: step1Data.city,
         neighborhood: 'default',
-        bio: `Profissional de terapias holísticas especializado em ${step2Data.services.map(s => s.service_type).join(', ')}.`,
+        bio: `Profissional de terapias holísticas especializado em ${step2Data.services.join(', ')}.`,
         whatsapp: step1Data.phone,
       })
 
@@ -693,32 +665,29 @@ function RegisterProfessionalPage() {
               </motion.button>
             </form>
           ) : (
-            /* Step 2: Services */
+            /* Step 2: Services & Price */
             <div className="space-y-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Serviços Oferecidos
+                Serviços & Preço Base
               </h3>
 
               {/* Added Services List */}
               {step2Data.services.length > 0 && (
                 <div className="space-y-3">
-                  <h4 className="font-medium text-gray-700">Serviços Adicionados:</h4>
+                  <h4 className="font-medium text-gray-700">Serviços Selecionados:</h4>
                   {step2Data.services.map((service) => (
                     <motion.div
-                      key={service.id}
+                      key={service}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="bg-gray-50 rounded-lg p-4 border"
+                      className="bg-gray-50 rounded-lg p-4 border border-gray-200"
                     >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h5 className="font-medium text-gray-900">{service.service_type}</h5>
-                          <p className="text-sm text-gray-600 mt-1">R$ {service.price_per_session.toFixed(2)}</p>
-                        </div>
+                      <div className="flex justify-between items-center">
+                        <h5 className="font-medium text-gray-900">{service}</h5>
                         <button
                           type="button"
-                          onClick={() => removeService(service.id)}
+                          onClick={() => removeService(service)}
                           className="text-red-500 hover:text-red-700 p-1"
                         >
                           <span className="material-symbols-outlined text-lg">delete</span>
@@ -729,9 +698,9 @@ function RegisterProfessionalPage() {
                 </div>
               )}
 
-              {/* Add New Service Form */}
+              {/* Services Selection */}
               <div className="border-t pt-6">
-                <h4 className="font-medium text-gray-700 mb-4">Adicionar Novo Serviço:</h4>
+                <h4 className="font-medium text-gray-700 mb-4">Selecionar Serviço:</h4>
 
                 <div className="space-y-4">
                   {/* Service Type Dropdown */}
@@ -740,40 +709,42 @@ function RegisterProfessionalPage() {
                       Tipo de Serviço
                     </label>
                     <select
-                      value={step2Data.newService.service_type}
-                      onChange={(e) => handleStep2InputChange('service_type', e.target.value)}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          addService(e.target.value)
+                          e.target.value = ''
+                        }
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                     >
-                      <option value="">Selecione um serviço</option>
-                      {availableServices.map((service) => (
-                        <option key={service} value={service}>
-                          {service}
-                        </option>
-                      ))}
+                      <option value="">Selecione um serviço para adicionar</option>
+                      {availableServices
+                        .filter(service => !step2Data.services.includes(service))
+                        .map((service) => (
+                          <option key={service} value={service}>
+                            {service}
+                          </option>
+                        ))}
                     </select>
                   </div>
 
-                  {/* Price Input */}
+                  {/* Price Base Input - "a partir de" */}
                   <FormInput
-                    label="Preço (R$)"
+                    label="Preço Base (a partir de)"
                     type="number"
-                    value={step2Data.newService.price_per_session || ''}
-                    onChange={(value) => handleStep2InputChange('price_per_session', parseFloat(value) || 0)}
-                    placeholder="0.00"
+                    value={step2Data.pricePerSession || ''}
+                    onChange={(value) => handleStep2PriceChange(value)}
+                    placeholder="Ex: 150.00"
                     min="0"
                     step="0.01"
+                    required
                   />
 
-                  {/* Add Service Button */}
-                  <motion.button
-                    type="button"
-                    onClick={addService}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
-                  >
-                    Adicionar Serviço
-                  </motion.button>
+                  {step2Data.pricePerSession > 0 && (
+                    <p className="text-sm text-gray-600">
+                      💡 Você poderá ajustar preços específicos por serviço no seu dashboard profissional
+                    </p>
+                  )}
                 </div>
               </div>
 

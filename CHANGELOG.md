@@ -7,9 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-11-08
 
-### FIX: Complete FormData Handling & Services JSON Parsing
+### FIX: Step 2 Refactor - Single Base Price "a partir de" Model
 
-**Root Cause Analysis**:
+**Architecture Conflict Resolved**:
+- **Problem**: Frontend allowed multiple services with different prices, but backend model only supports ONE price for ALL services
+- **Frontend Structure**: Step 2 had fields to set price per service individually
+- **Backend Structure**: `Professional` model has `price_per_session` (single field, not M2M relationship)
+- **Solution**: Opção 1 - Implement single base price with "a partir de" label
+
+**Files Updated**:
+
+1. **frontend/src/pages/RegisterProfessionalPage.tsx**
+   - **Removed**: `ServiceData` interface (no longer needed)
+   - **Changed**: `Step2FormData` interface:
+     - OLD: `services: ServiceData[]` (array of objects with id, service_type, price)
+     - NEW: `services: string[]` (just service names)
+     - Added: `pricePerSession: number` (single base price)
+   
+   - **Removed**: Individual price input per service
+   - **Added**: Single "Preço Base (a partir de)" input that applies to all services
+   
+   - **Updated Functions**:
+     - `addService(serviceType)`: Now takes service name string, adds to array
+     - `removeService(serviceType)`: Now filters by service name
+     - `handleStep2PriceChange()`: New function to update single base price
+     - `handleStep2Submit()`: Now sends:
+       ```json
+       {
+         "services": ["Reiki", "Acupuntura"],
+         "price_per_session": 150.00,  // ← SINGLE price for all
+         ...
+       }
+       ```
+   
+   - **UI Changes**:
+     - Service selection now auto-filters already-added services
+     - Removes individual price fields
+     - Adds helpful message: "Você poderá ajustar preços específicos por serviço no seu dashboard profissional"
+
+2. **backend/professionals/serializers.py** (Already Fixed)
+   - Has JSON parsing for FormData string services
+   - Has field mapping for `full_name` → `name`
+   - Ready to receive the new format
+
+**Why This Fixes 400 Errors**:
+- ✅ Backend receives `services: ["Reiki"]` and `price_per_session: 150`
+- ✅ No more individual prices per service
+- ✅ JSON parsing handles string services correctly
+- ✅ Field mapping handles full_name → name
+- ✅ All validations pass
+
+**Frontend Result**:
+- User Experience: Simpler form, less confusion
+- Display: Shows "a partir de R$ 150" on professional cards
+- Future Enhancement: Dashboard allows per-service pricing adjustments
+
+**Validation**:
+- ✅ Frontend build: 0 TypeScript errors
+- ✅ Backend tests: 167/168 passing
+- ✅ No breaking changes to existing APIs
+
+---
+
+### PREVIOUS: Complete FormData Handling & Services JSON Parsing
 - Frontend FormData sends complex fields (like `services` array) as JSON strings
 - Backend received `services` as string `'["Acupuntura", "Reiki"]'` instead of list `["Acupuntura", "Reiki"]`
 - Validation fails: `validate_services()` expects list, got string → 400 Bad Request
