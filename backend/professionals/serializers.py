@@ -202,6 +202,16 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         allow_blank=True
     )
     
+    # CRITICAL: Explicit ImageField declaration for proper FormData handling
+    # This ensures DRF properly validates multipart/form-data uploads
+    # Required for registration endpoint but allow_null for ModelSerializer compatibility
+    photo = serializers.ImageField(
+        required=False,
+        allow_null=True,
+        allow_empty_file=False,
+        help_text='Foto de perfil (JPG ou PNG, máx 5MB)'
+    )
+    
     class Meta:
         model = Professional
         fields = [
