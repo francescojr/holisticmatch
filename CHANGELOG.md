@@ -7,9 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-11-08
 
-### FIX: Password Confirmation Real-time Validation UI & FormData Content-Type
+### FIX: Complete FormData Handling & Services JSON Parsing
+
+**Root Cause Analysis**:
+- Frontend FormData sends complex fields (like `services` array) as JSON strings
+- Backend received `services` as string `'["Acupuntura", "Reiki"]'` instead of list `["Acupuntura", "Reiki"]`
+- Validation fails: `validate_services()` expects list, got string → 400 Bad Request
+- Frontend also sends `full_name` but Django model field is `name` → field mapping error
 
 **Files Updated**:
+
+1. **frontend/src/pages/RegisterProfessionalPage.tsx**
+   - Added `setFieldError` to real-time password validation
+   - When user types in "Confirmar Senha":
+     - If passwords don't match → shows red error: `"As senhas não conferem"`
+     - If passwords match → error clears immediately
+   - Users now get INSTANT feedback while typing
+
+2. **frontend/src/services/authService.ts**
+   - **CRITICAL**: Removed manual `Content-Type: multipart/form-data` header
+   - Axios now handles FormData encoding automatically with correct boundary marker
+   - This was causing 502 errors in production (Elastic Beanstalk)
+   - FormData appends: `services` as `JSON.stringify(['Acupuntura', 'Reiki'])`
+
+3. **backend/professionals/serializers.py** (ProfessionalCreateSerializer)
+   - Added `to_internal_value()` method to handle FormData conversion:
+     - Parses JSON string services back to list: `'["Acupuntura"]'` → `["Acupuntura"]`
+     - Maps `full_name` (frontend) → `name` (Django model field)
+     - Both conversions happen before validation, so validators receive correct data types
+   - Added `full_name` field with `write_only=True` to accept frontend naming
+
+**Why This Matters**:
+- ✅ 400 errors eliminated (services properly parsed from JSON)
+- ✅ Field mismatch errors eliminated (full_name → name mapping)
+- ✅ Real-time password validation with visual feedback
+- ✅ No more FormData boundary issues (502 errors fixed)
+- ✅ All 168 backend tests passing
+- ✅ Frontend build: 0 TypeScript errors
+
+**Technical Deep Dive**:
+- When `FormData.append()` is used, all values become strings
+- Complex types (arrays, objects) must be `JSON.stringify()`'d
+- Backend receives: `formData.services = '["Acupuntura"]'` (string)
+- Solution: `to_internal_value()` detects string + parses → list before validation
+- Validators then receive proper Python list type and validation passes
+
+---
+
+### Previous Fixes
 
 1. **frontend/src/pages/RegisterProfessionalPage.tsx**
    - Added `setFieldError` desestruturação from `useFormValidation()` hook

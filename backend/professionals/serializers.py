@@ -195,10 +195,18 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         help_text='Mínimo 8 caracteres com maiúscula e número'
     )
     
+    # Allow frontend to send 'full_name' instead of 'name'
+    full_name = serializers.CharField(
+        write_only=True,
+        required=False,
+        allow_blank=True
+    )
+    
     class Meta:
         model = Professional
         fields = [
             'name',
+            'full_name',  # Accept both name and full_name
             'bio',
             'services',
             'city',
@@ -211,6 +219,36 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
             'password',
             'photo',
         ]
+    
+    def to_internal_value(self, data):
+        """
+        Handle JSON-encoded fields from FormData
+        When FormData is sent, complex fields like 'services' come as JSON strings
+        Also map 'full_name' to 'name' for frontend compatibility
+        """
+        import json
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
+        # Map full_name to name if provided (frontend sends full_name, model field is name)
+        if 'full_name' in data and 'name' not in data:
+            data['name'] = data.pop('full_name')
+            logger.debug(f'Mapped full_name to name: {data["name"]}')
+        elif 'full_name' in data:
+            # If both exist, remove full_name to avoid confusion
+            data.pop('full_name')
+        
+        # Parse JSON fields that come from FormData
+        if 'services' in data and isinstance(data['services'], str):
+            try:
+                data['services'] = json.loads(data['services'])
+                logger.debug(f'Parsed services from JSON string: {data["services"]}')
+            except (json.JSONDecodeError, ValueError) as e:
+                logger.error(f'Failed to parse services JSON: {str(e)}')
+                data['services'] = []
+        
+        return super().to_internal_value(data)
     
     def validate_password(self, value):
         """Validate password strength"""
