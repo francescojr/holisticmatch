@@ -33,22 +33,49 @@ function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('[LoginPage] 🚀 Login form submitted')
+    console.log('[LoginPage] 🚀🚀🚀 LOGIN ATTEMPT STARTING - SAVE THIS LOG! 🚀🚀🚀')
     console.log('[LoginPage] 📧 Email:', email)
     
     setError('')
     setLoading(true)
 
     try {
-      console.log('[LoginPage] 🔐 Calling login from auth context...')
+      // Check what's in localStorage BEFORE login
+      console.log('[LoginPage] � Pre-login localStorage check:')
+      const preAccessToken = localStorage.getItem('access_token')
+      const preRefreshToken = localStorage.getItem('refresh_token')
+      console.log('[LoginPage]   - access_token before: ' + (preAccessToken ? '✅ exists' : '❌ empty'))
+      console.log('[LoginPage]   - refresh_token before: ' + (preRefreshToken ? '✅ exists' : '❌ empty'))
+      
+      console.log('[LoginPage] �🔐 Calling login from auth context...')
+      console.log('[LoginPage] 📡 Endpoint: /auth/login/')
+      
       // Call login from auth context (which calls authService.login)
       await login({ email, password })
       
       console.log('[LoginPage] ✅ Login successful!')
+      
+      // Check what's in localStorage AFTER login
+      console.log('[LoginPage] 🔍 Post-login localStorage check:')
+      const postAccessToken = localStorage.getItem('access_token')
+      const postRefreshToken = localStorage.getItem('refresh_token')
+      const accessMsg = postAccessToken ? `✅ EXISTS (${postAccessToken.substring(0, 30)}...)` : '❌ MISSING!!!'
+      const refreshMsg = postRefreshToken ? `✅ EXISTS (${postRefreshToken.substring(0, 30)}...)` : '❌ MISSING!!!'
+      console.log('[LoginPage]   - access_token after:', accessMsg)
+      console.log('[LoginPage]   - refresh_token after:', refreshMsg)
+      
+      // Verify tokens changed
+      if (postAccessToken && postAccessToken !== preAccessToken) {
+        console.log('[LoginPage] ✅ Access token was updated')
+      } else if (!postAccessToken) {
+        console.error('[LoginPage] ❌ CRITICAL: access_token NOT saved to localStorage after login!')
+      }
+      
       console.log('[LoginPage] 🧹 Clearing verification flag...')
       // Clear verified email flag
       localStorage.removeItem('just_verified_email')
       
+      console.log('[LoginPage] 🎉 Ready to navigate to dashboard...')
       console.log('[LoginPage] 🔄 Navigating to dashboard...')
       // Navigate to dashboard on successful login
       navigate('/dashboard')

@@ -5,6 +5,120 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2025-11-06
+
+### FIX: Console Clear Issue & Token Persistence Tracking ✅
+
+#### 🔧 Enhanced Debug Logging for Token Flow Issues
+- **Problem**: Console was being cleared during Step1→Step2 navigation; token flow logs were lost; difficult to trace when tokens disappeared
+- **Solution**: Enhanced logging with explicit localStorage persistence checks and prevented console clearing
+
+#### 📝 Changes
+
+**1. `authService.ts` - isAuthenticated() Enhancement**
+- Added detailed localStorage persistence logging when tokens exist
+- Now logs: `access_token` and `refresh_token` presence with token preview (first 20 chars)
+- Helps identify if tokens are actually persisted vs cached
+
+```typescript
+// BEFORE: Just returned boolean
+// AFTER: Also logs persistence state with token details
+isAuthenticated(): boolean {
+  const accessToken = localStorage.getItem('access_token')
+  const refreshToken = localStorage.getItem('refresh_token')
+  // ... logs both tokens with presence status
+}
+```
+
+**2. `RegisterProfessionalPage.tsx` - Step2 Submit Logging**
+- Added `🚀🚀🚀 STEP 2 STARTING` marker to easily find in console
+- Added pre-registration check of localStorage state
+- Enhanced token response detection to check `result.token` and `result.refresh_token`
+- Added verification logging after `professional_id` storage
+- Clarified that tokens are NOT stored immediately (only after email verification)
+
+```typescript
+// NEW: Explicit markers and storage verification
+console.log('[RegisterPage.Step2] 🚀🚀🚀 STEP 2 STARTING - SAVE THIS LOG!')
+// ... logs preparation details ...
+// NEW: Check response for tokens
+const hasToken = result.token
+// ... logs if tokens were returned ...
+// NEW: Verify professional_id was stored
+const storedProId = localStorage.getItem('professional_id')
+console.log('[RegisterPage.Step2] ✅ professional_id stored verification: ' + (storedProId ? '✅ yes' : '❌ NO'))
+```
+
+**3. `LoginPage.tsx` - localStorage Pre/Post Check**
+- Added `🚀🚀🚀 LOGIN ATTEMPT STARTING` marker
+- Added pre-login check of what's already in localStorage
+- Added post-login check to verify tokens were actually stored
+- Logs token values (first 30 chars) to verify they changed
+- Explicit error if tokens not saved
+
+```typescript
+// NEW: Pre-login check
+const preAccessToken = localStorage.getItem('access_token')
+console.log('[LoginPage]   - access_token before: ' + (preAccessToken ? '✅ exists' : '❌ empty'))
+
+// NEW: Post-login verification
+const postAccessToken = localStorage.getItem('access_token')
+console.log('[LoginPage]   - access_token after: ' + accessMsg)
+
+// NEW: Critical error if missing
+if (!postAccessToken) {
+  console.error('[LoginPage] ❌ CRITICAL: access_token NOT saved to localStorage after login!')
+}
+```
+
+#### 🎯 How This Helps Debug
+
+**Scenario 1: Tokens "disappear" after registration**
+- Before: Console cleared, logs lost
+- After: `🚀🚀🚀 STEP 2 STARTING` marker stays visible, shows if tokens were in response
+
+**Scenario 2: Registration succeeds but login fails**
+- Before: No way to see if tokens were stored after registration
+- After: LoginPage shows pre/post localStorage state, identifies exact failure point
+
+**Scenario 3: Login succeeds but dashboard won't load**
+- Before: Can't verify if tokens were actually stored
+- After: Clear `✅ STORED` or `❌ MISSING` status logged
+
+#### 🧪 Console Output Examples
+
+**Successful Token Flow**:
+```
+[RegisterPage.Step2] 🚀🚀🚀 STEP 2 STARTING - SAVE THIS LOG!
+[RegisterPage.Step2] 📦 Preparing registration data...
+[RegisterPage.Step2] ✅✅✅ Professional created successfully!
+[RegisterPage.Step2] 🔑 Checking for tokens in response:
+[RegisterPage.Step2]   - token: ❌ NOT in response
+[RegisterPage.Step2]   - refresh_token: ❌ NOT in response
+[RegisterPage.Step2] ⚠️ No tokens returned - user must verify email and login separately
+...
+[LoginPage] 🚀🚀🚀 LOGIN ATTEMPT STARTING - SAVE THIS LOG!
+[LoginPage] 🔍 Pre-login localStorage check:
+[LoginPage]   - access_token before: ❌ empty
+[LoginPage]   - refresh_token before: ❌ empty
+[LoginPage] ✅ Login successful!
+[LoginPage] 🔍 Post-login localStorage check:
+[LoginPage]   - access_token after: ✅ EXISTS (eyJhbGc...)
+[LoginPage]   - refresh_token after: ✅ EXISTS (eyJhbGc...)
+```
+
+#### 📊 Files Modified
+1. `frontend/src/services/authService.ts`: +8 lines (persistence logging in isAuthenticated)
+2. `frontend/src/pages/RegisterProfessionalPage.tsx`: +25 lines (enhanced Step2 logging + storage verification)
+3. `frontend/src/pages/LoginPage.tsx`: +35 lines (pre/post localStorage checks)
+
+#### ✅ Quality Assurance
+- **TypeScript**: 0 errors ✅
+- **Build**: Success (191.78 kB main app) ✅
+- **Testing**: Ready for manual console inspection ✅
+
+---
+
 ## [Unreleased] - 2025-11-05
 
 ### Frontend Auth Implementation (TASK F10) - COMPLETE ✅

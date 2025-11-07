@@ -315,7 +315,8 @@ function RegisterProfessionalPage() {
 
   const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('[RegisterPage.Step2] 📝 Step 2 form submitted')
+    console.log('[RegisterPage.Step2] �🚀🚀 STEP 2 STARTING - SAVE THIS LOG! 🚀🚀🚀')
+    console.log('[RegisterPage.Step2] �📝 Step 2 form submitted')
 
     if (!validateStep2Form()) {
       console.log('[RegisterPage.Step2] ❌ Services validation failed')
@@ -353,6 +354,7 @@ function RegisterProfessionalPage() {
 
       // Show loading message
       console.log('[RegisterPage.Step2] 🚀 Calling API to create professional...')
+      console.log('[RegisterPage.Step2] 📡 Endpoint: /professionals/register/')
       toast.info('Criando seu perfil profissional...', {
         message: 'Por favor, aguarde enquanto processamos seu cadastro.'
       })
@@ -360,9 +362,22 @@ function RegisterProfessionalPage() {
       // Create professional profile with password
       const result = await professionalService.createProfessionalWithPassword(registrationData)
 
-      console.log('[RegisterPage.Step2] ✅ Professional created successfully!')
+      console.log('[RegisterPage.Step2] ✅✅✅ Professional created successfully! ✅✅✅')
       console.log('[RegisterPage.Step2] 🆔 Professional ID:', result.professional.id)
-      console.log('[RegisterPage.Step2] 👤 User ID:', result.professional.id)
+      
+      // Check if tokens were returned
+      console.log('[RegisterPage.Step2] 🔑 Checking for tokens in response:')
+      const hasToken = result.token
+      const hasRefreshToken = result.refresh_token
+      console.log('[RegisterPage.Step2]   - token: ' + (hasToken ? '✅ FOUND' : '❌ NOT in response'))
+      console.log('[RegisterPage.Step2]   - refresh_token: ' + (hasRefreshToken ? '✅ FOUND' : '❌ NOT in response'))
+      
+      if (hasToken) {
+        console.log('[RegisterPage.Step2]     Token value:', hasToken.substring(0, 30) + '...')
+        console.log('[RegisterPage.Step2] 💾 Tokens will be stored after email verification')
+      } else {
+        console.log('[RegisterPage.Step2] ⚠️ No tokens returned - user must verify email and login separately')
+      }
 
       // If photo exists, upload it separately
       if (step1Data.photo && result.professional.id) {
@@ -389,6 +404,10 @@ function RegisterProfessionalPage() {
       if (result.professional.id) {
         console.log('[RegisterPage.Step2] 💾 Storing professional_id:', result.professional.id)
         localStorage.setItem('professional_id', result.professional.id.toString())
+        
+        // Verify it was stored
+        const storedProId = localStorage.getItem('professional_id')
+        console.log('[RegisterPage.Step2] ✅ professional_id stored verification: ' + (storedProId ? '✅ yes' : '❌ NO'))
       }
 
       // Clear session storage

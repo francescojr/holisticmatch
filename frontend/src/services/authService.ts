@@ -236,8 +236,19 @@ export const authService = {
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
-    const isAuth = !!localStorage.getItem('access_token')
+    const accessToken = localStorage.getItem('access_token')
+    const refreshToken = localStorage.getItem('refresh_token')
+    const isAuth = !!accessToken
+    
     console.log('[authService.isAuthenticated] 🔍 Check:', isAuth ? '✅ authenticated' : '❌ not authenticated')
+    
+    // Log persistence state if tokens exist
+    if (isAuth) {
+      console.log('[authService.isAuthenticated] 💾 Token persistence:')
+      console.log('[authService.isAuthenticated]   - access_token: ' + (accessToken ? '✅ PRESENT (' + accessToken.substring(0, 20) + '...)' : '❌ MISSING'))
+      console.log('[authService.isAuthenticated]   - refresh_token: ' + (refreshToken ? '✅ PRESENT (' + refreshToken.substring(0, 20) + '...)' : '❌ MISSING'))
+    }
+    
     return isAuth
   },
 }
