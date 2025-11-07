@@ -69,7 +69,9 @@ function EmailVerificationPage() {
       setState('success')
       
       // Store email in localStorage for login redirect
-      localStorage.setItem('just_verified_email', result.email)
+      const verifiedEmail = result.email || email
+      localStorage.setItem('verification_email', verifiedEmail)
+      localStorage.setItem('just_verified_email', verifiedEmail)
       
       toast.success('Email verificado com sucesso!', {
         message: 'Você pode fazer login agora'
@@ -77,7 +79,6 @@ function EmailVerificationPage() {
       
       // Redirect to login after 3 seconds
       setTimeout(() => {
-        localStorage.removeItem('just_verified_email')
         navigate('/login')
       }, 3000)
     } catch (error: any) {

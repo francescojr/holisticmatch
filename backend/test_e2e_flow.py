@@ -77,16 +77,18 @@ def test_complete_flow():
     
     response_data = register_response.json()
     
-    # Validate response structure
-    required_fields = ['access', 'refresh', 'professional', 'message']
+    # Validate response structure (updated field names)
+    required_fields = ['access_token', 'refresh_token', 'user_id', 'professional_id']
     for field in required_fields:
         if field not in response_data:
             print(f"   ERROR: Missing '{field}' in response")
+            print(f"   Available fields: {list(response_data.keys())}")
             return False
     
-    access_token = response_data['access']
-    refresh_token = response_data['refresh']
-    professional_data = response_data['professional']
+    access_token = response_data['access_token']
+    refresh_token = response_data['refresh_token']
+    professional_id = response_data['professional_id']
+    user_id = response_data['user_id']
     
     print(f"   ✅ User registered successfully")
     print(f"   ✅ JWT access token: {access_token[:50]}...")
@@ -215,7 +217,7 @@ def test_complete_flow():
     }
     
     profile_response = client.get(
-        f'/api/v1/professionals/{professional_data["id"]}/',
+        f'/api/v1/professionals/{professional_id}/',
         **headers
     )
     

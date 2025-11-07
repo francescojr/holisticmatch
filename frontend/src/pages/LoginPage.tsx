@@ -21,15 +21,18 @@ function LoginPage() {
 
   // Check if user just verified email
   useEffect(() => {
-    const verifiedEmail = localStorage.getItem('just_verified_email')
+    console.log('[LoginPage] 📍 useEffect mounted - checking for verified email')
+    const verifiedEmail = localStorage.getItem('just_verified_email') || localStorage.getItem('verification_email')
+    console.log('[LoginPage] 📧 Verified email from localStorage:', verifiedEmail ? `✅ ${verifiedEmail}` : '❌ not found')
     if (verifiedEmail) {
+      console.log('[LoginPage] ✅ Auto-filling email field from verification')
       setJustVerifiedEmail(verifiedEmail)
       setEmail(verifiedEmail)
       toast.success('Email verificado!', {
         message: 'Agora você pode fazer login com sua senha'
       })
     }
-  }, [])
+  }, [toast])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,9 +74,10 @@ function LoginPage() {
         console.error('[LoginPage] ❌ CRITICAL: access_token NOT saved to localStorage after login!')
       }
       
-      console.log('[LoginPage] 🧹 Clearing verification flag...')
-      // Clear verified email flag
+      console.log('[LoginPage] 🧹 Clearing verification flags...')
+      // Clear verified email flags
       localStorage.removeItem('just_verified_email')
+      localStorage.removeItem('verification_email')
       
       console.log('[LoginPage] 🎉 Ready to navigate to dashboard...')
       console.log('[LoginPage] 🔄 Navigating to dashboard...')

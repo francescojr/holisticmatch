@@ -5,7 +5,7 @@ Handles user registration, login, logout, and token refresh.
 from rest_framework import views, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -101,3 +101,53 @@ class LoginView(views.APIView):
                 'username': user.username
             }
         }, status=status.HTTP_200_OK)
+
+
+class CurrentUserView(views.APIView):
+    """
+    Get current authenticated user info
+    GET /api/v1/auth/me/
+    
+    Returns authenticated user and their professional profile data
+    Requires valid JWT token in Authorization header
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """
+        Get current user profile
+        
+        Response:
+        {
+            "id": 1,
+            "email": "user@example.com",
+            "professional_id": 123,
+            "full_name": "João Silva",
+            "city": "São Paulo",
+            "state": "SP"
+        }
+        """
+        try:
+            professional = request.user.professional
+            
+            return Response({
+                'id': request.user.id,
+                'email': request.user.email,
+                'professional_id': professional.id,
+                'full_name': professional.name,
+                'city': professional.city,
+                'state': professional.state,
+                'photo': professional.photo.url if professional.photo else None,
+                'bio': professional.bio,
+                'whatsapp': professional.whatsapp,
+            }, status=status.HTTP_200_OK)
+        except Professional.DoesNotExist:
+            return Response(
+                {'detail': 'Professional profile not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

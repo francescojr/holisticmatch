@@ -34,6 +34,8 @@ export interface UseToastReturn {
 }
 
 const DEFAULT_DURATION = 3000 // 3 seconds
+const SUCCESS_DURATION = 5000 // 5 seconds for success messages
+const ERROR_DURATION = 7000 // 7 seconds for error messages
 const MAX_TOASTS = 5 // Maximum number of toasts to show at once
 
 export const useToast = (): UseToastReturn => {
@@ -59,7 +61,15 @@ export const useToast = (): UseToastReturn => {
   }, [])
 
   const showToast = useCallback((type: ToastType, title: string, options: ToastOptions = {}) => {
-    const { duration = DEFAULT_DURATION, message } = options
+    // Determine duration based on toast type if not explicitly provided
+    let duration = options.duration
+    if (duration === undefined) {
+      duration = type === 'success' ? SUCCESS_DURATION : 
+                 type === 'error' ? ERROR_DURATION : 
+                 DEFAULT_DURATION
+    }
+    
+    const { message } = options
 
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
