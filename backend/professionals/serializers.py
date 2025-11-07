@@ -13,6 +13,7 @@ from .validators import (
     validate_price_per_session,
     validate_phone_number,
     validate_state_code,
+    validate_profile_photo,
 )
 from .constants import SERVICE_TYPES
 
@@ -204,12 +205,16 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
     
     # CRITICAL: Explicit ImageField declaration for proper FormData handling
     # This ensures DRF properly validates multipart/form-data uploads
-    # Required for registration endpoint but allow_null for ModelSerializer compatibility
     photo = serializers.ImageField(
         required=False,
         allow_null=True,
         allow_empty_file=False,
-        help_text='Foto de perfil (JPG ou PNG, máx 5MB)'
+        help_text='Foto de perfil (JPG ou PNG, máx 5MB)',
+        error_messages={
+            'invalid_image': 'Envie uma imagem válida (JPG ou PNG)',
+            'required': 'Foto é obrigatória',
+            'not_a_file': 'Foto precisa ser um arquivo de imagem',
+        }
     )
     
     class Meta:
@@ -241,23 +246,30 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         
         logger = logging.getLogger(__name__)
         
-        # Log incoming data structure for debugging
-        logger.info(f'[ProfessionalCreateSerializer.to_internal_value] Incoming data keys: {list(data.keys())}')
+        # HARDCORE DEBUG: Log EVERYTHING before processing
+        logger.info('=' * 80)
+        logger.info('[ProfessionalCreateSerializer.to_internal_value] ⚠️  INCOMING REQUEST')
+        logger.info('=' * 80)
+        logger.info(f'Data type: {type(data).__name__}')
+        logger.info(f'Data keys: {list(data.keys())}')
         
-        # CRITICAL: Log photo field details
-        if 'photo' in data:
-            photo = data['photo']
-            logger.info(f'[ProfessionalCreateSerializer] Photo field type: {type(photo).__name__}')
-            logger.info(f'[ProfessionalCreateSerializer] Photo value: {photo}')
-            logger.info(f'[ProfessionalCreateSerializer] Photo is InMemoryUploadedFile? {type(photo).__name__ == "InMemoryUploadedFile"}')
-            if hasattr(photo, 'size'):
-                logger.info(f'[ProfessionalCreateSerializer] Photo size: {photo.size} bytes')
-            if hasattr(photo, 'name'):
-                logger.info(f'[ProfessionalCreateSerializer] Photo name: {photo.name}')
-        else:
-            logger.warning('[ProfessionalCreateSerializer] No photo field in data!')
-        
-        logger.info(f'[ProfessionalCreateSerializer.to_internal_value] Full data: {data}')
+        # Log each field individually
+        for key, value in data.items():
+            if key == 'photo':
+                logger.info(f'  [{key}] Type: {type(value).__name__}, Value: {value}')
+                if hasattr(value, 'name'):
+                    logger.info(f'       -> name: {value.name}')
+                if hasattr(value, 'size'):
+                    logger.info(f'       -> size: {value.size}')
+                if hasattr(value, 'content_type'):
+                    logger.info(f'       -> content_type: {value.content_type}')
+                if hasattr(value, 'read'):
+                    logger.info(f'       -> is file-like: True')
+            elif key == 'services':
+                logger.info(f'  [{key}] Type: {type(value).__name__}, Value: {value[:50] if isinstance(value, str) else value}...')
+            else:
+                val_str = str(value)[:80]
+                logger.info(f'  [{key}] Type: {type(value).__name__}, Value: {val_str}')
         
         # Map full_name to name if provided (frontend sends full_name, model field is name)
         if 'full_name' in data and 'name' not in data:
@@ -276,7 +288,8 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
                 logger.error(f'Failed to parse services JSON: {str(e)}')
                 data['services'] = []
         
-        logger.info(f'[ProfessionalCreateSerializer.to_internal_value] After processing: {data}')
+        logger.info('[ProfessionalCreateSerializer.to_internal_value] 🚀 Calling super().to_internal_value()')
+        logger.info('=' * 80)
         return super().to_internal_value(data)
     
     def validate_password(self, value):
@@ -304,6 +317,29 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
             return value
         except DjangoValidationError as e:
             raise serializers.ValidationError(e.message)
+    
+    def validate_photo(self, value):
+        """
+        Validate photo field explicitly
+        This method is called AFTER ImageField parsing
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f'[validate_photo] Validating photo: {type(value).__name__}')
+        
+        if value:  # Only validate if provided
+            logger.info(f'[validate_photo] Photo provided: {value.name if hasattr(value, "name") else "unknown"}')
+            logger.info(f'[validate_photo] Is File-like: {hasattr(value, "read")}')
+            try:
+                validate_profile_photo(value)
+                return value
+            except DjangoValidationError as e:
+                logger.error(f'[validate_photo] Validation error: {str(e)}')
+                raise serializers.ValidationError(str(e))
+        else:
+            logger.info('[validate_photo] No photo provided, skipping validation')
+            return value
     
     def validate_services(self, value):
         """Validate services"""

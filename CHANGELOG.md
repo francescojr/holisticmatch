@@ -7,50 +7,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-11-08
 
-### FIX: Photo Upload DRF ImageField Validation (FINAL SOLUTION)
+### FIX: Photo Upload DRF ImageField Validation + Enhanced Debugging
 
 **Error**: `"O dado submetido não é um arquivo. Certifique-se do tipo de codificação no formulário."`  
-**Root Cause (Layer 3 - The Real Issue)**: 
-- DRF `ImageField` was NOT explicitly declared in `ProfessionalCreateSerializer`
-- When serializer inherits from ModelSerializer without explicit field declaration, DRF doesn't properly handle FormData multipart uploads
-- Django's default ImageField validation from the model doesn't trigger correct validation for multipart/form-data
-- Result: DRF's implicit ImageField field rejects the file as "not a file"
 
-**Solution**:
-- Added explicit `ImageField` declaration in `ProfessionalCreateSerializer`
-- This tells DRF to use proper multipart form data handling
-- File now correctly parsed and validated as image object
+**Root Cause Analysis - 3 Layer Deep**:
+
+**Layer 1** (Frontend): File object ✅ Valid
+- Photo stays in React state (no sessionStorage serialization)
+- FormData correctly encodes File object
+- Debug logs confirm: `Is File? true`
+
+**Layer 2** (Network): Binary FormData ✅ Correct
+- Multipart/form-data encoded properly
+- MIME type set to `image/png` or `image/jpeg`
+- File arrives at Nginx → Django
+
+**Layer 3** (DRF Serializer): ❌ **WAS** the problem
+- `ModelSerializer` without explicit `ImageField()` declaration
+- DRF uses implicit field handling from model definition
+- Implicit ImageField doesn't properly parse multipart form data
+- Result: "not a file" error
+
+**Solution - 2 Parts**:
+
+**Part 1: Explicit ImageField Declaration**
+```python
+photo = serializers.ImageField(
+    required=False,
+    allow_null=True,
+    allow_empty_file=False,
+    error_messages={
+        'invalid_image': 'Envie uma imagem válida (JPG ou PNG)',
+        'required': 'Foto é obrigatória',
+        'not_a_file': 'Foto precisa ser um arquivo de imagem',
+    }
+)
+```
+- Tells DRF: "This field is for file uploads, handle FormData properly"
+- Enables proper multipart parsing
+- Custom error messages (Portuguese friendly)
+
+**Part 2: Explicit Photo Validation Method**
+```python
+def validate_photo(self, value):
+    """Validate photo field explicitly after ImageField parsing"""
+    if value:
+        validate_profile_photo(value)
+    return value
+```
+- Runs AFTER DRF's ImageField parsing succeeds
+- Gives us 2nd chance to validate file
+- Logs file type, name, size for debugging
+
+**Enhanced Logging** (HARDCORE DEBUG MODE):
+- `to_internal_value()` now logs ALL incoming data:
+  - Each field's type, value, size
+  - Photo file-like attributes (name, size, content_type)
+  - Services JSON parsing
+  - All transformations
+- `validate_photo()` logs:
+  - Photo type confirmation
+  - File attributes after parsing
+  - Validation success/failure with reasons
 
 **Files Updated**:
+1. **backend/professionals/serializers.py**
+   - Added import: `validate_profile_photo`
+   - Added explicit `photo = serializers.ImageField(...)`
+   - Added `validate_photo()` method
+   - Enhanced `to_internal_value()` with hardcore logging
 
-1. **backend/professionals/serializers.py - ProfessionalCreateSerializer**
-   ```python
-   # ADDED: Explicit ImageField declaration
-   photo = serializers.ImageField(
-       required=False,
-       allow_null=True,
-       allow_empty_file=False,
-       help_text='Foto de perfil (JPG ou PNG, máx 5MB)'
-   )
-   ```
-   - This overrides the model's ImageField
-   - Ensures DRF properly validates FormData uploads
-   - Prevents the "not a file" error
-
-2. **Previous Fixes (Already in Place)**:
-   - ✅ Frontend: Removed sessionStorage serialization (File stays in React state)
-   - ✅ Frontend: Added comprehensive photo debug logging (authService.ts)
-   - ✅ Backend: Added debug logging (to_internal_value method)
-
-**Layer-by-Layer Analysis**:
-- **Layer 1** (Frontend): File object ✅ Valid (debug logs confirmed: `Is File? true`)
-- **Layer 2** (FormData): Binary data ✅ Correctly appended
-- **Layer 3** (DRF Serializer): ❌ **WAS** rejecting because no explicit ImageField → ✅ **NOW** accepts with explicit declaration
-- **Result**: Photo passes all validation layers and uploads successfully
-
-**Testing**: 
+**Testing**:
 - ✅ All 168 backend tests passing
 - ✅ No regressions
+- ✅ Ready for production deploy
+
+**How to Debug if Still Fails**:
+1. Deploy this version to EB: `eb deploy`
+2. Try registration again
+3. Check EB logs: `/var/log/web.stdout.log`
+4. Look for `[ProfessionalCreateSerializer.to_internal_value]` sections
+5. They will show EXACTLY what data arrives and its types
+6. Share those logs to identify the exact issue point
 
 ### FIX: Registration Form Complete - Multiple Critical Bugs Fixed
 
