@@ -173,6 +173,13 @@ CORS_ALLOWED_ORIGINS = config(
 
 CORS_ALLOW_CREDENTIALS = True
 
+# ============================================================================
+# FILE UPLOAD SETTINGS
+# ============================================================================
+# Maximum size of uploaded files in bytes (50MB)
+FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+
 # AWS S3 Settings
 USE_S3 = config('USE_S3', default=False, cast=bool)
 
