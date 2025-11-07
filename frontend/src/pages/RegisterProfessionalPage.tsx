@@ -243,18 +243,14 @@ function RegisterProfessionalPage() {
 
       // For now, just show success and navigate to next step
       // In a real implementation, this would validate email uniqueness
-      console.log('[RegisterPage.Step1] 💾 Storing Step 1 data to sessionStorage...')
       toast.success('Dados validados com sucesso!', {
         message: 'Prosseguindo para o próximo passo...'
       })
 
       // Store form data for next step (in a real app, this would be in a context or state management)
-      sessionStorage.setItem('registerStep1', JSON.stringify({
-        ...step1Data,
-        photo: step1Data.photo ? { name: step1Data.photo.name, size: step1Data.photo.size } : null
-      }))
-
-      console.log('[RegisterPage.Step1] ✅ Step 1 data stored')
+      // NOTE: We store step1Data directly in state, NOT in sessionStorage, because File objects cannot be serialized
+      // The step1Data state is maintained across component lifecycle
+      console.log('[RegisterPage.Step1] ✅ Step 1 data ready for Step 2')
       
       // Navigate to next step
       console.log('[RegisterPage.Step1] 🎯 Navigating to Step 2...')
