@@ -27,7 +27,7 @@ export const authService = {
 
       // Professional fields
       formData.append('full_name', data.full_name)
-      formData.append('photo', data.photo)
+      if (data.photo) formData.append('photo', data.photo)
       formData.append('services', JSON.stringify(data.services))
       formData.append('price_per_session', data.price_per_session.toString())
       formData.append('attendance_type', data.attendance_type)
