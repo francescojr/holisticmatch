@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test FormData Upload</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 50px auto; }
+        textarea { width: 100%; height: 300px; font-family: monospace; }
+        .log { margin-top: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Test FormData Photo Upload</h1>
+    
+    <div>
+        <h3>1. Select a photo file:</h3>
+        <input type="file" id="photoInput" accept="image/*">
+        <p id="fileInfo"></p>
+    </div>
+
+    <div>
+        <h3>2. Test FormData (No Content-Type header):</h3>
+        <button onclick="testFormDataProper()">Test Proper FormData (Delete Content-Type)</button>
+    </div>
+
+    <div>
+        <h3>3. Test with Wrong Content-Type (Simulates Bug):</h3>
+        <button onclick="testFormDataWrong()">Test Wrong (Keep Content-Type: application/json)</button>
+    </div>
+
+    <div class="log">
+        <h3>Logs:</h3>
+        <textarea id="log" readonly></textarea>
+    </div>
+
+    <script>
+        const log = (msg, type = 'info') => {
+            const el = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            const text = `[${time}] ${msg}\n`;
+            el.value += text;
+            el.scrollTop = el.scrollHeight;
+            console.log(`[${type}]`, msg);
+        };
+
+        document.getElementById('photoInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('fileInfo').innerHTML = `
+                    ✅ Selected: ${file.name}<br>
+                    Type: ${file.type}<br>
+                    Size: ${(file.size / 1024).toFixed(2)} KB<br>
+                    Is File: ${file instanceof File ? 'YES ✅' : 'NO ❌'}
+                `;
+            }
+        });
+
+        async function testFormDataProper() {
+            const file = document.getElementById('photoInput').files[0];
+            if (!file) {
+                log('❌ No file selected!', 'error');
+                return;
+            }
+
+            log('🚀 Starting PROPER FormData test...');
+            log('📊 File properties:');
+            log(`  - Name: ${file.name}`);
+            log(`  - Type: ${file.type}`);
+            log(`  - Size: ${file.size} bytes`);
+            log(`  - Is File: ${file instanceof File}`);
+
+            const formData = new FormData();
+            formData.append('email', 'test@example.com');
+            formData.append('password', 'Test123!');
+            formData.append('full_name', 'Test User');
+            formData.append('photo', file);
+            formData.append('state', 'SP');
+            formData.append('city', 'Sao Paulo');
+            formData.append('neighborhood', 'Centro');
+            formData.append('services', JSON.stringify(['Meditaçao']));
+            formData.append('price_per_session', '100');
+            formData.append('attendance_type', 'presencial');
+            formData.append('bio', 'Test bio');
+            formData.append('whatsapp', '11999999999');
+
+            log('📦 FormData prepared with keys: ' + Array.from(formData.keys()).join(', '));
+
+            try {
+                log('📡 Sending to backend (with PROPER header handling)...');
+                
+                // Method 1: Using fetch (automatically handles FormData)
+                const response = await fetch('/api/v1/professionals/register/', {
+                    method: 'POST',
+                    body: formData,
+                    // DO NOT set Content-Type header - let browser set it!
+                    // headers: { 'Content-Type': 'application/json' } ← This would break it!
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ SUCCESS! Status: ${response.status}`, 'success');
+                    log('📊 Response: ' + JSON.stringify(data, null, 2));
+                } else {
+                    log(`❌ FAILED! Status: ${response.status}`, 'error');
+                    log('📊 Error: ' + JSON.stringify(data, null, 2));
+                }
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFormDataWrong() {
+            const file = document.getElementById('photoInput').files[0];
+            if (!file) {
+                log('❌ No file selected!', 'error');
+                return;
+            }
+
+            log('🚀 Starting WRONG FormData test (with explicit Content-Type)...');
+            log('⚠️  This simulates the BUG we fixed!');
+
+            const formData = new FormData();
+            formData.append('email', 'test2@example.com');
+            formData.append('password', 'Test123!');
+            formData.append('full_name', 'Test User 2');
+            formData.append('photo', file);
+            formData.append('state', 'SP');
+            formData.append('city', 'Sao Paulo');
+            formData.append('neighborhood', 'Centro');
+            formData.append('services', JSON.stringify(['Meditaçao']));
+            formData.append('price_per_session', '100');
+            formData.append('attendance_type', 'presencial');
+            formData.append('bio', 'Test bio');
+            formData.append('whatsapp', '11999999999');
+
+            log('📦 FormData prepared');
+
+            try {
+                log('📡 Sending to backend (with WRONG Content-Type: application/json)...');
+                log('⚠️  This will likely fail with "not a file" error');
+                
+                // Method 2: Using fetch with explicit wrong Content-Type
+                const response = await fetch('/api/v1/professionals/register/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Content-Type': 'application/json'  // ← WRONG! This breaks multipart
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log(`✅ SUCCESS! Status: ${response.status}`, 'success');
+                    log('📊 Response: ' + JSON.stringify(data, null, 2));
+                } else {
+                    log(`❌ FAILED! Status: ${response.status} (EXPECTED with wrong header)`, 'error');
+                    log('📊 Error: ' + JSON.stringify(data, null, 2));
+                }
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        log('✅ Test page loaded. Select a photo file and click "Test Proper FormData"');
+        log('This demonstrates the difference between correct and broken FormData uploads.');
+    </script>
+</body>
+</html>

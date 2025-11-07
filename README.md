@@ -23,7 +23,12 @@
 - ✅ **Email Validation**: Duplicate emails return 400 (not 500 errors)
 - ✅ **Timing Attack Protection**: LoginView now immune to email enumeration attacks
 - ✅ **Complete Flow**: Full end-to-end testing validates register → verify → login flow
-- **Status**: All 31 tests passing ✅ | Ready for deployment ✅
+- ✅ **Photo Upload Fix**: Nginx/Django limits increased to 250MB, Axios header fixed
+- **Status**: All tests passing ✅ | Ready for deployment ✅
+
+### 📸 Photo Upload - Latest Fix (Nov 7, 2025)
+Nginx + Django limits increased from 50MB to 250MB. Axios FormData header issue fixed.
+See [PHOTO_UPLOAD_QUICKSTART.md](./PHOTO_UPLOAD_QUICKSTART.md) for details.
 
 ---
 

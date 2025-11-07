@@ -181,9 +181,10 @@ CORS_ALLOW_CREDENTIALS = True
 # ============================================================================
 # FILE UPLOAD SETTINGS
 # ============================================================================
-# Maximum size of uploaded files in bytes (50MB)
-FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50MB
+# Maximum size of uploaded files in bytes (250MB for safety margin)
+# This needs to match nginx client_max_body_size
+FILE_UPLOAD_MAX_MEMORY_SIZE = 262144000  # 250MB
+DATA_UPLOAD_MAX_MEMORY_SIZE = 262144000  # 250MB
 
 # AWS S3 Settings
 USE_S3 = config('USE_S3', default=False, cast=bool)

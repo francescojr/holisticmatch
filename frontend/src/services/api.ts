@@ -28,16 +28,25 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 seconds
+  timeout: 30000, // 30 seconds (increased for file uploads)
 })
 
-// Request interceptor - add JWT token to requests
+// Request interceptor - add JWT token and handle FormData
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Add JWT token if available
     const token = localStorage.getItem('access_token')
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`
     }
+
+    // CRITICAL: If sending FormData, remove Content-Type header
+    // Let browser/axios automatically set it with correct multipart boundary
+    if (config.data instanceof FormData) {
+      // Delete the Content-Type header so axios can set it with proper boundary
+      delete config.headers['Content-Type']
+    }
+
     return config
   },
   (error) => {

@@ -2,16 +2,20 @@
   "openapi": "3.0.0",
   "info": {
     "title": "HolisticMatch Professional API",
-    "description": "Complete REST API for HolisticMatch - Professional marketplace for holistic therapies",
+    "description": "Complete REST API for HolisticMatch - Professional marketplace for holistic therapies and wellness services",
     "version": "1.0.0",
     "contact": {
       "name": "HolisticMatch Team",
-      "email": "support@holisticmatch.com"
+      "email": "support@holisticmatch.com",
+      "url": "https://holisticmatch.com"
+    },
+    "license": {
+      "name": "MIT"
     }
   },
   "servers": [
     {
-      "url": "https://api.holisticmatch.com/api/v1",
+      "url": "https://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/api/v1",
       "description": "Production server"
     },
     {

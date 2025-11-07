@@ -71,8 +71,8 @@ def pytest_sessionstart(session):
 def ensure_cities_for_django_db_tests(db):
     """
     Autouse fixture: Ensures cities are loaded for tests with @pytest.mark.django_db.
-    This runs after pytest_sessionstart and ensures cities exist in the test DB
-    for each test that needs them.
+    Uses get_or_create to avoid UNIQUE constraint violations when tests try to
+    create cities that already exist.
     """
     global _cities_loaded_this_session
     
@@ -98,17 +98,16 @@ def ensure_cities_for_django_db_tests(db):
                 'PA': ['Belém', 'Ananindeua', 'Santarém'],
             }
             
-            cities_to_create = [
-                City(state=state, name=city_name)
-                for state, city_list in cities_data.items()
-                for city_name in city_list
-            ]
-            
-            City.objects.bulk_create(cities_to_create, ignore_conflicts=True)
+            # Use get_or_create to avoid UNIQUE constraint violations
+            for state, city_list in cities_data.items():
+                for city_name in city_list:
+                    City.objects.get_or_create(state=state, name=city_name)
+        
         _cities_loaded_this_session = True
-    except Exception:
-        # Silently fail - database might not be accessible in this context
-        pass
+    except Exception as e:
+        # Log but don't fail - database might not be accessible in collection phase
+        import traceback
+        traceback.print_exc()
 
 
 @pytest.fixture

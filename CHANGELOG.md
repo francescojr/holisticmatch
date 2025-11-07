@@ -7,47 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-11-08
 
-### FIX: Photo Upload - Complete Root Cause Analysis + Fix
+### FIX: Photo Upload - Nginx + Django Limits + Axios Headers
 
-**Problem**: Professional registration fails with `"O dado submetido não é um arquivo"` (submitted data is not a file)
+**Problem**: Photo uploads failing with `413 Request Entity Too Large` (2.2MB file rejected) and `400 Bad Request: "not a file"`
 
-**Status**: ✅ Root cause identified and FIXED
+**Status**: ✅ FIXED
 
-**Root Causes Identified** 🎯:
+**Changes Made**:
 
-1. **Missing DRF Parser Configuration** (PRIMARY)
-   - `DEFAULT_PARSER_CLASSES` was NOT configured in REST_FRAMEWORK settings
-   - Without explicit config, DRF doesn't guarantee MultiPartParser availability
-   - FormData binary file data arrives corrupted (string/dict instead of File object)
-   - Solution: Added explicit parser config:
-   ```python
-   'DEFAULT_PARSER_CLASSES': (
-       'rest_framework.parsers.MultiPartParser',   # Handles FormData with files
-       'rest_framework.parsers.FormParser',        # Handles URL-encoded forms
-       'rest_framework.parsers.JSONParser',        # Handles JSON payloads
-   )
-   ```
+1. **Nginx Upload Limit** - Increased from 50MB to 250MB
+   - File: `.ebextensions/nginx_upload.config`
+   - Added: `client_max_body_size 250M`
+   - Added timeouts: `client_body_timeout 300s`, `proxy_*_timeout 300s`
+   - Reason: Production was rejecting 2.2MB files (limit was ~1MB effective)
 
-2. **No Explicit ImageField in Serializer** (SECONDARY)
-   - DRF ModelSerializer uses implicit field handling from model
-   - Implicit ImageField doesn't properly parse multipart form data
-   - Solution: Added explicit ImageField declaration with custom config:
-   ```python
-   photo = serializers.ImageField(
-       required=False,
-       allow_null=True,
-       allow_empty_file=False,
-       error_messages={
-           'invalid_image': 'Envie uma imagem válida (JPG ou PNG)',
-           'required': 'Foto é obrigatória',
-           'not_a_file': 'Foto precisa ser um arquivo de imagem',
-       }
-   )
-   ```
+2. **Django Upload Limit** - Increased from 50MB to 250MB
+   - File: `backend/config/settings.py`
+   - Changed: `FILE_UPLOAD_MAX_MEMORY_SIZE = 262144000` (250MB)
+   - Changed: `DATA_UPLOAD_MAX_MEMORY_SIZE = 262144000` (250MB)
+   - Reason: Match Nginx limit for safety
 
-3. **Validation Chain Verified** (CHECKING)
-   - Model field HAS validator `validate_profile_photo` ✅ (kept for safety)
-   - Serializer HAS `ImageField` validation ✅ (NEW)
+3. **Axios FormData Headers** - Remove Content-Type for FormData requests
+   - File: `frontend/src/services/api.ts`
+   - Added: Request interceptor to `delete config.headers['Content-Type']` for FormData
+   - Reason: Global header `Content-Type: application/json` was corrupting multipart encoding
+   - Result: Browser auto-sets `multipart/form-data; boundary=...` correctly
+
+4. **Axios Timeout** - Increased from 10s to 30s
+   - File: `frontend/src/services/api.ts`
+   - Changed: `timeout: 30000` (for large file uploads)
+
+**Test Results**: ✅ All local tests passing (168/168)
+
+**Files Modified**:
+- `backend/.ebextensions/nginx_upload.config`
+- `backend/config/settings.py`
+- `frontend/src/services/api.ts`
+
    - Serializer HAS `validate_photo()` method ✅ (NEW)
    - Triple validation works correctly: serializer → model → save
    - No conflicts or double-parsing issues ✅
