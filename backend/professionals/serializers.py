@@ -231,6 +231,10 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         
         logger = logging.getLogger(__name__)
         
+        # Log incoming data structure for debugging
+        logger.info(f'[ProfessionalCreateSerializer.to_internal_value] Incoming data keys: {list(data.keys())}')
+        logger.info(f'[ProfessionalCreateSerializer.to_internal_value] Data: {data}')
+        
         # Map full_name to name if provided (frontend sends full_name, model field is name)
         if 'full_name' in data and 'name' not in data:
             data['name'] = data.pop('full_name')
@@ -248,6 +252,7 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
                 logger.error(f'Failed to parse services JSON: {str(e)}')
                 data['services'] = []
         
+        logger.info(f'[ProfessionalCreateSerializer.to_internal_value] After processing: {data}')
         return super().to_internal_value(data)
     
     def validate_password(self, value):
@@ -286,9 +291,13 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
     
     def validate_state(self, value):
         """Validate state"""
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f'[validate_state] Validating state value: {repr(value)} (type: {type(value).__name__})')
         try:
             return validate_state_code(value)
         except DjangoValidationError as e:
+            logger.error(f'[validate_state] Validation failed: {e.message}')
             raise serializers.ValidationError(e.message)
     
     def validate_email(self, value):
@@ -299,6 +308,10 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
     
     def validate(self, data):
         """Cross-field validation including city-state pair"""
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f'[validate] Validating cross-field data: {list(data.keys())}')
+        
         # Validate city and state pair
         city = data.get('city')
         state = data.get('state')
@@ -308,6 +321,7 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
             try:
                 validate_city_state_pair(city, state)
             except DjangoValidationError as e:
+                logger.error(f'[validate] City-state validation failed: {e.message}')
                 raise serializers.ValidationError({
                     'city': str(e.message),
                     'state': str(e.message)
