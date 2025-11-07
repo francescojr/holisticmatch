@@ -29,7 +29,7 @@ export interface RegisterRequest {
 
   // Professional fields
   full_name: string
-  photo: File
+  photo?: File
   services: string[]
   price_per_session: number
   attendance_type: 'home' | 'office' | 'both'

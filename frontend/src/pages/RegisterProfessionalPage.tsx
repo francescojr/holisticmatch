@@ -11,6 +11,7 @@ import { useFormValidation } from '../hooks/useFormValidation'
 import { useCities } from '../hooks/useCities'
 import { useToast } from '../hooks/useToast'
 import { FormInput, FileUpload, FormSelect, ToastContainer } from '../components'
+import { authService } from '../services/authService'
 import { professionalService } from '../services/professionalService'
 
 const BRAZILIAN_STATES = [
@@ -386,62 +387,45 @@ function RegisterProfessionalPage() {
       console.log('[RegisterPage.Step2]    Photo:', step1Data.photo ? '✅ will be uploaded' : '❌ no photo')
 
       // Show loading message
-      console.log('[RegisterPage.Step2] 🚀 Calling API to create professional...')
+      console.log('[RegisterPage.Step2] 🚀 Calling API to register professional...')
       console.log('[RegisterPage.Step2] 📡 Endpoint: /professionals/register/')
       toast.info('Criando seu perfil profissional...', {
         message: 'Por favor, aguarde enquanto processamos seu cadastro.'
       })
 
-      // Create professional profile with password
-      const result = await professionalService.createProfessionalWithPassword(registrationData)
+      // Use authService.register() which calls /professionals/register/ and returns JWT tokens
+      const registerResult = await authService.register({
+        email: step1Data.email,
+        password: step1Data.password,
+        full_name: step1Data.fullName,
+        photo: step1Data.photo || undefined,
+        services: step2Data.services.map(s => s.service_type),
+        price_per_session: Math.min(...step2Data.services.map(s => s.price_per_session)),
+        attendance_type: 'both',
+        city: step1Data.city,
+        neighborhood: 'default',
+        bio: `Profissional de terapias holísticas especializado em ${step2Data.services.map(s => s.service_type).join(', ')}.`,
+        whatsapp: step1Data.phone,
+      })
 
       console.log('[RegisterPage.Step2] ✅✅✅ Professional created successfully! ✅✅✅')
-      console.log('[RegisterPage.Step2] 🆔 Professional ID:', result.professional.id)
+      console.log('[RegisterPage.Step2] 🆔 Professional ID:', registerResult.professional_id)
       
       // Check if tokens were returned
       console.log('[RegisterPage.Step2] 🔑 Checking for tokens in response:')
-      const hasToken = result.token
-      const hasRefreshToken = result.refresh_token
-      console.log('[RegisterPage.Step2]   - token: ' + (hasToken ? '✅ FOUND' : '❌ NOT in response'))
+      const hasAccessToken = registerResult.access_token
+      const hasRefreshToken = registerResult.refresh_token
+      console.log('[RegisterPage.Step2]   - access_token: ' + (hasAccessToken ? '✅ FOUND' : '❌ NOT in response'))
       console.log('[RegisterPage.Step2]   - refresh_token: ' + (hasRefreshToken ? '✅ FOUND' : '❌ NOT in response'))
       
-      if (hasToken) {
-        console.log('[RegisterPage.Step2]     Token value:', hasToken.substring(0, 30) + '...')
-        console.log('[RegisterPage.Step2] 💾 Tokens will be stored after email verification')
-      } else {
-        console.log('[RegisterPage.Step2] ⚠️ No tokens returned - user must verify email and login separately')
+      if (hasAccessToken) {
+        console.log('[RegisterPage.Step2]     Access Token value:', hasAccessToken.substring(0, 30) + '...')
+        console.log('[RegisterPage.Step2] 💾 Tokens stored in localStorage by authService')
       }
-
-      // If photo exists, upload it separately
-      if (step1Data.photo && result.professional.id) {
-        try {
-          console.log('[RegisterPage.Step2] 📸 Uploading photo...')
-          toast.info('Fazendo upload da foto...', {
-            message: 'Quase lá!'
-          })
-
-          await professionalService.uploadProfessionalPhoto(result.professional.id, step1Data.photo)
-          console.log('[RegisterPage.Step2] ✅ Photo uploaded successfully')
-        } catch (photoError: any) {
-          console.warn('[RegisterPage.Step2] ⚠️ Photo upload failed, but professional was created:', photoError.message)
-          toast.warning('Perfil criado, mas houve um problema com a foto', {
-            message: 'Você pode fazer upload da foto depois no seu perfil.'
-          })
-        }
-      }
-
-      // Don't store auth token yet - user needs to verify email first
-      // Token will be stored after email verification
 
       // Store professional ID
-      if (result.professional.id) {
-        console.log('[RegisterPage.Step2] 💾 Storing professional_id:', result.professional.id)
-        localStorage.setItem('professional_id', result.professional.id.toString())
-        
-        // Verify it was stored
-        const storedProId = localStorage.getItem('professional_id')
-        console.log('[RegisterPage.Step2] ✅ professional_id stored verification: ' + (storedProId ? '✅ yes' : '❌ NO'))
-      }
+      console.log('[RegisterPage.Step2] 💾 Storing professional_id:', registerResult.professional_id)
+      localStorage.setItem('professional_id', registerResult.professional_id.toString())
 
       // Clear session storage
       sessionStorage.removeItem('registerStep1')

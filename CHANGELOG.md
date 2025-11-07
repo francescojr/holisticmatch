@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-11-08
 
+### CRITICAL FIX: Registration Form Now Saves Tokens to localStorage
+
+**Root Cause**: Frontend registration form was calling `professionalService.createProfessionalWithPassword()` which posts to `/professionals/` endpoint (doesn't return JWT tokens). Should call `authService.register()` which posts to `/professionals/register/` (returns and saves JWT tokens).
+
+**Impact**: After registration completed, tokens were NOT persisted → User was redirected to /login instead of /verify-email → Registration appeared to fail even though backend created the account.
+
+**Files Fixed**:
+- `frontend/src/pages/RegisterProfessionalPage.tsx` (handleStep2Submit):
+  - Changed from: `professionalService.createProfessionalWithPassword(registrationData)`
+  - Changed to: `authService.register({...})`
+  - Now tokens are automatically saved to localStorage
+  - Removed photo upload logic (handled by backend in one request)
+  
+- `frontend/src/types/Auth.ts`:
+  - Made `photo` field optional in RegisterRequest interface
+
+**Registration Flow Now Works**:
+1. ✅ User fills Step 1 → Step 2
+2. ✅ User fills Step 2 (services) → Click "Finalizar Cadastro"
+3. ✅ authService.register() calls `/professionals/register/`
+4. ✅ Backend returns JWT tokens AND user/professional data
+5. ✅ Frontend saves tokens to localStorage
+6. ✅ User is redirected to `/verify-email` with email pre-filled
+7. ✅ After email verification → User can login
+
+**Test Results**: ✅ All backend tests passing (166/166)
+
+---
+
 ### ENHANCED: Frontend Registration Form Validation Logging
 
 **Improvement**: Better debugging for registration form validation failures.
