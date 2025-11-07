@@ -7,9 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-11-08
 
-### FIX: Step 2 Refactor - Single Base Price "a partir de" Model
+### FIX: attendance_type Field Value Mismatch ('both' vs 'ambos')
 
-**Architecture Conflict Resolved**:
+**Root Cause**:
+- Frontend TypeScript types were using English values: `'home' | 'office' | 'both'`
+- Backend Django model uses Portuguese values: `('presencial', 'online', 'ambos')`
+- Serializer receives `'both'` but expects `'ambos'` → validation fails with 400
+
+**Files Updated**:
+
+1. **frontend/src/types/Auth.ts**
+   - Changed `attendance_type: 'home' | 'office' | 'both'` 
+   - To: `attendance_type: 'presencial' | 'online' | 'ambos'`
+
+2. **frontend/src/types/Professional.ts**
+   - Changed `attendance_type?: 'home' | 'office' | 'both'` (ProfessionalFilters)
+   - To: `attendance_type?: 'presencial' | 'online' | 'ambos'`
+
+3. **frontend/src/pages/RegisterProfessionalPage.tsx**
+   - Changed: `attendance_type: 'both'` in authService.register() call
+   - To: `attendance_type: 'ambos'`
+
+**Why This Fixes 400 Errors**:
+- ✅ Backend no longer receives invalid `'both'` value
+- ✅ Receives correct `'ambos'` value matching model choices
+- ✅ Validation passes for `attendance_type` field
+- ✅ Only 3 fields were failing: `state`, `attendance_type`, `photo`
+- ✅ After fix: Only `photo` and `state` might need investigation (if errors persist)
+
+**Validation**:
+- ✅ Frontend build: 0 TypeScript errors
+- ✅ Types now match backend exactly
+
+---
+
+### PREVIOUS: Step 2 Refactor - Single Base Price "a partir de" Model
 - **Problem**: Frontend allowed multiple services with different prices, but backend model only supports ONE price for ALL services
 - **Frontend Structure**: Step 2 had fields to set price per service individually
 - **Backend Structure**: `Professional` model has `price_per_session` (single field, not M2M relationship)

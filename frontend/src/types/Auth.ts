@@ -32,7 +32,7 @@ export interface RegisterRequest {
   photo?: File
   services: string[]
   price_per_session: number
-  attendance_type: 'home' | 'office' | 'both'
+  attendance_type: 'presencial' | 'online' | 'ambos'  // ← FIXED: Match backend choices
   city: string
   neighborhood: string
   bio: string

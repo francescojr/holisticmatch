@@ -51,7 +51,7 @@ export interface ProfessionalFilters {
   city?: string
   price_min?: number
   price_max?: number
-  attendance_type?: 'home' | 'office' | 'both'
+  attendance_type?: 'presencial' | 'online' | 'ambos'  // ← FIXED: Match backend
   limit?: number
   offset?: number
 }
