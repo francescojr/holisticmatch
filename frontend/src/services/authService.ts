@@ -39,8 +39,8 @@ export const authService = {
 
       console.log('[authService.register] 📦 Form data prepared with keys:', Array.from(formData.keys()).join(', '))
 
-      // Backend may return "access" and "refresh" or "access_token" and "refresh_token"
-      const response = await api.post<any>('/auth/register/', formData, {
+      // Backend endpoint: /professionals/register/ returns access_token, refresh_token, user_id, professional_id
+      const response = await api.post<any>('/professionals/register/', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

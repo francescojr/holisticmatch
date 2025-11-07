@@ -1,0 +1,334 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "HolisticMatch Professional API",
+    "description": "Complete REST API for HolisticMatch - Professional marketplace for holistic therapies",
+    "version": "1.0.0",
+    "contact": {
+      "name": "HolisticMatch Team",
+      "email": "support@holisticmatch.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.holisticmatch.com/api/v1",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:8000/api/v1",
+      "description": "Local development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and authorization"
+    },
+    {
+      "name": "Professionals",
+      "description": "Professional profile management"
+    },
+    {
+      "name": "Email Verification",
+      "description": "Email verification flow"
+    }
+  ],
+  "paths": {
+    "/auth/register/": {
+      "post": {
+        "summary": "Register a new professional",
+        "description": "Create a new professional account with email and basic profile information",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "name", "bio", "services", "price_per_session", "attendance_type", "city", "state", "whatsapp"],
+                "properties": {
+                  "email": {"type": "string", "format": "email"},
+                  "password": {"type": "string", "format": "password"},
+                  "name": {"type": "string", "minLength": 5},
+                  "bio": {"type": "string", "minLength": 50},
+                  "services": {"type": "array", "items": {"type": "string"}},
+                  "price_per_session": {"type": "number"},
+                  "attendance_type": {"type": "string", "enum": ["presencial", "online", "ambos"]},
+                  "city": {"type": "string"},
+                  "state": {"type": "string"},
+                  "neighborhood": {"type": "string"},
+                  "whatsapp": {"type": "string"},
+                  "photo": {"type": "string", "format": "binary"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Professional registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {"type": "string"},
+                    "professional": {"type": "object"},
+                    "access_token": {"type": "string"},
+                    "refresh_token": {"type": "string"},
+                    "user_id": {"type": "integer"},
+                    "professional_id": {"type": "integer"}
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/auth/login/": {
+      "post": {
+        "summary": "Authenticate user",
+        "description": "Login with email and password to receive JWT tokens",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {"type": "string", "format": "email"},
+                  "password": {"type": "string", "format": "password"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access": {"type": "string"},
+                    "refresh": {"type": "string"},
+                    "user": {"type": "object"}
+                  }
+                }
+              }
+            }
+          },
+          "401": {"description": "Invalid credentials"},
+          "403": {"description": "Email not verified"}
+        }
+      }
+    },
+    "/auth/me/": {
+      "get": {
+        "summary": "Get current user profile",
+        "tags": ["Authentication"],
+        "security": [{"Bearer": []}],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {"type": "integer"},
+                    "email": {"type": "string"},
+                    "professional_id": {"type": "integer"},
+                    "full_name": {"type": "string"},
+                    "city": {"type": "string"},
+                    "state": {"type": "string"},
+                    "photo": {"type": "string"},
+                    "bio": {"type": "string"},
+                    "whatsapp": {"type": "string"}
+                  }
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/auth/refresh/": {
+      "post": {
+        "summary": "Refresh access token",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["refresh"],
+                "properties": {
+                  "refresh": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "New access token generated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access": {"type": "string"},
+                    "refresh": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/logout/": {
+      "post": {
+        "summary": "Logout user",
+        "tags": ["Authentication"],
+        "security": [{"Bearer": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "refresh_token": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Logout successful"}
+        }
+      }
+    },
+    "/auth/verify-email/{token}/": {
+      "get": {
+        "summary": "Verify email",
+        "tags": ["Email Verification"],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string"}
+          }
+        ],
+        "responses": {
+          "200": {"description": "Email verified successfully"},
+          "400": {"description": "Invalid or expired token"}
+        }
+      }
+    },
+    "/professionals/": {
+      "get": {
+        "summary": "List all professionals",
+        "tags": ["Professionals"],
+        "parameters": [
+          {"name": "page", "in": "query", "schema": {"type": "integer"}},
+          {"name": "page_size", "in": "query", "schema": {"type": "integer"}},
+          {"name": "search", "in": "query", "schema": {"type": "string"}},
+          {"name": "service", "in": "query", "schema": {"type": "string"}},
+          {"name": "city", "in": "query", "schema": {"type": "string"}},
+          {"name": "state", "in": "query", "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "List of professionals",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {"type": "integer"},
+                    "next": {"type": "string"},
+                    "previous": {"type": "string"},
+                    "results": {"type": "array", "items": {"type": "object"}}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/professionals/{id}/": {
+      "get": {
+        "summary": "Get professional details",
+        "tags": ["Professionals"],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+        ],
+        "responses": {
+          "200": {"description": "Professional details"},
+          "404": {"description": "Not found"}
+        }
+      },
+      "patch": {
+        "summary": "Update professional profile",
+        "tags": ["Professionals"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bio": {"type": "string"},
+                  "services": {"type": "array"},
+                  "price_per_session": {"type": "number"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {"description": "Updated successfully"},
+          "403": {"description": "Not owner"}
+        }
+      },
+      "delete": {
+        "summary": "Delete professional profile",
+        "tags": ["Professionals"],
+        "security": [{"Bearer": []}],
+        "parameters": [
+          {"name": "id", "in": "path", "required": true, "schema": {"type": "integer"}}
+        ],
+        "responses": {
+          "204": {"description": "Deleted successfully"},
+          "403": {"description": "Not owner"}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "Bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

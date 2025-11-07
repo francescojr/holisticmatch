@@ -1,0 +1,607 @@
+openapi: 3.0.0
+info:
+  title: HolisticMatch Professional API
+  description: |
+    Complete REST API for HolisticMatch - Professional marketplace for holistic therapies.
+    
+    Features:
+    - Professional registration and profile management
+    - JWT-based authentication with email verification
+    - Professional discovery with advanced filtering
+    - Photo upload and management
+  version: 1.0.0
+  contact:
+    name: HolisticMatch Team
+    email: support@holisticmatch.com
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.holisticmatch.com/api/v1
+    description: Production server
+  - url: http://localhost:8000/api/v1
+    description: Local development server
+
+tags:
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Professionals
+    description: Professional profile management
+  - name: Email Verification
+    description: Email verification flow
+
+paths:
+  /auth/register/:
+    post:
+      summary: Register a new professional
+      description: Create a new professional account with email and basic profile information
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - name
+                - bio
+                - services
+                - price_per_session
+                - attendance_type
+                - city
+                - state
+                - whatsapp
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: professional@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: SecurePassword@123
+                  description: Must contain at least one uppercase letter and one number
+                name:
+                  type: string
+                  minLength: 5
+                  maxLength: 255
+                  example: João Silva
+                bio:
+                  type: string
+                  minLength: 50
+                  maxLength: 2000
+                  example: Holistic therapist with 10+ years experience in yoga and meditation
+                services:
+                  type: array
+                  minItems: 1
+                  maxItems: 5
+                  items:
+                    type: string
+                    enum:
+                      - Reiki
+                      - Acupuntura
+                      - Aromaterapia
+                      - Massagem
+                      - Meditação Guiada
+                      - Tai Chi
+                      - Reflexologia
+                      - Cristaloterapia
+                      - Florais
+                      - Yoga
+                      - Pilates Holístico
+                  example: [Yoga, Meditação Guiada]
+                price_per_session:
+                  type: number
+                  format: decimal
+                  minimum: 50
+                  maximum: 10000
+                  example: 150.00
+                attendance_type:
+                  type: string
+                  enum:
+                    - presencial
+                    - online
+                    - ambos
+                  example: presencial
+                city:
+                  type: string
+                  example: São Paulo
+                state:
+                  type: string
+                  pattern: ^[A-Z]{2}$
+                  example: SP
+                neighborhood:
+                  type: string
+                  example: Vila Mariana
+                whatsapp:
+                  type: string
+                  pattern: ^\d{11}$
+                  example: "11999999999"
+                photo:
+                  type: string
+                  format: binary
+                  description: Profile photo (JPG, PNG, WebP, max 5MB)
+      responses:
+        '201':
+          description: Professional registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Professional registered successfully
+                  professional:
+                    $ref: '#/components/schemas/Professional'
+                  access_token:
+                    type: string
+                    example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+                    description: JWT access token (user still inactive)
+                  refresh_token:
+                    type: string
+                    example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+                  user_id:
+                    type: integer
+                    example: 42
+                  professional_id:
+                    type: integer
+                    example: 42
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /auth/login/:
+    post:
+      summary: Authenticate user
+      description: Login with email and password to receive JWT tokens
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: professional@example.com
+                password:
+                  type: string
+                  format: password
+                  example: SecurePassword@123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+                    description: JWT access token
+                  refresh:
+                    type: string
+                    description: JWT refresh token
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      email:
+                        type: string
+                      username:
+                        type: string
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: Email ou senha inválidos
+        '403':
+          description: Email not verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: Por favor, verifique seu email antes de fazer login
+
+  /auth/me/:
+    get:
+      summary: Get current user profile
+      description: Retrieve authenticated user and professional profile data
+      tags:
+        - Authentication
+      security:
+        - Bearer: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  email:
+                    type: string
+                    format: email
+                  professional_id:
+                    type: integer
+                  full_name:
+                    type: string
+                  city:
+                    type: string
+                  state:
+                    type: string
+                  photo:
+                    type: string
+                    format: uri
+                    nullable: true
+                  bio:
+                    type: string
+                  whatsapp:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Professional profile not found
+
+  /auth/refresh/:
+    post:
+      summary: Refresh access token
+      description: Obtain a new access token using refresh token
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh
+              properties:
+                refresh:
+                  type: string
+                  description: Refresh token
+      responses:
+        '200':
+          description: New access token generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+                  refresh:
+                    type: string
+        '401':
+          description: Invalid or expired refresh token
+
+  /auth/logout/:
+    post:
+      summary: Logout user
+      description: Revoke refresh token and logout user
+      tags:
+        - Authentication
+      security:
+        - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Logout successful
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/verify-email/{token}/:
+    get:
+      summary: Verify email
+      description: Verify email using token from verification email link
+      tags:
+        - Email Verification
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+          example: dV730FN2jertST6EC7wfKuJQOp0AP_...
+      responses:
+        '200':
+          description: Email verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Email verified successfully
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      email:
+                        type: string
+                        format: email
+                      is_active:
+                        type: boolean
+                        example: true
+        '400':
+          description: Invalid or expired verification token
+
+  /professionals/:
+    get:
+      summary: List all professionals
+      description: Retrieve paginated list of professionals with optional filtering
+      tags:
+        - Professionals
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: search
+          in: query
+          description: Search by name or bio
+          schema:
+            type: string
+          example: yoga
+        - name: service
+          in: query
+          description: Filter by service type
+          schema:
+            type: string
+          example: Yoga
+        - name: city
+          in: query
+          description: Filter by city
+          schema:
+            type: string
+          example: São Paulo
+        - name: state
+          in: query
+          description: Filter by state
+          schema:
+            type: string
+            pattern: ^[A-Z]{2}$
+          example: SP
+        - name: ordering
+          in: query
+          description: Sort by field
+          schema:
+            type: string
+            enum:
+              - created_at
+              - "-created_at"
+              - price_per_session
+              - "-price_per_session"
+          example: "-created_at"
+      responses:
+        '200':
+          description: List of professionals
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    format: uri
+                    nullable: true
+                  previous:
+                    type: string
+                    format: uri
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Professional'
+
+  /professionals/{id}/:
+    get:
+      summary: Get professional details
+      description: Retrieve detailed information about a specific professional
+      tags:
+        - Professionals
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        '200':
+          description: Professional details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Professional'
+        '404':
+          description: Professional not found
+
+    patch:
+      summary: Update professional profile
+      description: Update professional profile (only owner can update)
+      tags:
+        - Professionals
+      security:
+        - Bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bio:
+                  type: string
+                  minLength: 50
+                services:
+                  type: array
+                  items:
+                    type: string
+                price_per_session:
+                  type: number
+                  format: decimal
+      responses:
+        '200':
+          description: Professional updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Professional'
+        '403':
+          description: Not owner of profile
+        '404':
+          description: Professional not found
+
+    delete:
+      summary: Delete professional profile
+      description: Delete professional profile (only owner can delete)
+      tags:
+        - Professionals
+      security:
+        - Bearer: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Professional deleted successfully
+        '403':
+          description: Not owner of profile
+        '404':
+          description: Professional not found
+
+components:
+  schemas:
+    Professional:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        name:
+          type: string
+          example: João Silva
+        email:
+          type: string
+          format: email
+        services:
+          type: array
+          items:
+            type: string
+          example: [Yoga, Meditação Guiada]
+        price_per_session:
+          type: number
+          format: decimal
+          example: 150.00
+        attendance_type:
+          type: string
+          enum:
+            - presencial
+            - online
+            - ambos
+        city:
+          type: string
+          example: São Paulo
+        state:
+          type: string
+          example: SP
+        neighborhood:
+          type: string
+          example: Vila Mariana
+        photo:
+          type: string
+          format: uri
+          nullable: true
+        bio:
+          type: string
+        whatsapp:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ValidationError:
+      type: object
+      properties:
+        field_name:
+          type: array
+          items:
+            type: string
+          example: ["Este campo é obrigatório."]
+
+  responses:
+    Unauthorized:
+      description: Authentication credentials were not provided or invalid
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+                example: Authentication credentials were not provided.
+
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from /auth/login/

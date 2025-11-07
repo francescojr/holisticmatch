@@ -97,7 +97,7 @@ describe('E2E Auth Flow', () => {
   it('Step 1: Should register a new professional with email', async () => {
     console.log('\n📝 STEP 1: Registering professional...')
 
-    const response = await apiClient.post('/v1/auth/register/', {
+    const response = await apiClient.post('/v1/professionals/register/', {
       email: testUser.email,
       password: testUser.password,
       name: testUser.name,

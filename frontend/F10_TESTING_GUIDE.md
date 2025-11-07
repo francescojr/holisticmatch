@@ -31,7 +31,7 @@
 
 ```
 1. ✅ Register New Professional
-   └─ POST /api/v1/auth/register/
+   └─ POST /api/v1/professionals/register/
    └─ Verifica: Email, nome, serviços criados
 
 2. ✅ Verify Email

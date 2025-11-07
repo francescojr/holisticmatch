@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2025-11-08
+
+### CRITICAL FIX: Frontend Registration Endpoint Mismatch ✅ JUST FIXED
+
+**Root Cause Identified & Fixed**:
+Frontend was calling `/auth/register/` endpoint which doesn't exist in backend. Backend's actual registration endpoint is `/professionals/register/`.
+
+**Why This Broke Everything**:
+1. Frontend POST to `/auth/register/` → 404 Not Found
+2. Backend `/auth/` URLs only have: `login/`, `me/`, `verify-email/`
+3. Registration endpoint is at `/professionals/register/` (NOT in `/auth/` namespace)
+4. Result: Registration appeared to work (frontend form accepted input) but couldn't send data to backend
+
+**Files Fixed**:
+- `frontend/src/services/authService.ts` (line 43): Changed endpoint from `/auth/register/` → `/professionals/register/`
+- `frontend/tests/integration/e2e-flow.test.ts` (line 100): Updated E2E test to use correct endpoint
+- `frontend/F10_TESTING_GUIDE.md` (line 34): Documentation updated to reflect correct endpoint
+
+**Impact**:
+✅ Frontend now calls correct backend endpoint
+✅ Backend returns `access_token` and `refresh_token`
+✅ Tokens are properly stored in localStorage
+✅ Complete authentication flow now works
+
+---
+
 ## [Unreleased] - 2025-11-07
 
 ### FIXED: Complete Authentication System - Register → Verify → Login → Get User ✅
