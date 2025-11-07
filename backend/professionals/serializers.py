@@ -252,6 +252,8 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         logger.info('=' * 80)
         logger.info(f'Data type: {type(data).__name__}')
         logger.info(f'Data keys: {list(data.keys())}')
+        logger.info(f'Data class path: {data.__class__.__module__}.{data.__class__.__name__}')
+        logger.info(f'Is QueryDict: {type(data).__name__ == "QueryDict"}')
         
         # Log each field individually
         for key, value in data.items():
@@ -397,6 +399,24 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         import logging
         
         logger = logging.getLogger(__name__)
+        
+        # ULTRA HARDCORE DEBUG: Log validated_data photo field
+        logger.info('=' * 80)
+        logger.info('[ProfessionalCreateSerializer.create] 🔥 VALIDATED DATA RECEIVED')
+        logger.info('=' * 80)
+        if 'photo' in validated_data:
+            photo_val = validated_data['photo']
+            logger.info(f'[create] photo type: {type(photo_val).__name__}')
+            logger.info(f'[create] photo value: {photo_val}')
+            if hasattr(photo_val, 'name'):
+                logger.info(f'[create] photo.name: {photo_val.name}')
+            if hasattr(photo_val, 'size'):
+                logger.info(f'[create] photo.size: {photo_val.size}')
+            if hasattr(photo_val, 'read'):
+                logger.info(f'[create] photo is file-like: True')
+        else:
+            logger.info('[create] ⚠️  NO PHOTO in validated_data!')
+        logger.info('=' * 80)
         
         password = validated_data.pop('password')
         email = validated_data['email']

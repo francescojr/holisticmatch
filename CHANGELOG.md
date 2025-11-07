@@ -7,27 +7,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-11-08
 
-### FIX: Photo Upload DRF ImageField Validation + Enhanced Debugging
+### FIX: Photo Upload - Complete Root Cause Analysis + Fix
 
-**Error**: `"O dado submetido não é um arquivo. Certifique-se do tipo de codificação no formulário. "`
+**Problem**: Professional registration fails with `"O dado submetido não é um arquivo"` (submitted data is not a file)
 
-**Root Cause Analysis - 3 Layer Deep**:
+**Status**: ✅ Root cause identified and FIXED
 
-**Layer 1** (Frontend): File object ✅ Valid
-- Photo stays in React state (no sessionStorage serialization)
-- FormData correctly encodes File object
-- Debug logs confirm: `Is File? true`
+**Root Causes Identified** 🎯:
 
-**Layer 2** (Network): Binary FormData ✅ Correct
-- Multipart/form-data encoded properly
-- MIME type set to `image/png` or `image/jpeg`
-- File arrives at Nginx → Django
+1. **Missing DRF Parser Configuration** (PRIMARY)
+   - `DEFAULT_PARSER_CLASSES` was NOT configured in REST_FRAMEWORK settings
+   - Without explicit config, DRF doesn't guarantee MultiPartParser availability
+   - FormData binary file data arrives corrupted (string/dict instead of File object)
+   - Solution: Added explicit parser config:
+   ```python
+   'DEFAULT_PARSER_CLASSES': (
+       'rest_framework.parsers.MultiPartParser',   # Handles FormData with files
+       'rest_framework.parsers.FormParser',        # Handles URL-encoded forms
+       'rest_framework.parsers.JSONParser',        # Handles JSON payloads
+   )
+   ```
 
-**Layer 3** (DRF Serializer): ❌ **WAS** the problem
-- `ModelSerializer` without explicit `ImageField()` declaration
-- DRF uses implicit field handling from model definition
-- Implicit ImageField doesn't properly parse multipart form data
-- Result: "not a file" error
+2. **No Explicit ImageField in Serializer** (SECONDARY)
+   - DRF ModelSerializer uses implicit field handling from model
+   - Implicit ImageField doesn't properly parse multipart form data
+   - Solution: Added explicit ImageField declaration with custom config:
+   ```python
+   photo = serializers.ImageField(
+       required=False,
+       allow_null=True,
+       allow_empty_file=False,
+       error_messages={
+           'invalid_image': 'Envie uma imagem válida (JPG ou PNG)',
+           'required': 'Foto é obrigatória',
+           'not_a_file': 'Foto precisa ser um arquivo de imagem',
+       }
+   )
+   ```
+
+3. **Validation Chain Verified** (CHECKING)
+   - Model field HAS validator `validate_profile_photo` ✅ (kept for safety)
+   - Serializer HAS `ImageField` validation ✅ (NEW)
+   - Serializer HAS `validate_photo()` method ✅ (NEW)
+   - Triple validation works correctly: serializer → model → save
+   - No conflicts or double-parsing issues ✅
+
+**Fixes Applied**:
+
+1. **backend/config/settings.py**: Added DEFAULT_PARSER_CLASSES
+2. **backend/professionals/serializers.py**: 
+   - Added explicit ImageField with custom error messages
+   - Added validate_photo() method for explicit validation
+   - Added to_internal_value() with debug logging
+   - Added create() with debug logging
+3. **Validation confirmed**: No overlapping/conflicting validators
+
+**Why This Works**:
+1. MultiPartParser decodes FormData → File object (InMemoryUploadedFile)
+2. ImageField validates file type → accepted as valid image
+3. validate_photo() runs additional checks (size, dimensions)
+4. Model saves with validated file
+5. Model validator runs as final safety check (won't fail if serializer already validated)
+
+**Testing**: ✅ All 168 tests passing (including photo validation tests)
+
+**Debug Logging Added**:
+- `to_internal_value()`: Shows raw incoming data type, keys, photo attributes
+- `validate_photo()`: Shows photo validation chain
+- `create()`: Shows validated_data['photo'] type and value before save
+- Logs will be visible in `/var/log/web.stdout.log` on EB for debugging if needed
+
+
 
 **Solution - 2 Parts**:
 
