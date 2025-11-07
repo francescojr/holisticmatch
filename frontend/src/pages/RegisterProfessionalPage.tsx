@@ -105,8 +105,6 @@ function RegisterProfessionalPage() {
       // Special validation for password confirmation
       if (field === 'passwordConfirm' && value !== step1Data.password) {
         setStep1Data(prev => ({ ...prev, passwordConfirm: value }))
-        // Show error directly
-        const errors = { passwordConfirm: 'As senhas não conferem' }
         console.log('[RegisterPage.Step1] ⚠️ Password mismatch in real-time')
       }
     }
