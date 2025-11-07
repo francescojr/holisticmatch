@@ -31,6 +31,7 @@ export const authService = {
       formData.append('services', JSON.stringify(data.services))
       formData.append('price_per_session', data.price_per_session.toString())
       formData.append('attendance_type', data.attendance_type)
+      formData.append('state', data.state)
       formData.append('city', data.city)
       formData.append('neighborhood', data.neighborhood)
       formData.append('bio', data.bio)
@@ -84,7 +85,11 @@ export const authService = {
     } catch (error: any) {
       console.error('[authService.register] ❌ REGISTRATION FAILED!')
       console.error('[authService.register] Error Status:', error.response?.status)
-      console.error('[authService.register] Error Data:', error.response?.data)
+      console.error('[authService.register] Error Data:', JSON.stringify(error.response?.data, null, 2))
+      console.error('[authService.register] Error Details:', error.response?.data)
+      if (error.response?.data?.detail) {
+        console.error('[authService.register] Detail Message:', error.response.data.detail)
+      }
       console.error('[authService.register] Error Message:', error.message)
       throw error
     }

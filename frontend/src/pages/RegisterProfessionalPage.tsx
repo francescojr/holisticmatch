@@ -385,6 +385,7 @@ function RegisterProfessionalPage() {
         services: step2Data.services,  // Just the service names array
         price_per_session: step2Data.pricePerSession,  // Single base price
         attendance_type: 'ambos',  // ← FIXED: Backend expects 'ambos', not 'both'
+        state: step1Data.state,
         city: step1Data.city,
         neighborhood: 'default',
         bio: `Profissional de terapias holísticas especializado em ${step2Data.services.join(', ')}.`,

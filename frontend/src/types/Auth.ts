@@ -33,6 +33,7 @@ export interface RegisterRequest {
   services: string[]
   price_per_session: number
   attendance_type: 'presencial' | 'online' | 'ambos'  // ← FIXED: Match backend choices
+  state: string
   city: string
   neighborhood: string
   bio: string

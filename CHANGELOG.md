@@ -7,7 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-11-08
 
-### FIX: attendance_type Field Value Mismatch ('both' vs 'ambos')
+### FIX: Registration Form Complete - Multiple Critical Bugs Fixed
+
+#### 1. Missing `state` Field in Registration (CRITICAL)
+**Root Cause**:
+- RegisterRequest interface was missing `state` field
+- Frontend was preparing `state` data but NOT sending it in FormData
+- Backend validation requires `state` → 400 error
+- Manifested as validation error on `state` field
+
+**Files Updated**:
+
+1. **frontend/src/types/Auth.ts**
+   - Added `state: string` to RegisterRequest interface
+
+2. **frontend/src/services/authService.ts**
+   - Added `formData.append('state', data.state)` to form data
+   - Enhanced error logging to show full error response JSON
+
+3. **frontend/src/pages/RegisterProfessionalPage.tsx**
+   - Added `state: step1Data.state` to authService.register() call
+
+#### 2. Nginx Upload Size Limit (FIXED)
+**Root Cause**: Photo upload (~2.2MB) exceeded nginx default 1MB limit
+- Nginx error: `client intended to send too large body: 2249584 bytes`
+- File rejected at proxy layer before reaching Django
+
+**Files Updated**:
+
+1. **backend/.ebextensions/nginx_upload.config** (NEW)
+   - Set `client_max_body_size 50M` in nginx configuration
+
+2. **backend/config/settings.py**
+   - Increased `FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800` (50MB)
+   - Increased `DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800` (50MB)
+
+#### 3. Attendance Type Field Value Mismatch ('both' vs 'ambos')
 
 **Root Cause**:
 - Frontend TypeScript types were using English values: `'home' | 'office' | 'both'`
