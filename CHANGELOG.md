@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-11-08
 
+### FIX: Photo Upload File Type Validation Error
+
+**Error**: `"O dado submetido não é um arquivo. Certifique-se do tipo de codificação no formulário."`  
+**Root Cause**: Photo object was losing File type due to JSON serialization in sessionStorage during Step 1→Step 2 transition
+
+**Files Updated**:
+
+1. **frontend/src/pages/RegisterProfessionalPage.tsx**
+   - REMOVED: `sessionStorage.setItem()` JSON serialization of step1Data
+   - RATIONALE: JavaScript File objects cannot be serialized to JSON
+   - SOLUTION: Keep File object in React component state memory (no sessionStorage)
+
+2. **frontend/src/services/authService.ts**
+   - ADDED: Comprehensive Photo debugging logs
+   - Logs photo type, constructor, instanceof File check, size, name
+   - Identifies if photo is valid File object or corrupted object
+
+3. **backend/professionals/serializers.py**
+   - ADDED: Detailed photo field logging in `to_internal_value()`
+   - Logs photo type, value, size, and name for debugging
+
+**Why This Works**:
+- React components maintain state across navigation without page reload
+- File objects stay in memory throughout Step 1 → Step 2 → API call
+- FormData correctly sends File object with proper MIME type and binary data
+- Backend's ImageField validator recognizes it as a valid file
+
 ### FIX: Registration Form Complete - Multiple Critical Bugs Fixed
 
 #### 1. Missing `state` Field in Registration (CRITICAL)

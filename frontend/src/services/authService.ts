@@ -27,7 +27,20 @@ export const authService = {
 
       // Professional fields
       formData.append('full_name', data.full_name)
-      if (data.photo) formData.append('photo', data.photo)
+      
+      // CRITICAL: Log photo details before appending
+      if (data.photo) {
+        console.log('[authService.register] 📸 Photo detected:')
+        console.log('[authService.register]    Type:', typeof data.photo)
+        console.log('[authService.register]    Constructor:', data.photo.constructor.name)
+        console.log('[authService.register]    Is File?', data.photo instanceof File)
+        console.log('[authService.register]    Size:', (data.photo as any).size)
+        console.log('[authService.register]    Name:', (data.photo as any).name)
+        formData.append('photo', data.photo)
+      } else {
+        console.log('[authService.register] ⚠️  No photo provided!')
+      }
+      
       formData.append('services', JSON.stringify(data.services))
       formData.append('price_per_session', data.price_per_session.toString())
       formData.append('attendance_type', data.attendance_type)

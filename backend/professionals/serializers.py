@@ -233,7 +233,21 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         
         # Log incoming data structure for debugging
         logger.info(f'[ProfessionalCreateSerializer.to_internal_value] Incoming data keys: {list(data.keys())}')
-        logger.info(f'[ProfessionalCreateSerializer.to_internal_value] Data: {data}')
+        
+        # CRITICAL: Log photo field details
+        if 'photo' in data:
+            photo = data['photo']
+            logger.info(f'[ProfessionalCreateSerializer] Photo field type: {type(photo).__name__}')
+            logger.info(f'[ProfessionalCreateSerializer] Photo value: {photo}')
+            logger.info(f'[ProfessionalCreateSerializer] Photo is InMemoryUploadedFile? {type(photo).__name__ == "InMemoryUploadedFile"}')
+            if hasattr(photo, 'size'):
+                logger.info(f'[ProfessionalCreateSerializer] Photo size: {photo.size} bytes')
+            if hasattr(photo, 'name'):
+                logger.info(f'[ProfessionalCreateSerializer] Photo name: {photo.name}')
+        else:
+            logger.warning('[ProfessionalCreateSerializer] No photo field in data!')
+        
+        logger.info(f'[ProfessionalCreateSerializer.to_internal_value] Full data: {data}')
         
         # Map full_name to name if provided (frontend sends full_name, model field is name)
         if 'full_name' in data and 'name' not in data:
