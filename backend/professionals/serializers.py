@@ -282,46 +282,53 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         from .models import EmailVerificationToken
         from django.core.mail import send_mail
         from django.urls import reverse
+        import logging
+        
+        logger = logging.getLogger(__name__)
         
         password = validated_data.pop('password')
         email = validated_data['email']
         
-        # Create user account (initially inactive until email verified)
-        user = User.objects.create_user(
-            username=email,
-            email=email,
-            password=password,
-            is_active=False  # User starts inactive until email verification
-        )
-        
-        # Create professional profile
-        professional = Professional.objects.create(
-            user=user,
-            **validated_data
-        )
-        
-        # Create email verification token
-        email_token = EmailVerificationToken.create_token(user, expiry_hours=24)
-        
-        # Send verification email
         try:
-            verification_link = f"{self.context.get('request').build_absolute_uri('/')}" if self.context.get('request') else "http://localhost:3000"
-            verification_link = verification_link.rstrip('/') + f"/verify-email/{email_token.token}"
-            
-            send_mail(
-                subject='Verifique seu email - HolisticMatch',
-                message=f'Clique no link para verificar seu email: {verification_link}',
-                from_email='noreply@holisticmatch.com',
-                recipient_list=[email],
-                fail_silently=False,
+            # Create user account (initially inactive until email verified)
+            user = User.objects.create_user(
+                username=email,
+                email=email,
+                password=password,
+                is_active=False  # User starts inactive until email verification
             )
+            
+            # Create professional profile
+            professional = Professional.objects.create(
+                user=user,
+                **validated_data
+            )
+            
+            # Create email verification token
+            email_token = EmailVerificationToken.create_token(user, expiry_hours=24)
+            
+            # Send verification email (with comprehensive error handling)
+            try:
+                verification_link = f"{self.context.get('request').build_absolute_uri('/')}" if self.context.get('request') else "http://localhost:3000"
+                verification_link = verification_link.rstrip('/') + f"/verify-email/{email_token.token}"
+                
+                send_mail(
+                    subject='Verifique seu email - HolisticMatch',
+                    message=f'Clique no link para verificar seu email: {verification_link}',
+                    from_email='noreply@holisticmatch.com',
+                    recipient_list=[email],
+                    fail_silently=True,  # Don't crash if email fails
+                )
+                logger.info(f'Verification email sent to {email}')
+            except Exception as e:
+                logger.error(f'Failed to send verification email to {email}: {str(e)}', exc_info=True)
+                # Continue - user can request email resend later
+            
+            return professional
+            
         except Exception as e:
-            # Log error but don't fail registration
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f'Failed to send verification email to {email}: {str(e)}')
-        
-        return professional
+            logger.error(f'Error in professional creation: {str(e)}', exc_info=True)
+            raise
 
 
 class EmailVerificationSerializer(serializers.Serializer):

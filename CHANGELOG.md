@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-11-08
 
+### FIX: Password Confirmation Real-time Validation & Email Error Handling
+
+**Files Updated**:
+1. **frontend/src/pages/RegisterProfessionalPage.tsx**
+   - Enhanced `handleStep1InputChange()` to validate password match in real-time
+   - When user types in "Confirmar Senha" field, immediately checks if matches "Senha"
+   - Shows error message if passwords don't match
+   - Improves UX by providing instant feedback
+
+2. **backend/professionals/serializers.py** (ProfessionalCreateSerializer.create)
+   - Enhanced error handling for email sending
+   - Changed `fail_silently=False` → `fail_silently=True`
+   - Added comprehensive try/catch with logging
+   - Email sending failures no longer crash registration (user can retry later)
+   - Fixes 502 gateway errors caused by email backend failures
+
+**Why This Matters**:
+- Users now see immediately if passwords don't match (no need to wait for submit)
+- Email failures don't break the registration flow (graceful degradation)
+- Comprehensive logging helps debug email issues
+
+---
+
 ### CRITICAL FIX: Registration Form Now Saves Tokens to localStorage
 
 **Root Cause**: Frontend registration form was calling `professionalService.createProfessionalWithPassword()` which posts to `/professionals/` endpoint (doesn't return JWT tokens). Should call `authService.register()` which posts to `/professionals/register/` (returns and saves JWT tokens).

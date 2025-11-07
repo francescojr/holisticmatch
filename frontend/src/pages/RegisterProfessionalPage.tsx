@@ -101,6 +101,14 @@ function RegisterProfessionalPage() {
     // Validate field on change
     if (typeof value === 'string') {
       validate(field, value, getValidationRules(field))
+      
+      // Special validation for password confirmation
+      if (field === 'passwordConfirm' && value !== step1Data.password) {
+        setStep1Data(prev => ({ ...prev, passwordConfirm: value }))
+        // Show error directly
+        const errors = { passwordConfirm: 'As senhas não conferem' }
+        console.log('[RegisterPage.Step1] ⚠️ Password mismatch in real-time')
+      }
     }
   }
 
