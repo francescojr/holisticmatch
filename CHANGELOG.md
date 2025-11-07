@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-11-08
 
+### ENHANCED: Frontend Registration Form Validation Logging
+
+**Improvement**: Better debugging for registration form validation failures.
+
+**Files Updated**:
+- `frontend/src/pages/RegisterProfessionalPage.tsx`:
+  - Added detailed logging showing which fields are missing/invalid
+  - Shows specific list of required fields that need to be filled
+  - Console logs now show full form data and validation errors state
+  - Better error messages to guide users
+
+**Why This Matters**:
+Users were getting "Validation failed" message without knowing which field to fix. Now they see exactly which required fields are missing (e.g., "Campos obrigatórios: Nome completo, Email, Telefone").
+
+**Test Results**: ✅ All backend tests passing (166/166)
+
+---
+
 ### CRITICAL FIX: Frontend Registration Endpoint Mismatch ✅ JUST FIXED
 
 **Root Cause Identified & Fixed**:

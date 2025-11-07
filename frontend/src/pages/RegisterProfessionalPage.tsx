@@ -158,6 +158,7 @@ function RegisterProfessionalPage() {
 
   const validateStep1Form = (): boolean => {
     let isFormValid = true
+    const failedFields: string[] = []
 
     // Validate all text fields
     Object.keys(step1Data).forEach(key => {
@@ -166,13 +167,22 @@ function RegisterProfessionalPage() {
         const value = step1Data[fieldKey]
         if (typeof value === 'string') {
           const fieldValid = validate(fieldKey, value, getValidationRules(fieldKey))
-          if (!fieldValid) isFormValid = false
+          if (!fieldValid) {
+            isFormValid = false
+            failedFields.push(fieldKey)
+          }
         }
       }
     })
 
+    if (failedFields.length > 0) {
+      console.log('[RegisterPage.Step1] ❌ Failed fields:', failedFields)
+      console.log('[RegisterPage.Step1] ❌ Errors object:', errors)
+    }
+
     // Validate password confirmation
     if (step1Data.password !== step1Data.passwordConfirm) {
+      console.log('[RegisterPage.Step1] ❌ Password mismatch')
       toast.error('Erro de validação', { message: 'As senhas não conferem' })
       isFormValid = false
     }
@@ -180,8 +190,13 @@ function RegisterProfessionalPage() {
     // Validate photo
     const photoError = validatePhoto(step1Data.photo)
     if (photoError) {
+      console.log('[RegisterPage.Step1] ❌ Photo error:', photoError)
       toast.error('Erro na foto', { message: photoError })
       isFormValid = false
+    }
+
+    if (!isFormValid) {
+      console.log('[RegisterPage.Step1] ❌ Full form data:', step1Data)
     }
 
     return isFormValid
@@ -190,10 +205,28 @@ function RegisterProfessionalPage() {
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault()
     console.log('[RegisterPage.Step1] 📝 Step 1 form submitted')
+    console.log('[RegisterPage.Step1] 📝 Form data:', step1Data)
+    console.log('[RegisterPage.Step1] 📝 Validation errors:', errors)
 
     if (!validateStep1Form()) {
       console.log('[RegisterPage.Step1] ❌ Validation failed')
-      toast.error('Por favor, corrija os erros no formulário')
+      
+      // Build list of missing required fields
+      const missingFields: string[] = []
+      if (!step1Data.fullName) missingFields.push('Nome completo')
+      if (!step1Data.email) missingFields.push('Email')
+      if (!step1Data.phone) missingFields.push('Telefone')
+      if (!step1Data.state) missingFields.push('Estado')
+      if (!step1Data.city) missingFields.push('Cidade')
+      if (!step1Data.password) missingFields.push('Senha')
+      if (!step1Data.passwordConfirm) missingFields.push('Confirmação de senha')
+      
+      const errorMsg = missingFields.length > 0 
+        ? `Campos obrigatórios: ${missingFields.join(', ')}`
+        : 'Por favor, corrija os erros no formulário'
+      
+      console.log('[RegisterPage.Step1] ❌ Missing fields:', missingFields)
+      toast.error('Validação incompleta', { message: errorMsg })
       return
     }
 
