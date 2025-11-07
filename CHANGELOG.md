@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### FIX: Photo Upload DRF ImageField Validation + Enhanced Debugging
 
-**Error**: `"O dado submetido não é um arquivo. Certifique-se do tipo de codificação no formulário."`  
+**Error**: `"O dado submetido não é um arquivo. Certifique-se do tipo de codificação no formulário. "`
 
 **Root Cause Analysis - 3 Layer Deep**:
 

@@ -11,4 +11,4 @@ from django.contrib.auth.models import User
 # - User registration (email, password)
 # - Professional profile creation
 # - Photo upload
-# - Password validation (8+ chars, letter + number)
+# - Password validation (8+ chars, letter + number) :)

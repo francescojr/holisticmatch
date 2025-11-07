@@ -21,7 +21,7 @@ export const authService = {
       
       const formData = new FormData()
 
-      // User fields
+      // User fields :)
       formData.append('email', data.email)
       formData.append('password', data.password)
 
