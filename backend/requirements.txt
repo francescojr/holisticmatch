@@ -30,7 +30,7 @@ gunicorn==21.2.0
 django-filter==23.5
 
 # Email
-resend==0.11.0
+resend==2.19.0
 
 # Testing
 pytest==7.4.3
