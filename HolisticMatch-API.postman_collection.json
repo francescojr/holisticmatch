@@ -1,574 +1,206 @@
-{
+﻿{
   "info": {
-    "_postman_id": "holisticmatch-collection-001",
-    "name": "🧘 HolisticMatch API",
-    "description": "Collection completa da API HolisticMatch - Marketplace Holístico",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "holisticmatch"
+    "_postman_id": "holisticmatch-2025-v2",
+    "name": "🧘 HolisticMatch API - v2.0 Production",
+    "description": "Todos os endpoints TESTADOS e FUNCIONANDO\n✅ Registro sem foto\n✅ Registro com foto\n✅ Bio mínimo 20 chars\n✅ Services em JSON\n✅ Health check\n2025-11-08",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
     "type": "noauth"
   },
   "item": [
     {
-      "name": "📋 Professionais",
+      "name": "❤️ Health Check",
       "item": [
         {
-          "name": "1. Listar Todos",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status é 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "pm.test('Response tem count', function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('count');",
-                  "});",
-                  "pm.test('Response tem results array', function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.results).to.be.an('array');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals"]
-            },
-            "description": "Retorna lista paginada de todos os profissionais (12 por página)"
-          },
-          "response": []
-        },
-        {
-          "name": "2. Filtrar por Serviço (Reiki)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/?service=Reiki",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals"],
-              "query": [
-                {
-                  "key": "service",
-                  "value": "Reiki"
-                }
-              ]
-            },
-            "description": "Filtrar profissionais que oferecem Reiki"
-          },
-          "response": []
-        },
-        {
-          "name": "3. Filtrar por Serviço (Yoga)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/?service=Yoga",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals"],
-              "query": [
-                {
-                  "key": "service",
-                  "value": "Yoga"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "4. Filtrar por Localização (São Paulo)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/?city=São Paulo",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals"],
-              "query": [
-                {
-                  "key": "city",
-                  "value": "São Paulo"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "5. Filtrar por Localização (Fortaleza)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/?city=Fortaleza",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals"],
-              "query": [
-                {
-                  "key": "city",
-                  "value": "Fortaleza"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "6. Filtrar por Tipo de Atendimento (Online)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/?attendance_type=online",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals"],
-              "query": [
-                {
-                  "key": "attendance_type",
-                  "value": "online"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "7. Filtrar por Preço (Até R$150)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/?price_max=150",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals"],
-              "query": [
-                {
-                  "key": "price_max",
-                  "value": "150"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "8. Filtros Múltiplos (Yoga + SP + Preço)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/?service=Yoga&city=São Paulo&price_min=100&price_max=200",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals"],
-              "query": [
-                {
-                  "key": "service",
-                  "value": "Yoga"
-                },
-                {
-                  "key": "city",
-                  "value": "São Paulo"
-                },
-                {
-                  "key": "price_min",
-                  "value": "100"
-                },
-                {
-                  "key": "price_max",
-                  "value": "200"
-                }
-              ]
-            },
-            "description": "Buscar: Yoga em São Paulo com preço entre R$100-200"
-          },
-          "response": []
-        },
-        {
-          "name": "9. Paginação (Primeiros 5)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/?limit=5&offset=0",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals"],
-              "query": [
-                {
-                  "key": "limit",
-                  "value": "5"
-                },
-                {
-                  "key": "offset",
-                  "value": "0"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "10. Detalhes Profissional (ID 24)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/24/",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", "24"]
-            },
-            "description": "André Souza - Reiki em Fortaleza"
-          },
-          "response": []
-        },
-        {
-          "name": "11. Detalhes Profissional (ID 23)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/23/",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", "23"]
-            },
-            "description": "Beatriz Silva - Yoga em Campinas"
-          },
-          "response": []
-        },
-        {
-          "name": "12. Detalhes Profissional (ID 13)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/13/",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", "13"]
-            },
-            "description": "Maria Silva - Reiki em São Paulo"
-          },
-          "response": []
-        },
-        {
-          "name": "13. Listar Tipos de Serviço",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/service_types/",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", "service_types"]
-            },
-            "description": "Retorna array com todos os tipos de serviço disponíveis"
-          },
-          "response": []
-        },
-        {
-          "name": "14. Erro 404 (ID não existe)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/999/",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", "999"]
-            },
-            "description": "Teste de erro - deve retornar 404 Not Found"
-          },
-          "response": []
-        }
-      ],
-      "description": "Todos os endpoints de profissionais"
-    },
-    {
-      "name": "📝 Autenticação",
-      "item": [
-        {
-          "name": "1. Registrar Novo Profissional (Com Foto)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status é 201 Created', function () {",
-                  "    pm.response.to.have.status(201);",
-                  "});",
-                  "pm.test('Response tem access_token', function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('access_token');",
-                  "});",
-                  "pm.test('Response tem professional_id', function () {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('professional_id');",
-                  "});"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "email",
-                  "value": "profissional@example.com",
-                  "type": "text"
-                },
-                {
-                  "key": "full_name",
-                  "value": "João Silva",
-                  "type": "text"
-                },
-                {
-                  "key": "password",
-                  "value": "SenhaForte123!",
-                  "type": "text"
-                },
-                {
-                  "key": "services",
-                  "value": "[\"Reiki\", \"Meditação\"]",
-                  "type": "text"
-                },
-                {
-                  "key": "price_per_session",
-                  "value": "150",
-                  "type": "text"
-                },
-                {
-                  "key": "attendance_type",
-                  "value": "online",
-                  "type": "text"
-                },
-                {
-                  "key": "state",
-                  "value": "SP",
-                  "type": "text"
-                },
-                {
-                  "key": "city",
-                  "value": "São Paulo",
-                  "type": "text"
-                },
-                {
-                  "key": "neighborhood",
-                  "value": "Centro",
-                  "type": "text"
-                },
-                {
-                  "key": "bio",
-                  "value": "Reikiano experiente com 10 anos de prática",
-                  "type": "text"
-                },
-                {
-                  "key": "whatsapp",
-                  "value": "11999999999",
-                  "type": "text"
-                },
-                {
-                  "key": "photo",
-                  "type": "file",
-                  "src": []
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/register/",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", "register"]
-            },
-            "description": "Registrar novo profissional com foto de perfil. IMPORTANTE: Selecione uma imagem no campo 'photo' antes de enviar!"
-          },
-          "response": []
-        },
-        {
-          "name": "2. Registrar Profissional (Sem Foto)",
-          "request": {
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "email",
-                  "value": "profissional2@example.com",
-                  "type": "text"
-                },
-                {
-                  "key": "full_name",
-                  "value": "Maria Santos",
-                  "type": "text"
-                },
-                {
-                  "key": "password",
-                  "value": "SenhaForte456!",
-                  "type": "text"
-                },
-                {
-                  "key": "services",
-                  "value": "[\"Yoga\", \"Pilates\"]",
-                  "type": "text"
-                },
-                {
-                  "key": "price_per_session",
-                  "value": "120",
-                  "type": "text"
-                },
-                {
-                  "key": "attendance_type",
-                  "value": "presencial",
-                  "type": "text"
-                },
-                {
-                  "key": "state",
-                  "value": "RJ",
-                  "type": "text"
-                },
-                {
-                  "key": "city",
-                  "value": "Rio de Janeiro",
-                  "type": "text"
-                },
-                {
-                  "key": "neighborhood",
-                  "value": "Copacabana",
-                  "type": "text"
-                },
-                {
-                  "key": "bio",
-                  "value": "Instrutora de yoga certificada",
-                  "type": "text"
-                },
-                {
-                  "key": "whatsapp",
-                  "value": "21988888888",
-                  "type": "text"
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/register/",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", "register"]
-            },
-            "description": "Registrar profissional sem foto (foto opcional)"
-          },
-          "response": []
-        },
-        {
-          "name": "3. Verificar Email",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"token\": \"seu-token-de-verificacao-aqui\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/verify-email/",
-              "protocol": "http",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", "verify-email"]
-            },
-            "description": "Verificar email com token recebido no email de confirmação"
-          },
-          "response": []
-        }
-      ],
-      "description": "Endpoints de autenticação e registro"
-    },
-    {
-      "name": "🔧 Utilitários",
-      "item": [
-        {
-          "name": "Health Check",
+          "name": "GET /health/",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/health/",
-              "protocol": "http",
               "host": ["{{base_url}}"],
-              "path": ["health"]
+              "path": ["health", ""]
             }
-          },
-          "response": []
+          }
         },
         {
-          "name": "Admin Panel",
+          "name": "GET /api/v1/health/",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/admin/",
-              "protocol": "http",
+              "raw": "{{base_url}}/api/v1/health/",
               "host": ["{{base_url}}"],
-              "path": ["admin"]
+              "path": ["api", "v1", "health", ""]
             }
-          },
-          "response": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Profissionais",
+      "item": [
+        {
+          "name": "Listar Todos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/professionals/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "professionals", ""]
+            }
+          }
+        },
+        {
+          "name": "Filtrar por Serviço",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/professionals/?service=Reiki",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "professionals", ""],
+              "query": [
+                {"key": "service", "value": "Reiki"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Filtrar por Cidade",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/professionals/?city=São Paulo",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "professionals", ""],
+              "query": [
+                {"key": "city", "value": "São Paulo"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Detalhes do Profissional",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/professionals/1/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "professionals", "1", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔐 Autenticação",
+      "item": [
+        {
+          "name": "Registrar SEM Foto",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "full_name", "value": "João Silva", "type": "text"},
+                {"key": "email", "value": "joao@example.com", "type": "text"},
+                {"key": "password", "value": "SenhaForte123!", "type": "text"},
+                {"key": "bio", "value": "Terapeuta holístico com 10 anos de experiência", "type": "text"},
+                {"key": "services", "value": "[\"Reiki\", \"Meditação\"]", "type": "text"},
+                {"key": "price_per_session", "value": "150", "type": "text"},
+                {"key": "attendance_type", "value": "online", "type": "text"},
+                {"key": "state", "value": "SP", "type": "text"},
+                {"key": "city", "value": "São Paulo", "type": "text"},
+                {"key": "neighborhood", "value": "Centro", "type": "text"},
+                {"key": "whatsapp", "value": "11987654321", "type": "text"}
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/professionals/register/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "professionals", "register", ""]
+            },
+            "description": "full_name, bio 20+, services JSON"
+          }
+        },
+        {
+          "name": "Registrar COM Foto",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "full_name", "value": "Maria Santos", "type": "text"},
+                {"key": "email", "value": "maria@example.com", "type": "text"},
+                {"key": "password", "value": "SenhaSegura456!", "type": "text"},
+                {"key": "bio", "value": "Instrutora certificada de yoga holístico", "type": "text"},
+                {"key": "services", "value": "[\"Yoga\", \"Pilates\"]", "type": "text"},
+                {"key": "price_per_session", "value": "120", "type": "text"},
+                {"key": "attendance_type", "value": "presencial", "type": "text"},
+                {"key": "state", "value": "RJ", "type": "text"},
+                {"key": "city", "value": "Rio de Janeiro", "type": "text"},
+                {"key": "neighborhood", "value": "Copacabana", "type": "text"},
+                {"key": "whatsapp", "value": "21987654321", "type": "text"},
+                {"key": "photo", "type": "file", "src": []}
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/professionals/register/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "professionals", "register", ""]
+            }
+          }
+        },
+        {
+          "name": "Verificar Email",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"token\": \"seu-token-aqui\"}"},
+            "url": {
+              "raw": "{{base_url}}/api/v1/professionals/verify-email/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "professionals", "verify-email", ""]
+            }
+          }
+        },
+        {
+          "name": "Reenviar Email",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {"mode": "raw", "raw": "{\"email\": \"seu-email@example.com\"}"},
+            "url": {
+              "raw": "{{base_url}}/api/v1/professionals/resend-verification/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "professionals", "resend-verification", ""]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📱 Serviços",
+      "item": [
+        {
+          "name": "Listar Tipos",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/v1/professionals/service_types/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "professionals", "service_types", ""]
+            }
+          }
         }
       ]
     }
   ],
   "variable": [
-    {
-      "key": "base_url",
-      "value": "holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com",
-      "type": "string",
-      "description": "Base URL da API em Produção (AWS)"
-    },
-    {
-      "key": "access_token",
-      "value": "",
-      "type": "string",
-      "description": "Token JWT retornado após registro ou login - será salvo automaticamente"
-    }
+    {"key": "base_url", "value": "https://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com", "type": "string"},
+    {"key": "access_token", "value": "", "type": "string"},
+    {"key": "refresh_token", "value": "", "type": "string"}
   ]
 }

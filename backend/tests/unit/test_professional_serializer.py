@@ -54,7 +54,7 @@ class TestProfessionalSerializerValidation:
         """Test bio validation errors"""
         invalid_bios = [
             '',  # Empty
-            'A' * 49,  # Too short
+            'A' * 19,  # Too short (min 20)
             'A' * 2001,  # Too long
         ]
 
@@ -224,11 +224,11 @@ class TestProfessionalSerializerValidation:
             serializer.validate_name('')  # Empty name
 
         # Test validate_bio method
-        long_bio = 'A' * 50  # Minimum 50 characters
+        long_bio = 'A' * 20  # Minimum 20 characters
         assert serializer.validate_bio(long_bio) == long_bio
 
         with pytest.raises(serializers.ValidationError):
-            serializer.validate_bio('A' * 49)  # Too short
+            serializer.validate_bio('A' * 19)  # Too short
 
         # Test validate_services method
         assert serializer.validate_services(['Reiki']) == ['Reiki']

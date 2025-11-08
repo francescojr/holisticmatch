@@ -207,7 +207,7 @@ class TestBioValidator:
         invalid_bios = [
             '',  # Empty
             '  ',  # Whitespace only
-            'A' * 49,  # Too short
+            'A' * 19,  # Too short (min 20)
             'A' * 2001,  # Too long
         ]
         for bio in invalid_bios:

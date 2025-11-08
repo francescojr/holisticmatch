@@ -71,7 +71,7 @@ class TestProfessionalModelValidation:
         """Test bio validation errors"""
         invalid_bios = [
             '',  # Empty
-            'A' * 49,  # Too short
+            'A' * 19,  # Too short (min 20)
             'A' * 2001,  # Too long
         ]
 
