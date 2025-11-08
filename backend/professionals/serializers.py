@@ -200,7 +200,8 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(
         write_only=True,
         required=False,
-        allow_blank=True
+        allow_blank=True,
+        source='name'  # Map to 'name' field in the model
     )
     
     # CRITICAL: Explicit ImageField declaration for proper FormData handling
@@ -246,41 +247,6 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         
         logger = logging.getLogger(__name__)
         
-        # HARDCORE DEBUG: Log EVERYTHING before processing
-        logger.info('=' * 80)
-        logger.info('[ProfessionalCreateSerializer.to_internal_value] ⚠️  INCOMING REQUEST')
-        logger.info('=' * 80)
-        logger.info(f'Data type: {type(data).__name__}')
-        logger.info(f'Data keys: {list(data.keys())}')
-        logger.info(f'Data class path: {data.__class__.__module__}.{data.__class__.__name__}')
-        logger.info(f'Is QueryDict: {type(data).__name__ == "QueryDict"}')
-        
-        # Log each field individually
-        for key, value in data.items():
-            if key == 'photo':
-                logger.info(f'  [{key}] Type: {type(value).__name__}, Value: {value}')
-                if hasattr(value, 'name'):
-                    logger.info(f'       -> name: {value.name}')
-                if hasattr(value, 'size'):
-                    logger.info(f'       -> size: {value.size}')
-                if hasattr(value, 'content_type'):
-                    logger.info(f'       -> content_type: {value.content_type}')
-                if hasattr(value, 'read'):
-                    logger.info(f'       -> is file-like: True')
-            elif key == 'services':
-                logger.info(f'  [{key}] Type: {type(value).__name__}, Value: {value[:50] if isinstance(value, str) else value}...')
-            else:
-                val_str = str(value)[:80]
-                logger.info(f'  [{key}] Type: {type(value).__name__}, Value: {val_str}')
-        
-        # Map full_name to name if provided (frontend sends full_name, model field is name)
-        if 'full_name' in data and 'name' not in data:
-            data['name'] = data.pop('full_name')
-            logger.debug(f'Mapped full_name to name: {data["name"]}')
-        elif 'full_name' in data:
-            # If both exist, remove full_name to avoid confusion
-            data.pop('full_name')
-        
         # Parse JSON fields that come from FormData
         if 'services' in data and isinstance(data['services'], str):
             try:
@@ -288,10 +254,10 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
                 logger.debug(f'Parsed services from JSON string: {data["services"]}')
             except (json.JSONDecodeError, ValueError) as e:
                 logger.error(f'Failed to parse services JSON: {str(e)}')
-                data['services'] = []
+                # Don't modify - let validator handle the error
         
-        logger.info('[ProfessionalCreateSerializer.to_internal_value] 🚀 Calling super().to_internal_value()')
-        logger.info('=' * 80)
+        # DRF's source='name' mapping in field definition handles full_name -> name conversion
+        # Just call parent to process it
         return super().to_internal_value(data)
     
     def validate_password(self, value):
@@ -325,22 +291,13 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         Validate photo field explicitly
         This method is called AFTER ImageField parsing
         """
-        import logging
-        logger = logging.getLogger(__name__)
-        
-        logger.info(f'[validate_photo] Validating photo: {type(value).__name__}')
-        
         if value:  # Only validate if provided
-            logger.info(f'[validate_photo] Photo provided: {value.name if hasattr(value, "name") else "unknown"}')
-            logger.info(f'[validate_photo] Is File-like: {hasattr(value, "read")}')
             try:
                 validate_profile_photo(value)
                 return value
             except DjangoValidationError as e:
-                logger.error(f'[validate_photo] Validation error: {str(e)}')
                 raise serializers.ValidationError(str(e))
         else:
-            logger.info('[validate_photo] No photo provided, skipping validation')
             return value
     
     def validate_services(self, value):
@@ -353,13 +310,9 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
     
     def validate_state(self, value):
         """Validate state"""
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f'[validate_state] Validating state value: {repr(value)} (type: {type(value).__name__})')
         try:
             return validate_state_code(value)
         except DjangoValidationError as e:
-            logger.error(f'[validate_state] Validation failed: {e.message}')
             raise serializers.ValidationError(e.message)
     
     def validate_email(self, value):
@@ -370,10 +323,6 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
     
     def validate(self, data):
         """Cross-field validation including city-state pair"""
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info(f'[validate] Validating cross-field data: {list(data.keys())}')
-        
         # Validate city and state pair
         city = data.get('city')
         state = data.get('state')
@@ -383,7 +332,6 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
             try:
                 validate_city_state_pair(city, state)
             except DjangoValidationError as e:
-                logger.error(f'[validate] City-state validation failed: {e.message}')
                 raise serializers.ValidationError({
                     'city': str(e.message),
                     'state': str(e.message)
@@ -395,28 +343,9 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         """Create professional with associated user and send verification email"""
         from .models import EmailVerificationToken
         from django.core.mail import send_mail
-        from django.urls import reverse
         import logging
         
         logger = logging.getLogger(__name__)
-        
-        # ULTRA HARDCORE DEBUG: Log validated_data photo field
-        logger.info('=' * 80)
-        logger.info('[ProfessionalCreateSerializer.create] 🔥 VALIDATED DATA RECEIVED')
-        logger.info('=' * 80)
-        if 'photo' in validated_data:
-            photo_val = validated_data['photo']
-            logger.info(f'[create] photo type: {type(photo_val).__name__}')
-            logger.info(f'[create] photo value: {photo_val}')
-            if hasattr(photo_val, 'name'):
-                logger.info(f'[create] photo.name: {photo_val.name}')
-            if hasattr(photo_val, 'size'):
-                logger.info(f'[create] photo.size: {photo_val.size}')
-            if hasattr(photo_val, 'read'):
-                logger.info(f'[create] photo is file-like: True')
-        else:
-            logger.info('[create] ⚠️  NO PHOTO in validated_data!')
-        logger.info('=' * 80)
         
         password = validated_data.pop('password')
         email = validated_data['email']

@@ -177,8 +177,10 @@ def validate_bio(value):
     if not value or not value.strip():
         raise ValidationError('Bio é obrigatória')
 
-    if len(value.strip()) < 50:
-        raise ValidationError('Bio deve ter pelo menos 50 caracteres')
+    # Minimum 20 characters for registration (can be increased later)
+    # This allows for realistic short bios like "Instrutora de yoga certificada"
+    if len(value.strip()) < 20:
+        raise ValidationError('Bio deve ter pelo menos 20 caracteres')
 
     if len(value) > 2000:
         raise ValidationError('Bio deve ter no máximo 2000 caracteres')

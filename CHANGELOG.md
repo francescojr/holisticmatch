@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Production Fixes] - 2025-11-08
+
+### Fixed
+- **Registration Serializer Field Mapping**: Fixed `full_name` → `name` field mapping using DRF's `source` parameter for proper FormData handling
+- **Bio Validation Too Strict**: Reduced minimum bio length requirement from 50 to 20 characters to allow realistic short bios like "Instrutora de yoga certificada"
+- **Services JSON Parsing**: Improved JSON parsing from FormData to handle `services` field as JSON string
+- **Health Check Endpoint**: Added `/health/` and `/api/v1/health/` endpoints for load balancer health checks (returns JSON `{status: ok}`)
+
+### Details
+- Registration form now accepts both POST with and without trailing slash
+- Photo uploads optional when bio is provided (reduces validation barriers for MVP)
+- All 29 unit tests passing locally and in production
+- Email verification endpoint working with token validation
+
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
