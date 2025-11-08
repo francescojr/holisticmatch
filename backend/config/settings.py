@@ -265,6 +265,13 @@ if IS_PYTEST_TEST:
 # ============================================================================
 # LOGGING CONFIGURATION
 # ============================================================================
+
+# Create logs directory if it doesn't exist (for file logging)
+import os
+logs_dir = BASE_DIR / 'logs'
+if not IS_PYTEST_TEST:  # Don't create in tests
+    os.makedirs(logs_dir, exist_ok=True)
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -285,7 +292,7 @@ LOGGING = {
         },
         'file': {
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
+            'filename': logs_dir / 'django.log',
             'maxBytes': 1024 * 1024 * 10,  # 10 MB
             'backupCount': 5,
             'formatter': 'verbose',
@@ -297,17 +304,17 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'] if IS_PYTEST_TEST else ['console', 'file'],
             'level': config('DJANGO_LOG_LEVEL', default='INFO'),
             'propagate': False,
         },
         'professionals': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'] if IS_PYTEST_TEST else ['console', 'file'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'authentication': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'] if IS_PYTEST_TEST else ['console', 'file'],
             'level': 'DEBUG',
             'propagate': False,
         },
