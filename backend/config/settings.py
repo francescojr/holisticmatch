@@ -214,7 +214,7 @@ else:
 # ============================================================================
 EMAIL_BACKEND = config(
     'EMAIL_BACKEND',
-    default='resend.django.EmailBackend'
+    default='professionals.email_backend.ResendEmailBackend'
 )
 
 RESEND_API_KEY = config(
