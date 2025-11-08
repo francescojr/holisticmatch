@@ -20,22 +20,22 @@ class ResendEmailBackend(BaseEmailBackend):
         self.fail_silently = fail_silently
         
         # Set API key from environment or settings
-        api_key = os.environ.get('RESEND_API_KEY') or getattr(settings, 'RESEND_API_KEY', None)
+        self.api_key = os.environ.get('RESEND_API_KEY') or getattr(settings, 'RESEND_API_KEY', None)
         
-        if not api_key:
+        if not self.api_key:
             logger.warning("RESEND_API_KEY not found in environment or settings")
-            self.client = None
+            self.api_key = None
             return
         
-        # Import and initialize Resend client
+        # Verify resend package is available
         try:
-            from resend import Resend
-            self.client = Resend(api_key=api_key)
-            logger.info("Resend client initialized successfully")
+            import resend
+            self.resend = resend
+            logger.info("Resend package imported successfully")
         except ImportError as exc:
             if not fail_silently:
                 raise ImportError("Resend package not installed") from exc
-            self.client = None
+            self.resend = None
             logger.error("Failed to import Resend package")
     
     def send_messages(self, email_messages):
@@ -64,25 +64,28 @@ class ResendEmailBackend(BaseEmailBackend):
         """
         Send a single EmailMessage object via Resend
         """
-        if not self.client:
-            logger.error("Resend client not initialized")
+        if not self.resend or not self.api_key:
+            logger.error("Resend not initialized or API key missing")
             return False
         
         try:
-            # Prepare email payload
-            email_payload = {
+            # Set API key in environment for resend to use
+            os.environ['RESEND_API_KEY'] = self.api_key
+            
+            # Prepare email payload using Resend's format
+            email_params = {
                 'from': message.from_email or settings.DEFAULT_FROM_EMAIL,
-                'to': message.to,
+                'to': ', '.join(message.to) if isinstance(message.to, list) else message.to,
                 'subject': message.subject,
-                'html': message.body,  # Use body as HTML
+                'html': message.body,
             }
             
             logger.info("📧 Sending email via Resend to: %s", str(message.to))
-            logger.info("📧 From: %s", email_payload['from'])
-            logger.info("📧 Subject: %s", email_payload['subject'])
+            logger.info("📧 From: %s", email_params['from'])
+            logger.info("📧 Subject: %s", email_params['subject'])
             
-            # Call Resend API via client
-            response = self.client.emails.send(email_payload)
+            # Call Resend API - use the Emails class directly
+            response = self.resend.Emails.send(**email_params)
             
             logger.info("✅ Email sent successfully via Resend. Response: %s", str(response))
             return True
