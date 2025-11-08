@@ -4,6 +4,7 @@ Custom Email Backend for Resend API Integration with Django
 from django.core.mail.backends.base import BaseEmailBackend
 from django.conf import settings
 import logging
+import os
 
 logger = logging.getLogger('professionals')
 
@@ -18,16 +19,24 @@ class ResendEmailBackend(BaseEmailBackend):
         super().__init__(fail_silently=fail_silently)
         self.fail_silently = fail_silently
         
-        # Import Resend - set API key via environment or config
+        # Set API key from environment or settings
+        api_key = os.environ.get('RESEND_API_KEY') or getattr(settings, 'RESEND_API_KEY', None)
+        
+        if not api_key:
+            logger.warning("RESEND_API_KEY not found in environment or settings")
+            self.client = None
+            return
+        
+        # Import and initialize Resend client
         try:
-            import os
-            os.environ['RESEND_API_KEY'] = settings.RESEND_API_KEY
-            from resend.emails import send as resend_send
-            self.resend_send = resend_send
-        except (ImportError, AttributeError) as exc:
+            from resend import Resend
+            self.client = Resend(api_key=api_key)
+            logger.info("Resend client initialized successfully")
+        except ImportError as exc:
             if not fail_silently:
-                raise ImportError("Resend package not installed or incompatible version") from exc
-            self.resend_send = None
+                raise ImportError("Resend package not installed") from exc
+            self.client = None
+            logger.error("Failed to import Resend package")
     
     def send_messages(self, email_messages):
         """
@@ -55,34 +64,31 @@ class ResendEmailBackend(BaseEmailBackend):
         """
         Send a single EmailMessage object via Resend
         """
-        if not self.resend_send:
-            logger.warning("Resend send function not initialized")
-            return False
-        
-        if not settings.RESEND_API_KEY:
-            logger.error("RESEND_API_KEY not configured")
+        if not self.client:
+            logger.error("Resend client not initialized")
             return False
         
         try:
-            # Prepare email data using resend SDK format
-            email_data = {
+            # Prepare email payload
+            email_payload = {
                 'from': message.from_email or settings.DEFAULT_FROM_EMAIL,
-                'to': message.to,  # List of recipients
+                'to': message.to,
                 'subject': message.subject,
-                'html': message.body,  # Use body as HTML for now
+                'html': message.body,  # Use body as HTML
             }
             
-            logger.info("Resend: Sending email to %s", str(message.to))
-            logger.info("Resend: From: %s", email_data['from'])
+            logger.info("📧 Sending email via Resend to: %s", str(message.to))
+            logger.info("📧 From: %s", email_payload['from'])
+            logger.info("📧 Subject: %s", email_payload['subject'])
             
-            # Send via Resend using the send function
-            response = self.resend_send(email_data)
+            # Call Resend API via client
+            response = self.client.emails.send(email_payload)
             
-            logger.info("Resend: Email sent successfully. Response: %s", str(response))
+            logger.info("✅ Email sent successfully via Resend. Response: %s", str(response))
             return True
             
         except Exception as exc:
-            logger.error("Resend: Failed to send email: %s", str(exc), exc_info=True)
+            logger.error("❌ Failed to send email via Resend: %s", str(exc), exc_info=True)
             if not self.fail_silently:
                 raise
             return False
