@@ -5,16 +5,25 @@ All notable changes to this project will be documented in this file.
 ## [Production Fixes] - 2025-11-08
 
 ### Fixed
-- **Registration Serializer Field Mapping**: Fixed `full_name` → `name` field mapping using DRF's `source` parameter for proper FormData handling
+- **Registration Serializer Field Mapping**: Fixed `full_name` → `name` field mapping by manually converting in `to_internal_value()` since DRF's `source` parameter only works on model fields
 - **Bio Validation Too Strict**: Reduced minimum bio length requirement from 50 to 20 characters to allow realistic short bios like "Instrutora de yoga certificada"
-- **Services JSON Parsing**: Improved JSON parsing from FormData to handle `services` field as JSON string
+- **Services JSON Parsing**: Fixed JSON parsing from FormData by making a mutable copy of QueryDict before modifying (Django's QueryDict is immutable)
+- **QueryDict Immutability**: Fixed `AttributeError: This QueryDict instance is immutable` by converting QueryDict to dict in `to_internal_value()`
 - **Health Check Endpoint**: Added `/health/` and `/api/v1/health/` endpoints for load balancer health checks (returns JSON `{status: ok}`)
+
+### Added
+- Comprehensive tests for registration without photo
+- Tests for `full_name` mapping to `name` field
+- Tests for bio length validation
+- 3 new unit tests in `test_registration_without_photo.py`
 
 ### Details
 - Registration form now accepts both POST with and without trailing slash
 - Photo uploads optional when bio is provided (reduces validation barriers for MVP)
-- All 29 unit tests passing locally and in production
+- All 32 unit tests passing locally (29 existing + 3 new)
 - Email verification endpoint working with token validation
+- Frontend can send `full_name` and it's automatically mapped to `name` model field
+- Services can be sent as JSON string from FormData: `services='["Reiki", "Meditação Guiada"]'`
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
