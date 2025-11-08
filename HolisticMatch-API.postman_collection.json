@@ -319,6 +319,211 @@
       "description": "Todos os endpoints de profissionais"
     },
     {
+      "name": "📝 Autenticação",
+      "item": [
+        {
+          "name": "1. Registrar Novo Profissional (Com Foto)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status é 201 Created', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "pm.test('Response tem access_token', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('access_token');",
+                  "});",
+                  "pm.test('Response tem professional_id', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('professional_id');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "profissional@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "full_name",
+                  "value": "João Silva",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "SenhaForte123!",
+                  "type": "text"
+                },
+                {
+                  "key": "services",
+                  "value": "[\"Reiki\", \"Meditação\"]",
+                  "type": "text"
+                },
+                {
+                  "key": "price_per_session",
+                  "value": "150",
+                  "type": "text"
+                },
+                {
+                  "key": "attendance_type",
+                  "value": "online",
+                  "type": "text"
+                },
+                {
+                  "key": "state",
+                  "value": "SP",
+                  "type": "text"
+                },
+                {
+                  "key": "city",
+                  "value": "São Paulo",
+                  "type": "text"
+                },
+                {
+                  "key": "neighborhood",
+                  "value": "Centro",
+                  "type": "text"
+                },
+                {
+                  "key": "bio",
+                  "value": "Reikiano experiente com 10 anos de prática",
+                  "type": "text"
+                },
+                {
+                  "key": "whatsapp",
+                  "value": "11999999999",
+                  "type": "text"
+                },
+                {
+                  "key": "photo",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/professionals/register/",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "professionals", "register"]
+            },
+            "description": "Registrar novo profissional com foto de perfil. IMPORTANTE: Selecione uma imagem no campo 'photo' antes de enviar!"
+          },
+          "response": []
+        },
+        {
+          "name": "2. Registrar Profissional (Sem Foto)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "email",
+                  "value": "profissional2@example.com",
+                  "type": "text"
+                },
+                {
+                  "key": "full_name",
+                  "value": "Maria Santos",
+                  "type": "text"
+                },
+                {
+                  "key": "password",
+                  "value": "SenhaForte456!",
+                  "type": "text"
+                },
+                {
+                  "key": "services",
+                  "value": "[\"Yoga\", \"Pilates\"]",
+                  "type": "text"
+                },
+                {
+                  "key": "price_per_session",
+                  "value": "120",
+                  "type": "text"
+                },
+                {
+                  "key": "attendance_type",
+                  "value": "presencial",
+                  "type": "text"
+                },
+                {
+                  "key": "state",
+                  "value": "RJ",
+                  "type": "text"
+                },
+                {
+                  "key": "city",
+                  "value": "Rio de Janeiro",
+                  "type": "text"
+                },
+                {
+                  "key": "neighborhood",
+                  "value": "Copacabana",
+                  "type": "text"
+                },
+                {
+                  "key": "bio",
+                  "value": "Instrutora de yoga certificada",
+                  "type": "text"
+                },
+                {
+                  "key": "whatsapp",
+                  "value": "21988888888",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/professionals/register/",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "professionals", "register"]
+            },
+            "description": "Registrar profissional sem foto (foto opcional)"
+          },
+          "response": []
+        },
+        {
+          "name": "3. Verificar Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"seu-token-de-verificacao-aqui\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/professionals/verify-email/",
+              "protocol": "http",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "professionals", "verify-email"]
+            },
+            "description": "Verificar email com token recebido no email de confirmação"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints de autenticação e registro"
+    },
+    {
       "name": "🔧 Utilitários",
       "item": [
         {
@@ -355,9 +560,15 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com",
+      "value": "localhost:8000",
       "type": "string",
-      "description": "Base URL da API - Mude para localhost:8000 para local"
+      "description": "Base URL da API. MUDE PARA: holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com para testar em produção"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string",
+      "description": "Token JWT retornado após registro ou login - será salvo automaticamente"
     }
   ]
 }
