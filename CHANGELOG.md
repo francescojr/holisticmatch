@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased] - 2025-11-08
 
+### FIX: API Routing - Accept POST/PUT without Trailing Slash
+
+**Problem**: Postman and API clients sending requests to `/api/v1/professionals/register` (without trailing slash) were getting 404 errors. Django + DRF require trailing slash by default, and redirects lose request body on POST.
+
+**Solution**: Added explicit regex URL patterns that accept both with and without trailing slash
+
+**Changes**:
+- File: `backend/professionals/urls.py`
+- Added: `re_path()` patterns for `register` and `verify_email` actions
+- Pattern: `^professionals/register/?$` (accepts both `/register` and `/register/`)
+- Maintains: Full compatibility with existing DefaultRouter routes
+
+**Test Results**: ✅ 29/29 tests passing
+
+---
+
 ### FIX: Photo Upload - Nginx + Django Limits + Axios Headers
 
 **Problem**: Photo uploads failing with `413 Request Entity Too Large` (2.2MB file rejected) and `400 Bad Request: "not a file"`
@@ -37,16 +53,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    - File: `frontend/src/services/api.ts`
    - Changed: `timeout: 30000` (for large file uploads)
 
-**Test Results**: ✅ All local tests passing (168/168)
+**Test Results**: ✅ All local tests passing (29/29)
 
 **Files Modified**:
-- `backend/.ebextensions/nginx_upload.config`
-- `backend/config/settings.py`
-- `frontend/src/services/api.ts`
-
-   - Serializer HAS `validate_photo()` method ✅ (NEW)
-   - Triple validation works correctly: serializer → model → save
-   - No conflicts or double-parsing issues ✅
+- `backend/professionals/urls.py`
 
 **Fixes Applied**:
 

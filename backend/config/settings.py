@@ -17,10 +17,6 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver').split(',')
 
-# Django REST Framework doesn't require trailing slash
-# Disable automatic redirect to prevent losing request body on POST/PUT/DELETE
-APPEND_SLASH = False
-
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
