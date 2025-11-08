@@ -197,11 +197,11 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
     )
     
     # Allow frontend to send 'full_name' instead of 'name'
+    # This is write_only and not a model field
     full_name = serializers.CharField(
         write_only=True,
         required=False,
-        allow_blank=True,
-        source='name'  # Map to 'name' field in the model
+        allow_blank=True
     )
     
     # CRITICAL: Explicit ImageField declaration for proper FormData handling
@@ -240,12 +240,27 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         """
         Handle JSON-encoded fields from FormData
         When FormData is sent, complex fields like 'services' come as JSON strings
-        Also map 'full_name' to 'name' for frontend compatibility
+        Map 'full_name' to 'name' for frontend compatibility
         """
         import json
         import logging
         
         logger = logging.getLogger(__name__)
+        
+        # Make a mutable copy of QueryDict to avoid immutability issues
+        if hasattr(data, 'dict'):  # QueryDict
+            data = data.dict()
+        else:
+            # Create a mutable copy of regular dicts/objects
+            data = dict(data) if not isinstance(data, dict) else data
+        
+        # Map full_name to name if full_name provided
+        if 'full_name' in data and data['full_name']:
+            data['name'] = data.pop('full_name')
+            logger.debug(f'Mapped full_name to name: {data["name"]}')
+        elif 'full_name' in data:
+            # Remove empty full_name
+            data.pop('full_name')
         
         # Parse JSON fields that come from FormData
         if 'services' in data and isinstance(data['services'], str):
@@ -256,8 +271,7 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
                 logger.error(f'Failed to parse services JSON: {str(e)}')
                 # Don't modify - let validator handle the error
         
-        # DRF's source='name' mapping in field definition handles full_name -> name conversion
-        # Just call parent to process it
+        # Call parent to process
         return super().to_internal_value(data)
     
     def validate_password(self, value):
