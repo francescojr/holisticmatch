@@ -12,7 +12,7 @@ All notable changes to this project will be documented in this file.
 - **Environment Variables**: Added RESEND_API_KEY, EMAIL_BACKEND, DEFAULT_FROM_EMAIL to all environments
 
 ### Changed
-- **requirements.txt**: Added `resend==0.11.0` dependency
+- **requirements.txt**: Added `resend==2.19.0` dependency
 - **settings.py**: EMAIL_BACKEND now uses Resend instead of console backend
 - **.env**: Updated with Resend configuration (RESEND_API_KEY, DEFAULT_FROM_EMAIL)
 - **.env.example**: Updated template with Resend configuration guide

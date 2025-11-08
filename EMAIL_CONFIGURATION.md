@@ -3,7 +3,7 @@
 ## ✅ Status Atual
 - ✅ Backend: Configurado para Resend
 - ✅ GitHub Actions: Secrets adicionados
-- ✅ Requirements: resend==0.11.0 adicionado
+- ✅ Requirements: resend==2.19.0 adicionado
 - ❌ AWS EB: Variáveis precisam ser setadas (veja abaixo)
 - ⏳ GitHub Secrets: Precisam ser adicionadas
 
@@ -99,7 +99,7 @@ DEFAULT_FROM_EMAIL: onboarding@resend.dev
 
 | Arquivo | Mudança | Razão |
 |---------|---------|-------|
-| `requirements.txt` | +resend==0.11.0 | Dependência email |
+| `requirements.txt` | +resend==2.19.0 | Dependência email |
 | `settings.py` | +Resend config | Email backend |
 | `.env` | +RESEND_API_KEY | Chave API |
 | `.env.example` | +Resend template | Documentação |
