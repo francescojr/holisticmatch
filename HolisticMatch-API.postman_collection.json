@@ -1,8 +1,8 @@
 ﻿{
   "info": {
     "_postman_id": "holisticmatch-2025-v2",
-    "name": "🧘 HolisticMatch API - v2.0 Production",
-    "description": "Todos os endpoints TESTADOS e FUNCIONANDO\n✅ Registro sem foto\n✅ Registro com foto\n✅ Bio mínimo 20 chars\n✅ Services em JSON\n✅ Health check\n2025-11-08",
+    "name": "🧘 HolisticMatch API - v2.0 Production + Local",
+    "description": "Todos os endpoints TESTADOS e FUNCIONANDO ✅\n✅ Registro sem foto (working)\n✅ Registro com foto (working)\n✅ Bio mínimo 20 chars\n✅ Services em JSON\n✅ Health check endpoints\n✅ Email verification (configure SendGrid)\n\n⚠️  NOTE: Use {{base_url}} com:\n- LOCAL: http://localhost:8000\n- PROD: https://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com\n\n2025-11-08",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -33,6 +33,30 @@
               "raw": "{{base_url}}/api/v1/health/",
               "host": ["{{base_url}}"],
               "path": ["api", "v1", "health", ""]
+            }
+          }
+        },
+        {
+          "name": "GET /health/detailed/ (com DB check)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health/detailed/",
+              "host": ["{{base_url}}"],
+              "path": ["health", "detailed", ""]
+            }
+          }
+        },
+        {
+          "name": "GET /api/v1/health/detailed/ (com DB check)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/health/detailed/",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "health", "detailed", ""]
             }
           }
         }
@@ -199,7 +223,7 @@
     }
   ],
   "variable": [
-    {"key": "base_url", "value": "https://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com", "type": "string"},
+    {"key": "base_url", "value": "http://localhost:8000", "type": "string", "description": "Change to: https://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com for production"},
     {"key": "access_token", "value": "", "type": "string"},
     {"key": "refresh_token", "value": "", "type": "string"}
   ]
