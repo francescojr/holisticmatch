@@ -2,6 +2,47 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Security & Email Debug] - 2025-11-08
+
+### 🔐 Security Fixes
+- **URGENT**: Removed exposed Resend API key from all public documentation
+- **API Key Storage**: Moved API key from .env file to GitHub Secrets only (environment variables in CI/CD)
+- **Sensitive Data**: Replaced hardcoded values in EMAIL_CONFIGURATION.md, GITHUB_SECRET_SETUP.md, RESEND_IMPLEMENTATION.md with placeholders
+- **from_email**: Changed from hardcoded 'noreply@holisticmatch.com' to `settings.DEFAULT_FROM_EMAIL` (respects environment config)
+
+### 🐛 Email Debugging Enhancements
+- **Comprehensive Logging**: Added detailed logging to email verification flow with emoji indicators
+- **Log Configuration**: Implemented Django LOGGING settings with rotating file handlers
+- **Log Levels**: Set DEBUG for professionals and authentication apps
+- **Log File**: Created backend/logs/django.log for persistent logging
+- **Debug Output**: Added status checks for:
+  - Email backend configuration
+  - Resend API key presence
+  - Verification token generation
+  - Email sending success/failure with detailed error types
+
+### Changed
+- **professionals/serializers.py**: Enhanced `create()` method with comprehensive logging at each step
+- **config/settings.py**: 
+  - Added complete LOGGING configuration with console and file handlers
+  - Logging setup for professionals and authentication modules
+- **.env**: Removed API key value (now empty, will be set via environment variable)
+- **.gitignore**: Added `logs/` directory to ignore generated logs
+- **EMAIL_CONFIGURATION.md**: Replaced all API key references with `<seu_resend_api_key>` placeholder
+- **GITHUB_SECRET_SETUP.md**: Replaced hardcoded key with placeholder
+- **RESEND_IMPLEMENTATION.md**: All environment examples now use placeholders
+
+### Added
+- **EMAIL_DEBUG_GUIDE.md**: Complete debugging guide with log interpretation, test procedures, and checklist
+- **backend/logs/.gitkeep**: Directory structure for log files
+- **Logging Handlers**: File rotation handler (10MB max, 5 backups)
+
+### 🎯 Why These Changes
+1. **GitGuardian Alert**: API key was exposed in commits - now only in GitHub Secrets
+2. **Better Debugging**: Detailed logs will show exactly where email delivery fails
+3. **Environment Safety**: Using settings.DEFAULT_FROM_EMAIL respects config per environment
+4. **Developer Experience**: Clear debug guide helps troubleshoot email issues
+
 ## [Email Integration] - 2025-11-08
 
 ### Added

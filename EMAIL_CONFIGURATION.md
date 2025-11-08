@@ -16,7 +16,7 @@
 1. Vá para: **GitHub → Settings → Secrets and variables → Actions**
 2. Clique **New repository secret**
 3. Nome: `RESEND_API_KEY`
-4. Value: `re_2MrKCFP3_6x5e3PwLJKjNf8Sp5KYTLF3Q`
+4. Value: `<Seu Resend API Key>` (veja seção "Como Gerar Resend API Key" abaixo)
 5. Clique **Add secret**
 
 ### **Passo 2: Configurar AWS EB Environment**
@@ -29,7 +29,7 @@ bash configure_eb_env.sh
 # Opção B: Manual via CLI
 cd backend
 eb setenv \
-  RESEND_API_KEY=re_2MrKCFP3_6x5e3PwLJKjNf8Sp5KYTLF3Q \
+  RESEND_API_KEY=<seu_resend_api_key> \
   DEFAULT_FROM_EMAIL=onboarding@resend.dev \
   EMAIL_BACKEND=resend.django.EmailBackend
 

@@ -357,12 +357,15 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         """Create professional with associated user and send verification email"""
         from .models import EmailVerificationToken
         from django.core.mail import send_mail
+        from django.conf import settings
         import logging
         
         logger = logging.getLogger(__name__)
         
         password = validated_data.pop('password')
         email = validated_data['email']
+        
+        logger.info(f'🔄 Starting professional registration for email: {email}')
         
         try:
             # Create user account (initially inactive until email verified)
@@ -372,37 +375,58 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
                 password=password,
                 is_active=False  # User starts inactive until email verification
             )
+            logger.info(f'✅ User created: {email} (is_active=False)')
             
             # Create professional profile
             professional = Professional.objects.create(
                 user=user,
                 **validated_data
             )
+            logger.info(f'✅ Professional profile created for {email}')
             
             # Create email verification token
             email_token = EmailVerificationToken.create_token(user, expiry_hours=24)
+            logger.info(f'✅ Email verification token created: {email_token.token[:20]}...')
             
             # Send verification email (with comprehensive error handling)
             try:
                 verification_link = f"{self.context.get('request').build_absolute_uri('/')}" if self.context.get('request') else "http://localhost:3000"
                 verification_link = verification_link.rstrip('/') + f"/verify-email/{email_token.token}"
                 
+                # Log email configuration
+                logger.info(f'📧 Email Backend: {settings.EMAIL_BACKEND}')
+                logger.info(f'📧 From Email: {settings.DEFAULT_FROM_EMAIL}')
+                logger.info(f'📧 Recipient: {email}')
+                logger.info(f'📧 Verification Link: {verification_link}')
+                
+                # Log Resend API key status
+                if hasattr(settings, 'RESEND_API_KEY'):
+                    key_status = '✅ CONFIGURED' if settings.RESEND_API_KEY else '❌ NOT SET'
+                    logger.info(f'🔑 RESEND_API_KEY: {key_status}')
+                else:
+                    logger.warning(f'⚠️ RESEND_API_KEY not in settings')
+                
+                logger.info(f'📤 Attempting to send verification email...')
+                
                 send_mail(
                     subject='Verifique seu email - HolisticMatch',
                     message=f'Clique no link para verificar seu email: {verification_link}',
-                    from_email='noreply@holisticmatch.com',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[email],
-                    fail_silently=True,  # Don't crash if email fails
+                    fail_silently=False,  # Raise exception to log it
                 )
-                logger.info(f'Verification email sent to {email}')
+                logger.info(f'✅ Verification email sent successfully to {email}')
             except Exception as e:
-                logger.error(f'Failed to send verification email to {email}: {str(e)}', exc_info=True)
+                logger.error(f'❌ Failed to send verification email to {email}', exc_info=True)
+                logger.error(f'Error type: {type(e).__name__}')
+                logger.error(f'Error message: {str(e)}')
                 # Continue - user can request email resend later
             
             return professional
             
         except Exception as e:
-            logger.error(f'Error in professional creation: {str(e)}', exc_info=True)
+            logger.error(f'❌ Error in professional creation: {str(e)}', exc_info=True)
+            logger.error(f'Error type: {type(e).__name__}')
             raise
 
 

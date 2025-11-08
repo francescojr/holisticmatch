@@ -12,7 +12,7 @@ https://github.com/francescojr/holisticmatch/settings/secrets/actions
 ### 3. Preencha:
 ```
 Name: RESEND_API_KEY
-Secret: re_2MrKCFP3_6x5e3PwLJKjNf8Sp5KYTLF3Q
+Secret: <Seu Resend API Key>
 ```
 
 ### 4. Clique "Add secret"

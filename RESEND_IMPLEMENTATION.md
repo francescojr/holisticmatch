@@ -65,7 +65,7 @@
 ```bash
 # backend/.env (PRONTO)
 EMAIL_BACKEND=resend.django.EmailBackend
-RESEND_API_KEY=re_2MrKCFP3_6x5e3PwLJKjNf8Sp5KYTLF3Q
+RESEND_API_KEY=<seu_resend_api_key>  # Será preenchido via environment variable
 DEFAULT_FROM_EMAIL=onboarding@resend.dev
 
 # Usar:
@@ -97,7 +97,7 @@ bash configure_eb_env.sh
 
 # Via CLI manual:
 eb setenv \
-  RESEND_API_KEY=re_2MrKCFP3_6x5e3PwLJKjNf8Sp5KYTLF3Q \
+  RESEND_API_KEY=<seu_resend_api_key> \
   EMAIL_BACKEND=resend.django.EmailBackend \
   DEFAULT_FROM_EMAIL=onboarding@resend.dev
 
@@ -134,13 +134,13 @@ eb setenv \
    → https://github.com/francescojr/holisticmatch/settings/secrets/actions
    → New repository secret
    → Name: RESEND_API_KEY
-   → Value: re_2MrKCFP3_6x5e3PwLJKjNf8Sp5KYTLF3Q
+   → Value: <Seu Resend API Key>
 
 ⏳ 2. Configurar AWS EB Environment
    → Option A (Automático):
       cd backend && bash configure_eb_env.sh
    → Option B (CLI):
-      eb setenv RESEND_API_KEY=re_... EMAIL_BACKEND=resend.django.EmailBackend
+      eb setenv RESEND_API_KEY=<seu_resend_api_key> EMAIL_BACKEND=resend.django.EmailBackend
    → Option C (AWS Console):
       Elastic Beanstalk → Configuration → Environment properties
 
