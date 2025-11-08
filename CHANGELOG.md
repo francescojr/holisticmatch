@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file.
 
+## [CI/CD & Logging Fix] - 2025-11-08
+
+### Fixed
+- **Logging Configuration**: Fixed pytest failure due to missing logs directory in CI/CD
+- **CI/CD Compatibility**: Logging now conditionally creates file handler only in production, uses console-only in tests
+- **Test Suite**: All 171 tests now passing in both local and CI/CD environments
+
+### Changed
+- **config/settings.py**: 
+  - Added dynamic directory creation for logs (only outside pytest)
+  - Modified LOGGING handlers to use console-only during tests
+  - Prevents FileNotFoundError in GitHub Actions
+
+### Why This Matters
+- ✅ CI/CD tests will now pass
+- ✅ GitHub Actions will deploy successfully
+- ✅ AWS EB will have Resend installed automatically
+- ✅ Email verification will work in production
+
 ## [Security & Email Debug] - 2025-11-08
 
 ### 🔐 Security Fixes
