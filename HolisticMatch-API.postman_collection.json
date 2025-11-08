@@ -560,9 +560,9 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "localhost:8000",
+      "value": "holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com",
       "type": "string",
-      "description": "Base URL da API. MUDE PARA: holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com para testar em produção"
+      "description": "Base URL da API em Produção (AWS)"
     },
     {
       "key": "access_token",
