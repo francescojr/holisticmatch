@@ -266,11 +266,30 @@ if IS_PYTEST_TEST:
 # LOGGING CONFIGURATION
 # ============================================================================
 
-# Create logs directory if it doesn't exist (for file logging)
+# Prepare logging handlers based on environment
 import os
 logs_dir = BASE_DIR / 'logs'
-if not IS_PYTEST_TEST:  # Don't create in tests
+
+# Only configure file handler in non-test environments
+if not IS_PYTEST_TEST:
     os.makedirs(logs_dir, exist_ok=True)
+
+logging_handlers = {
+    'console': {
+        'class': 'logging.StreamHandler',
+        'formatter': 'verbose',
+    },
+}
+
+# Only add file handler if not in test environment
+if not IS_PYTEST_TEST:
+    logging_handlers['file'] = {
+        'class': 'logging.handlers.RotatingFileHandler',
+        'filename': str(logs_dir / 'django.log'),
+        'maxBytes': 1024 * 1024 * 10,  # 10 MB
+        'backupCount': 5,
+        'formatter': 'verbose',
+    }
 
 LOGGING = {
     'version': 1,
@@ -285,19 +304,7 @@ LOGGING = {
             'style': '{',
         },
     },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-        'file': {
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': logs_dir / 'django.log',
-            'maxBytes': 1024 * 1024 * 10,  # 10 MB
-            'backupCount': 5,
-            'formatter': 'verbose',
-        },
-    },
+    'handlers': logging_handlers,
     'root': {
         'handlers': ['console'],
         'level': 'INFO',
