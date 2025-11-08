@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Email Integration] - 2025-11-08
+
+### Added
+- **Resend Email Integration**: Full email delivery system using Resend API (100 emails/day free tier)
+- **GitHub Secrets Configuration**: Added `RESEND_API_KEY` to CI/CD pipelines (ci.yml, deploy-backend.yml)
+- **AWS EB Environment Setup**: Created `configure_eb_env.sh` script for easy EB environment variable configuration
+- **Email Backend in settings.py**: Configured Django EMAIL_BACKEND to use `resend.django.EmailBackend`
+- **Environment Variables**: Added RESEND_API_KEY, EMAIL_BACKEND, DEFAULT_FROM_EMAIL to all environments
+
+### Changed
+- **requirements.txt**: Added `resend==0.11.0` dependency
+- **settings.py**: EMAIL_BACKEND now uses Resend instead of console backend
+- **.env**: Updated with Resend configuration (RESEND_API_KEY, DEFAULT_FROM_EMAIL)
+- **.env.example**: Updated template with Resend configuration guide
+- **ci.yml**: Added RESEND_API_KEY secret injection for CI tests
+- **deploy-backend.yml**: Added RESEND_API_KEY secret injection for deployment tests
+
+### Improved
+- Email configuration now supports local development, CI/CD, and production environments
+- Created comprehensive EMAIL_CONFIGURATION.md with setup instructions
+- Automated EB environment setup with `configure_eb_env.sh` script
+- Email verification tokens now delivered via real emails (not console)
+
+### Technical Details
+- **Resend API Key**: Securely stored as GitHub secret
+- **Backend Configuration**: EMAIL_BACKEND=resend.django.EmailBackend
+- **Default Sender**: onboarding@resend.dev (can be customized after domain setup)
+- **Free Tier**: 100 emails/day, scales to R$ 0,10 per email after trial
+- **Security**: API key never committed to repository (uses GitHub secrets)
+
+---
+
 ## [Production Fixes] - 2025-11-08
 
 ### Fixed

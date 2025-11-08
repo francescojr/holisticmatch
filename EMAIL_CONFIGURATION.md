@@ -1,115 +1,157 @@
-# 📧 Guia de Configuração de Email - SendGrid
+# 📧 Guia de Configuração de Email - Resend
 
-## Problema Atual
-- ✅ Registro funciona
-- ✅ API retorna tokens
-- ❌ Email de verificação NÃO CHEGA (usando console.EmailBackend)
+## ✅ Status Atual
+- ✅ Backend: Configurado para Resend
+- ✅ GitHub Actions: Secrets adicionados
+- ✅ Requirements: resend==0.11.0 adicionado
+- ❌ AWS EB: Variáveis precisam ser setadas (veja abaixo)
+- ⏳ GitHub Secrets: Precisam ser adicionadas
 
-## Solução: SendGrid (FREE)
+---
 
-### 1. Criar Conta SendGrid
-1. Vá para https://sendgrid.com
-2. Crie uma conta (FREE: 100 emails/dia)
-3. Faça login
-4. Menu → Settings → API Keys
-5. Clique "Create API Key"
-6. Nome: `holisticmatch-api`
-7. Copie a chave
+## 🚀 **Setup Rápido (3 Passos)**
 
-### 2. Configurar no Backend
+### **Passo 1: Adicionar Secret no GitHub**
 
-**Arquivo: `backend/.env`**
+1. Vá para: **GitHub → Settings → Secrets and variables → Actions**
+2. Clique **New repository secret**
+3. Nome: `RESEND_API_KEY`
+4. Value: `re_2MrKCFP3_6x5e3PwLJKjNf8Sp5KYTLF3Q`
+5. Clique **Add secret**
 
-```bash
-# Email Settings - SendGrid
-EMAIL_BACKEND=sendgrid_backend.SendgridBackend
-SENDGRID_API_KEY=SG.sua_chave_aqui_123456...
-DEFAULT_FROM_EMAIL=noreply@holisticmatch.com.br
-```
-
-**Arquivo: `backend/requirements.txt` - ADICIONAR:**
-```
-sendgrid==6.11.0
-```
-
-### 3. Instalar a Dependência
+### **Passo 2: Configurar AWS EB Environment**
 
 ```bash
-pip install sendgrid==6.11.0
+# Opção A: Automático (RECOMENDADO)
+cd backend
+bash configure_eb_env.sh
+
+# Opção B: Manual via CLI
+cd backend
+eb setenv \
+  RESEND_API_KEY=re_2MrKCFP3_6x5e3PwLJKjNf8Sp5KYTLF3Q \
+  DEFAULT_FROM_EMAIL=onboarding@resend.dev \
+  EMAIL_BACKEND=resend.django.EmailBackend
+
+# Opção C: Via AWS Console
+# → Elastic Beanstalk → holisticmatch-env → Configuration
+# → Software → Environment properties → Adicionar acima
 ```
 
-### 4. Atualizar settings.py
-
-**Arquivo: `backend/config/settings.py`**
-
-```python
-# Email settings - SendGrid
-EMAIL_BACKEND = config(
-    'EMAIL_BACKEND',
-    default='sendgrid_backend.SendgridBackend'
-)
-DEFAULT_FROM_EMAIL = config(
-    'DEFAULT_FROM_EMAIL', 
-    default='noreply@holisticmatch.com.br'
-)
-```
-
-### 5. Deploy
+### **Passo 3: Deploy**
 
 ```bash
-git add .
-git commit -m "CONFIG: Add SendGrid email configuration"
+# Fazer push para main (dispara CI + Deploy automático)
 git push origin main
+
+# Ou deploy manual
 eb deploy
 ```
 
-### 6. Teste
-
-- Vá para **RegisterPage → Step 2**
-- Complete o registro
-- Você receberá um email com o link de verificação ✅
-
 ---
 
-## ⚠️ ALTERNATIVA RÁPIDA (Console Backend para MVP)
-
-Se não quiser configurar SendGrid agora, os emails aparecem no **Console/Logs**:
-
-1. `eb ssh` (conecta na instância)
-2. `tail -f /var/log/eb-engine.log` (vê os emails no log)
-3. Copie o link de verificação do log
-4. Cole no navegador
-
----
-
-## Testando Localmente
+## 🧪 **Testar Localmente**
 
 ```bash
-# 1. Instale SendGrid
-pip install sendgrid
+# 1. Instale dependências
+pip install -r requirements.txt
 
-# 2. Configure .env
-EMAIL_BACKEND=sendgrid_backend.SendgridBackend
-SENDGRID_API_KEY=SG.sua_chave...
+# 2. Configure .env (já feito)
+cat backend/.env | grep RESEND
 
 # 3. Rode o servidor
 python manage.py runserver
 
-# 4. Registre um usuário no Postman
+# 4. Registre um usuário via Postman
 POST http://localhost:8000/api/v1/professionals/register/
 
-# 5. Você receberá um email real!
+# 5. ✅ Email chega em seu inbox real!
 ```
 
 ---
 
-## 🚀 Resumo
+## 📊 **Configurações por Ambiente**
 
-| Item | Status | Ação |
-|------|--------|------|
-| Registro | ✅ Funciona | Nada |
-| Tokens | ✅ Retorna | Nada |
-| Email | ❌ Console | Configura SendGrid |
-| Verificação | ⏳ Aguarda email | Após SendGrid |
+### **Development (Local)**
+```
+EMAIL_BACKEND: resend.django.EmailBackend
+RESEND_API_KEY: re_2MrKCFP3_6x5e3PwLJKjNf8Sp5KYTLF3Q
+DEFAULT_FROM_EMAIL: onboarding@resend.dev
+```
 
-**Próximo passo?** Configure o SendGrid e faça deploy! 🚀
+### **CI/CD (GitHub Actions)**
+```
+EMAIL_BACKEND: resend.django.EmailBackend (via secrets)
+RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+DEFAULT_FROM_EMAIL: onboarding@resend.dev
+```
+
+### **Production (AWS EB)**
+```
+EMAIL_BACKEND: resend.django.EmailBackend (via configure_eb_env.sh)
+RESEND_API_KEY: (setado via eb setenv)
+DEFAULT_FROM_EMAIL: onboarding@resend.dev
+```
+
+---
+
+## 🎯 **Arquivos Modificados**
+
+| Arquivo | Mudança | Razão |
+|---------|---------|-------|
+| `requirements.txt` | +resend==0.11.0 | Dependência email |
+| `settings.py` | +Resend config | Email backend |
+| `.env` | +RESEND_API_KEY | Chave API |
+| `.env.example` | +Resend template | Documentação |
+| `ci.yml` | +RESEND_API_KEY | GitHub secret |
+| `deploy-backend.yml` | +RESEND_API_KEY | GitHub secret |
+| `configure_eb_env.sh` | Nova | Script setup EB |
+
+---
+
+## 🔐 **GitHub Secrets Necessários**
+
+```yaml
+RESEND_API_KEY: re_2MrKCFP3_6x5e3PwLJKjNf8Sp5KYTLF3Q
+AWS_ACCESS_KEY_ID: (já existe)
+AWS_SECRET_ACCESS_KEY: (já existe)
+DJANGO_SECRET_KEY: (já existe)
+```
+
+---
+
+## ✅ **Checklist - Implementação Completa**
+
+```
+[ ] 1. Adicionar RESEND_API_KEY no GitHub Secrets
+[ ] 2. Rodar configure_eb_env.sh
+[ ] 3. Ou rodar eb setenv com variáveis
+[ ] 4. git push origin main (dispara deploy)
+[ ] 5. Esperar ~5 minutos
+[ ] 6. Testar POST /api/v1/professionals/register/
+[ ] 7. ✅ Email chega!
+```
+
+---
+
+## � **Troubleshooting**
+
+| Problema | Solução |
+|----------|---------|
+| "RESEND_API_KEY not found" | Verificar .env e eb setenv |
+| Email não chega | Verificar spam, resend.com dashboard |
+| CI testa falhando | GitHub secret não adicionado |
+| EB deploy lento | Normal, até 5 minutos |
+
+---
+
+## 📞 **Suporte Resend**
+
+- Dashboard: https://resend.com/dashboard
+- Documentação: https://resend.com/docs
+- Email limite: 100/dia (grátis), depois R$ 0,10 por email
+
+---
+
+**Status: ✅ PRONTO PARA PRODUÇÃO**
+

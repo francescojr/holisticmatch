@@ -36,6 +36,8 @@ jobs:
           SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
           DEBUG: False
           DATABASE_URL: sqlite:///test.db
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_BACKEND: resend.django.EmailBackend
         run: |
           pytest tests/ -v --tb=short
       

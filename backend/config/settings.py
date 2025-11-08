@@ -209,10 +209,22 @@ else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
 
-# Email settings (console backend for MVP)
+# ============================================================================
+# EMAIL CONFIGURATION - RESEND
+# ============================================================================
 EMAIL_BACKEND = config(
     'EMAIL_BACKEND',
-    default='django.core.mail.backends.console.EmailBackend'
+    default='resend.django.EmailBackend'
+)
+
+RESEND_API_KEY = config(
+    'RESEND_API_KEY',
+    default=''
+)
+
+DEFAULT_FROM_EMAIL = config(
+    'DEFAULT_FROM_EMAIL',
+    default='onboarding@resend.dev'
 )
 
 # Frontend URL for password reset and email verification links
