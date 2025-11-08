@@ -1,5 +1,6 @@
 """
 Custom Email Backend for Resend API Integration with Django
+Resend 2.19.0 - Uses Emails.send(SendParams) method
 """
 from django.core.mail.backends.base import BaseEmailBackend
 from django.conf import settings
@@ -12,31 +13,23 @@ logger = logging.getLogger('professionals')
 class ResendEmailBackend(BaseEmailBackend):
     """
     Email backend that sends emails via Resend API
-    Uses resend==2.19.0 Python SDK
+    Uses resend==2.19.0 Python SDK with Emails.SendParams
     """
     
     def __init__(self, fail_silently=False, **kwargs):
         super().__init__(fail_silently=fail_silently)
         self.fail_silently = fail_silently
         
-        # Set API key from environment or settings
+        # Set API key from environment (priority) or settings
         self.api_key = os.environ.get('RESEND_API_KEY') or getattr(settings, 'RESEND_API_KEY', None)
         
         if not self.api_key:
-            logger.warning("RESEND_API_KEY not found in environment or settings")
-            self.api_key = None
+            logger.error("❌ RESEND_API_KEY not configured!")
+            if not fail_silently:
+                raise ValueError("RESEND_API_KEY must be configured")
             return
         
-        # Verify resend package is available
-        try:
-            import resend
-            self.resend = resend
-            logger.info("Resend package imported successfully")
-        except ImportError as exc:
-            if not fail_silently:
-                raise ImportError("Resend package not installed") from exc
-            self.resend = None
-            logger.error("Failed to import Resend package")
+        logger.info("✅ RESEND_API_KEY configured from environment/settings")
     
     def send_messages(self, email_messages):
         """
@@ -56,7 +49,7 @@ class ResendEmailBackend(BaseEmailBackend):
             except Exception as exc:
                 if not self.fail_silently:
                     raise
-                logger.error("Error sending email via Resend: %s", str(exc))
+                logger.error("❌ Error sending email via Resend: %s", str(exc), exc_info=True)
         
         return msg_count
     
@@ -64,30 +57,34 @@ class ResendEmailBackend(BaseEmailBackend):
         """
         Send a single EmailMessage object via Resend
         """
-        if not self.resend or not self.api_key:
-            logger.error("Resend not initialized or API key missing")
+        if not self.api_key:
+            logger.error("❌ RESEND_API_KEY not configured")
             return False
         
         try:
-            # Set API key in environment for resend to use
-            os.environ['RESEND_API_KEY'] = self.api_key
+            from resend import Emails
             
-            # Prepare email payload using Resend's format
-            email_params = {
-                'from': message.from_email or settings.DEFAULT_FROM_EMAIL,
-                'to': ', '.join(message.to) if isinstance(message.to, list) else message.to,
-                'subject': message.subject,
-                'html': message.body,
-            }
+            # Prepare recipients - convert to list if needed
+            recipients = message.to
+            if isinstance(recipients, str):
+                recipients = [recipients]
             
-            logger.info("📧 Sending email via Resend to: %s", str(message.to))
-            logger.info("📧 From: %s", email_params['from'])
-            logger.info("📧 Subject: %s", email_params['subject'])
+            # Log the attempt
+            logger.info("📧 Attempting to send email via Resend")
+            logger.info("📧 To: %s", recipients)
+            logger.info("📧 From: %s", message.from_email)
+            logger.info("📧 Subject: %s", message.subject)
             
-            # Call Resend API - use the Emails class directly
-            response = self.resend.Emails.send(**email_params)
+            # Call Resend API with proper params
+            # Emails.send expects a SendParams dict with required 'to' key
+            response = Emails.send({
+                "from": message.from_email,
+                "to": recipients,
+                "subject": message.subject,
+                "html": message.body,
+            })
             
-            logger.info("✅ Email sent successfully via Resend. Response: %s", str(response))
+            logger.info("✅ Email sent successfully! Response ID: %s", response.get('id'))
             return True
             
         except Exception as exc:
