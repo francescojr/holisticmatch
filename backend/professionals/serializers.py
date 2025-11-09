@@ -483,8 +483,9 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
 </body>
 </html>"""
                 
-                # Use EmailMessage to properly send HTML with Resend backend
-                msg = EmailMessage(
+                # Use EmailMessage with HTML body directly for Resend backend
+                from django.core.mail import EmailMultiAlternatives
+                msg = EmailMultiAlternatives(
                     subject='Verifique seu email - HolisticMatch',
                     body='Verifique seu email - HolisticMatch',  # Plain text fallback
                     from_email=settings.DEFAULT_FROM_EMAIL,

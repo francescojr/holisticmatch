@@ -228,9 +228,9 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
 </body>
 </html>"""
                     
-                    # Use EmailMessage to properly send HTML with Resend backend
-                    from django.core.mail import EmailMessage
-                    msg = EmailMessage(
+                    # Use EmailMultiAlternatives to properly send HTML with Resend backend
+                    from django.core.mail import EmailMultiAlternatives
+                    msg = EmailMultiAlternatives(
                         subject='Verifique seu email - HolisticMatch',
                         body='Verifique seu email - HolisticMatch',  # Plain text fallback
                         from_email=settings.DEFAULT_FROM_EMAIL,

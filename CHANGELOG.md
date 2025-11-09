@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Email Backend - HTML Parsing Fix v2 - FINAL] - 2025-11-09
+
+### ✅ FINAL FIX: Email Verification Working!
+- **First Attempt Issue**: Used `EmailMessage` but `attach_alternative()` not available on that class
+- **Corrected Approach**: Using `EmailMultiAlternatives` (from `django.core.mail`)
+- **Why This Works**: `EmailMultiAlternatives` has built-in `attach_alternative()` method for HTML content
+- **Result**: HTML emails now properly attached and sent via Resend API ✅
+
+### Changed Files (FINAL UPDATE)
+- **backend/professionals/serializers.py**:
+  - Changed from `EmailMessage` to `EmailMultiAlternatives`
+  - Import: `from django.core.mail import EmailMultiAlternatives`
+  - Method: `msg.attach_alternative(email_body, "text/html")`
+  - Registration emails ✅ working
+
+- **backend/professionals/views.py**:
+  - Same fix in `resend_verification()` endpoint
+  - Using `EmailMultiAlternatives` for consistency
+  - Resend verification emails ✅ working
+
+### Key Learning
+- `EmailMessage` (basic class) → no `attach_alternative()` method ❌
+- `EmailMultiAlternatives` (advanced class) → has `attach_alternative()` method ✅
+- Both in `django.core.mail` but different purposes
+
 ## [Email Backend - HTML Parsing Fix] - 2025-11-09
 
 ### 🔧 CRITICAL EMAIL BACKEND FIX
