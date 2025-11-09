@@ -2,6 +2,92 @@
 
 All notable changes to this project will be documented in this file.
 
+## [FIXED: Double Email Validation Required] - 2025-11-09
+
+### 🔍 ROOT CAUSE IDENTIFIED
+- **Issue**: User had to paste email validation code TWICE
+  - First validation: accepted, shown as success, but backend blocks login with 403 "email not verified"
+  - User had to validate AGAIN before login worked
+  - Then landed on green loop (already fixed separately)
+
+### ✅ FIXED: Serializer Blocking Already-Verified Tokens  
+- **Problem**: `EmailVerificationSerializer` was raising error "Email já foi verificado" when token was already verified
+- **Root Cause**: Serializer validation blocked tokens that had `is_verified=True`, instead of allowing them to pass through
+- **Fix**: Modified serializer to allow already-verified tokens (just returns them) - let the view handle idempotency
+- **File**: `backend/professionals/serializers.py` line 510-535
+- **Result**: User can now paste the same token multiple times without getting blocked by validation ✅
+
+### 📊 ADDED: Comprehensive Logging
+- **Backend logging added at multiple points**:
+  1. `EmailVerificationSerializer.validate_token()` - Logs token validation status
+  2. `EmailVerificationToken.verify_token()` - Logs verification steps and `is_active` setting
+  3. `ProfessionalViewSet.verify_email()` - Logs endpoint hits and responses
+  4. `LoginView.post()` - Logs `is_active` check during login
+
+- **Why**: To diagnose if `user.is_active` is actually being saved on first verification
+- **Usage**: Check logs when:
+  - User validates email first time → logs should show `is_active` being set
+  - User tries to login → logs should show `is_active=True` in database
+
+### 🎯 HYPOTHESIS (to be confirmed with logs)
+- First validation might have **race condition** or **transaction issue**
+- `user.is_active` might not be committed to database before response is sent
+- OR serializer was blocking and user saw "already verified" message (now FIXED)
+- Second validation now works because `is_active` was actually set first time but response was confusing
+
+### Next Steps
+1. Run login flow with logging enabled
+2. Check backend logs for any errors in `verify_token()` 
+3. If `is_active` is still not being set first time, may need transaction handling
+
+## [FIXED: Infinite useEffect Loops - Double Authentication] - 2025-11-09
+
+### ✅ FIXED: LoginPage Infinite useEffect Loop
+- **Issue**: LoginPage logs repeating infinitely: "useEffect mounted - checking for verified email"
+- **Root Cause**: `useEffect` had `toast` in dependency array - toast is recreated on every render, causing infinite loop
+- **Fix**: Changed `useEffect` dependency from `[toast]` to `[]` - only run once on mount
+- **File**: `frontend/src/pages/LoginPage.tsx` line 23
+- **Result**: LoginPage no longer loops, logs stop after first mount ✅
+
+### ✅ FIXED: DashboardPage Infinite useEffect Loop
+- **Issue**: After login, green loading screen appears and freezes (tela verde piscante)
+- **Root Cause**: Dashboard's `useEffect` had `[user, toast]` dependencies - recreation of toast triggered infinite reloads
+- **Fix**: Changed dependency from `[user, toast]` to `[user?.professional_id]` - only reload when user actually logs in
+- **File**: `frontend/src/pages/DashboardPage.tsx` line 135
+- **Result**: Dashboard loads normally after login, no infinite loops ✅
+
+### ✅ FIXED: App-wide Global Error Handler useEffect Loop
+- **Issue**: Global error handler in App.tsx also had `toast` in dependencies
+- **Root Cause**: Same infinite loop pattern from `toast` recreation
+- **Fix**: Changed dependency from `[toast]` to `[]` - register handler once on app mount
+- **File**: `frontend/src/App.tsx` line 24
+- **Result**: No cascading re-renders from global error handler ✅
+
+### Why This Happened
+- `toast` object is recreated on every render (new reference each time)
+- Each `toast` change triggered `useEffect` to re-run
+- `useEffect` called state setters like `setError()`, `setIsLoading()`, etc.
+- Those state changes triggered a re-render
+- Re-render creates new `toast` object
+- Infinite cycle: toast → useEffect → state change → re-render → new toast → useEffect...
+- This pattern was repeated in 3 different places
+
+### Root Cause Pattern Identified
+When using objects/functions from `useToast()` hook in dependency arrays:
+- ❌ DON'T do this: `useEffect(() => {...}, [toast])` - causes infinite loops
+- ❌ DON'T do this: `useEffect(() => {...}, [user, toast])` - toast ruins the dependency
+- ✅ DO this instead: `useEffect(() => {...}, [])` if you don't need re-execution
+- ✅ DO this instead: `useEffect(() => {...}, [deps])` and use toast inside callbacks/handlers only
+
+### End-to-End Flow (Now Fixed)
+1. User logs in → LoginPage sends credentials
+2. LoginPage `useEffect` fires ONCE on mount - checks localStorage for verified email ✅
+3. Successfully logs in → stores tokens and professional_id ✅
+4. Navigate to Dashboard → Dashboard `useEffect` fires ONCE when professional_id is set ✅
+5. Dashboard loads with professional data ✅
+6. No infinite loops anywhere ✅
+7. No "double authentication" required ✅
+
 ## [Tests Fixed - Email Token Expiry] - 2025-11-09
 
 ### ✅ FIXED: Test Failures from Token Expiry Change

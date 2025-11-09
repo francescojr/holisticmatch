@@ -83,7 +83,13 @@ class LoginView(views.APIView):
 
         # Check if email is verified (TASK 7.2: Login Security)
         # User must be active (is_active=True set during email verification)
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f'[login] 🔍 Checking is_active for user: {email}')
+        logger.info(f'[login] 📊 user.is_active = {user.is_active}')
+        
         if not user.is_active:
+            logger.warning(f'[login] ❌ User {email} is not active, blocking login')
             return Response(
                 {'detail': 'Por favor, verifique seu email antes de fazer login'},
                 status=status.HTTP_403_FORBIDDEN

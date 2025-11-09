@@ -516,16 +516,32 @@ class EmailVerificationSerializer(serializers.Serializer):
     def validate_token(self, value):
         """Validate that token exists and is valid"""
         from .models import EmailVerificationToken
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f'[EmailVerificationSerializer.validate_token] 🔍 Validating token: {value[:20]}...')
         
         try:
             email_token = EmailVerificationToken.objects.get(token=value)
-            if not email_token.is_valid():
-                if email_token.is_expired():
-                    raise serializers.ValidationError('Token expirado')
-                elif email_token.is_verified:
-                    raise serializers.ValidationError('Email já foi verificado')
+            logger.info(f'[EmailVerificationSerializer.validate_token] ✅ Token found')
+            logger.info(f'[EmailVerificationSerializer.validate_token] 📊 is_verified: {email_token.is_verified}')
+            logger.info(f'[EmailVerificationSerializer.validate_token] 📊 is_expired(): {email_token.is_expired()}')
+            logger.info(f'[EmailVerificationSerializer.validate_token] 📊 is_valid(): {email_token.is_valid()}')
+            
+            # Check if already verified - if so, allow it (don't block)
+            if email_token.is_verified:
+                logger.info(f'[EmailVerificationSerializer.validate_token] ⚠️ Token already verified - allowing anyway')
+                return value
+            
+            # Check if expired
+            if email_token.is_expired():
+                logger.warning(f'[EmailVerificationSerializer.validate_token] ⏰ Token expired')
+                raise serializers.ValidationError('Token expirado')
+            
+            logger.info(f'[EmailVerificationSerializer.validate_token] ✅ Token is valid')
             return value
         except EmailVerificationToken.DoesNotExist:
+            logger.error(f'[EmailVerificationSerializer.validate_token] ❌ Token not found')
             raise serializers.ValidationError('Token inválido')
 
 

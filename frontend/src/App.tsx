@@ -23,7 +23,7 @@ function AppContent() {
     registerErrorHandler((error) => {
       toast[error.type](error.title, { message: error.message })
     })
-  }, [toast])
+  }, [])
 
   return (
     <>

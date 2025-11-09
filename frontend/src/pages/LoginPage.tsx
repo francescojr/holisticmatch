@@ -32,7 +32,7 @@ function LoginPage() {
         message: 'Agora você pode fazer login com sua senha'
       })
     }
-  }, [toast])
+  }, []) // Empty dependency array - only run once on mount
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -133,7 +133,7 @@ function DashboardPage() {
     }
 
     loadProfessionalData()
-  }, [user, toast])
+  }, [user?.professional_id])
 
   const addService = () => {
     setIsAddServiceModalOpen(true)
