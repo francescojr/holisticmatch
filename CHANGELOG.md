@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Tests Fixed - Email Token Expiry] - 2025-11-09
+
+### ✅ FIXED: Test Failures from Token Expiry Change
+- **Issue**: 9 tests failing with `TypeError: EmailVerificationToken.create_token() got an unexpected keyword argument 'expiry_hours'`
+- **Root Cause**: Changed `create_token()` signature from `expiry_hours=24` to `expiry_minutes=5` but didn't update all call sites
+- **Fix**: Updated all calls to `create_token(user)` - now uses default 5 minutes
+- **Files Updated**:
+  - `backend/professionals/serializers.py` line 393: `create_token(user, expiry_hours=24)` → `create_token(user)`
+  - `backend/professionals/views.py` line 150: `create_token(user, expiry_hours=24)` → `create_token(user)`
+- **Test Result**: All 171 tests now pass ✅
+
 ## [Email Verification & Dashboard Fixes] - 2025-11-09
 
 ### ✅ FIXED: Email Verification Token Expiry

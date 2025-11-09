@@ -147,7 +147,7 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
             email = serializer.validated_data['email']
             try:
                 user = User.objects.get(email=email)
-                email_token = EmailVerificationToken.create_token(user, expiry_hours=24)
+                email_token = EmailVerificationToken.create_token(user)
                 
                 # Send verification email with token-based verification flow
                 try:

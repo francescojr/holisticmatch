@@ -390,7 +390,7 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
             logger.info(f'✅ Professional profile created for {email}')
             
             # Create email verification token
-            email_token = EmailVerificationToken.create_token(user, expiry_hours=24)
+            email_token = EmailVerificationToken.create_token(user)
             logger.info(f'✅ Email verification token created: {email_token.token[:20]}...')
             
             # Send verification email with token-based verification flow
