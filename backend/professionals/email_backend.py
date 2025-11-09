@@ -2,6 +2,9 @@
 Custom Email Backend for Resend API Integration with Django
 Resend 2.19.0 - Uses Emails.send(SendParams) method
 """
+
+# force push :)
+
 from django.core.mail.backends.base import BaseEmailBackend
 from django.conf import settings
 import logging
