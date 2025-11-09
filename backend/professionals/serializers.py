@@ -388,23 +388,13 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
             email_token = EmailVerificationToken.create_token(user, expiry_hours=24)
             logger.info(f'✅ Email verification token created: {email_token.token[:20]}...')
             
-            # Send verification email (with comprehensive error handling)
+            # Send verification email with token-based verification flow
             try:
-                if self.context.get('request'):
-                    # Build HTTPS URL for production, HTTP for localhost
-                    base_url = self.context.get('request').build_absolute_uri('/')
-                    # Force HTTPS in production (AWS EB behind nginx)
-                    if 'localhost' not in base_url and 'http://' in base_url:
-                        base_url = base_url.replace('http://', 'https://', 1)
-                    verification_link = base_url.rstrip('/') + f"/verify-email/{email_token.token}"
-                else:
-                    verification_link = "https://holisticmatch.vercel.app/verify-email/" + email_token.token
-                
                 # Log email configuration
                 logger.info(f'📧 Email Backend: {settings.EMAIL_BACKEND}')
                 logger.info(f'📧 From Email: {settings.DEFAULT_FROM_EMAIL}')
                 logger.info(f'📧 Recipient: {email}')
-                logger.info(f'📧 Verification Link: {verification_link}')
+                logger.info(f'� Verification Token: {email_token.token[:20]}...')
                 
                 # Log Resend API key status
                 if hasattr(settings, 'RESEND_API_KEY'):
@@ -415,9 +405,27 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
                 
                 logger.info(f'📤 Attempting to send verification email...')
                 
+                # Token-based verification: send token as plain text, not as link
+                verification_token = email_token.token
+                email_body = f"""
+Bem-vindo ao HolisticMatch!
+
+Para verificar seu email, use o código abaixo na página de verificação:
+
+{verification_token}
+
+Você também pode usar este link direto para verificação automática:
+https://holisticmatch.vercel.app/verify-email/{verification_token}
+
+Este código expira em 24 horas.
+
+Atenciosamente,
+Equipe HolisticMatch
+                """.strip()
+                
                 send_mail(
                     subject='Verifique seu email - HolisticMatch',
-                    message=f'Clique no link para verificar seu email: {verification_link}',
+                    message=email_body,
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[email],
                     fail_silently=False,  # Raise exception to log it

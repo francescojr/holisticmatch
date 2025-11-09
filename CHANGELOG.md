@@ -2,6 +2,46 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Email Verification Flow - Token-Based] - 2025-11-08
+
+### ✅ Implementation Complete
+- **Token-Based Verification**: Replaced URL-based auto-click verification with token paste flow
+- **Email Template Update**: Changed email to display verification token as plain text instead of link
+- **User Experience**: Simplified flow - user receives token, pastes it in form, frontend validates with backend
+
+### Changed
+- **backend/professionals/serializers.py**:
+  - Updated email template in `create()` method to display token as plain text
+  - Email format now shows: "Your verification token: [TOKEN]"
+  - Removed complex URL generation logic (kept it simple)
+  - Added both token paste and automatic link options for flexibility
+  - Comprehensive logging for token-based verification
+
+- **backend/professionals/views.py**:
+  - Updated `resend_verification()` endpoint to use new token-based email template
+  - Consistent email format across all verification emails
+  - Changed from_email to use `settings.DEFAULT_FROM_EMAIL` (respects environment config)
+
+### Backend Endpoints (No Changes - Already Support Token)
+- ✅ `POST /api/professionals/verify-email/` - Accepts token, validates, marks email verified
+- ✅ `POST /api/professionals/resend-verification/` - Sends new token email
+
+### Frontend (No Changes - Already Support Token)
+- ✅ `EmailVerificationPage.tsx` - Already supports both auto-link and manual token input
+- ✅ `professionalService.verifyEmailToken()` - Already sends token to backend
+
+### Why This Matters
+- **Reliability**: Token paste is more reliable than timeout-prone URL clicks
+- **Simplicity**: User experience is clearer - "copy token, paste in form"
+- **Flexibility**: Email provides both token and backup link option
+- **Production Ready**: Works with Resend in production environment
+
+### Notes
+- Token generation unchanged (secure 32-byte random tokens with 24-hour expiry)
+- Database models unchanged (EmailVerificationToken still uses is_verified flag)
+- All existing tests continue to pass
+- Backward compatible: Automatic link verification still works as fallback
+
 ## [CI/CD & Logging Fix] - 2025-11-08
 
 ### Fixed
@@ -48,6 +88,7 @@ All notable changes to this project will be documented in this file.
 - **.env**: Removed API key value (now empty, will be set via environment variable)
 - **.gitignore**: Added `logs/` directory to ignore generated logs
 - **EMAIL_CONFIGURATION.md**: Replaced all API key references with `<seu_resend_api_key>` placeholder
+
 - **GITHUB_SECRET_SETUP.md**: Replaced hardcoded key with placeholder
 - **RESEND_IMPLEMENTATION.md**: All environment examples now use placeholders
 

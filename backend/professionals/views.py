@@ -149,18 +149,39 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
                 user = User.objects.get(email=email)
                 email_token = EmailVerificationToken.create_token(user, expiry_hours=24)
                 
-                # Send verification email
+                # Send verification email with token-based verification flow
                 try:
                     from django.core.mail import send_mail
-                    verification_link = f"http://localhost:3000/verify-email/{email_token.token}"
+                    from django.conf import settings
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    
+                    # Token-based verification: send token as plain text
+                    verification_token = email_token.token
+                    email_body = f"""
+Bem-vindo ao HolisticMatch!
+
+Para verificar seu email, use o código abaixo na página de verificação:
+
+{verification_token}
+
+Você também pode usar este link direto para verificação automática:
+https://holisticmatch.vercel.app/verify-email/{verification_token}
+
+Este código expira em 24 horas.
+
+Atenciosamente,
+Equipe HolisticMatch
+                    """.strip()
                     
                     send_mail(
                         subject='Verifique seu email - HolisticMatch',
-                        message=f'Clique no link para verificar seu email: {verification_link}',
-                        from_email='noreply@holisticmatch.com',
+                        message=email_body,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
                         recipient_list=[email],
                         fail_silently=False,
                     )
+                    logger.info(f'✅ Resend verification email sent to {email}')
                 except Exception as e:
                     import logging
                     logger = logging.getLogger(__name__)
