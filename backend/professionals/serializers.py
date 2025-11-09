@@ -390,8 +390,15 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
             
             # Send verification email (with comprehensive error handling)
             try:
-                verification_link = f"{self.context.get('request').build_absolute_uri('/')}" if self.context.get('request') else "http://localhost:3000"
-                verification_link = verification_link.rstrip('/') + f"/verify-email/{email_token.token}"
+                if self.context.get('request'):
+                    # Build HTTPS URL for production, HTTP for localhost
+                    base_url = self.context.get('request').build_absolute_uri('/')
+                    # Force HTTPS in production (AWS EB behind nginx)
+                    if 'localhost' not in base_url and 'http://' in base_url:
+                        base_url = base_url.replace('http://', 'https://', 1)
+                    verification_link = base_url.rstrip('/') + f"/verify-email/{email_token.token}"
+                else:
+                    verification_link = "https://holisticmatch.vercel.app/verify-email/" + email_token.token
                 
                 # Log email configuration
                 logger.info(f'📧 Email Backend: {settings.EMAIL_BACKEND}')
