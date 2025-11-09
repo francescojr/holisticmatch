@@ -483,16 +483,15 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
 </body>
 </html>"""
                 
-                # Use EmailMessage with HTML body directly for Resend backend
-                from django.core.mail import EmailMultiAlternatives
-                msg = EmailMultiAlternatives(
+                # Simple text email - Resend backend will handle it
+                from django.core.mail import send_mail
+                send_mail(
                     subject='Verifique seu email - HolisticMatch',
-                    body='Verifique seu email - HolisticMatch',  # Plain text fallback
+                    message=f'Código de verificação: {verification_token}\n\nCopie este código e cole em: https://holisticmatch.vercel.app/verify-email\n\nEste código expira em 24 horas.',
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=[email],
+                    recipient_list=[email],
+                    fail_silently=False,
                 )
-                msg.attach_alternative(email_body, "text/html")
-                msg.send(fail_silently=False)
                 logger.info(f'✅ Verification email sent successfully to {email}')
             except Exception as e:
                 logger.error(f'❌ Failed to send verification email to {email}', exc_info=True)

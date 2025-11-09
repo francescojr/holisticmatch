@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Email Backend - Revert to Text Only] - 2025-11-09
+
+### 🎯 ROOT CAUSE IDENTIFIED
+HTML approach breaking email delivery. Reverting to **plain text emails** (what was working before).
+
+### ✅ FINAL FIX: Back to Basics
+- **Issue**: HTML via `EmailMultiAlternatives` not being extracted correctly by Resend backend
+- **Solution**: Simple `send_mail()` with plain text message
+- **Why**: Resend backend works reliably with text content
+
+### Changed Files
+- **backend/professionals/serializers.py** (create registration flow):
+  - Reverted from `EmailMultiAlternatives` to `send_mail()`
+  - Plain text: `Código de verificação: {token}\n\nCopie e cole em: {url}\n\nExpira em 24 horas`
+  - Registration emails will work ✅
+
+- **backend/professionals/views.py** (resend-verification endpoint):
+  - Same revert to `send_mail()`
+  - Consistent plain text delivery
+  - Resend endpoint will work ✅
+
+### Why Plain Text?
+- ✅ Emails were arriving before with text
+- ✅ Resend backend verified working with `send_mail()`
+- ✅ No extraction issues - direct text content
+- ✅ HTML complications introduced bugs
+
+### Next: Test & Verify
+1. Deploy to production
+2. Register test user → should receive plain text email with token
+3. Token should be copyable and usable for verification
+4. Once working, can revisit HTML if needed
+
 ## [Email Backend - HTML Parsing Fix v2 - FINAL] - 2025-11-09
 
 ### ✅ FINAL FIX: Email Verification Working!

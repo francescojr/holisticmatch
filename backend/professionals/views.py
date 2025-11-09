@@ -228,16 +228,15 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
 </body>
 </html>"""
                     
-                    # Use EmailMultiAlternatives to properly send HTML with Resend backend
-                    from django.core.mail import EmailMultiAlternatives
-                    msg = EmailMultiAlternatives(
+                    # Simple text email - Resend backend will handle it
+                    from django.core.mail import send_mail
+                    send_mail(
                         subject='Verifique seu email - HolisticMatch',
-                        body='Verifique seu email - HolisticMatch',  # Plain text fallback
+                        message=f'Código de verificação: {verification_token}\n\nCopie este código e cole em: https://holisticmatch.vercel.app/verify-email\n\nEste código expira em 24 horas.',
                         from_email=settings.DEFAULT_FROM_EMAIL,
-                        to=[email],
+                        recipient_list=[email],
+                        fail_silently=False,
                     )
-                    msg.attach_alternative(email_body, "text/html")
-                    msg.send(fail_silently=False)
                     logger.info(f'✅ Resend verification email sent to {email}')
                 except Exception as e:
                     import logging
