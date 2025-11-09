@@ -1,221 +1,148 @@
 ﻿{
   "info": {
-    "_postman_id": "holisticmatch-2025-v2",
-    "name": "🧘 HolisticMatch API - v2.0 Production + Local",
-    "description": "Todos os endpoints TESTADOS e FUNCIONANDO ✅\n✅ Registro sem foto (working)\n✅ Registro com foto (working)\n✅ Bio mínimo 20 chars\n✅ Services em JSON\n✅ Health check endpoints\n✅ Email verification (configure SendGrid)\n\n⚠️  NOTE: Use {{base_url}} com:\n- LOCAL: http://localhost:8000\n- PROD: https://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com\n\n2025-11-08",
+    "_postman_id": "holisticmatch-prod-2025",
+    "name": "HolisticMatch API - Production",
+    "description": "HolisticMatch API - Production Only",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-  },
-  "auth": {
-    "type": "noauth"
   },
   "item": [
     {
-      "name": "❤️ Health Check",
+      "name": "Auth",
       "item": [
         {
-          "name": "GET /health/",
+          "name": "Register",
           "request": {
-            "method": "GET",
-            "header": [],
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test_{{$timestamp}}@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"password_confirm\": \"SecurePass123!\",\n  \"name\": \"Test Professional\",\n  \"city\": \"Sao Paulo\",\n  \"state\": \"SP\",\n  \"phone\": \"11987654321\",\n  \"whatsapp\": \"11987654321\",\n  \"bio\": \"Professional bio with at least 20 characters here\",\n  \"services\": [\"Terapia\", \"Yoga\"]\n}"
+            },
             "url": {
-              "raw": "{{base_url}}/health/",
-              "host": ["{{base_url}}"],
-              "path": ["health", ""]
+              "raw": "{{prod_url}}/api/v1/auth/register/",
+              "host": ["{{prod_url}}"],
+              "path": ["api", "v1", "auth", "register", ""]
             }
           }
         },
         {
-          "name": "GET /api/v1/health/",
+          "name": "Login",
           "request": {
-            "method": "GET",
-            "header": [],
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
             "url": {
-              "raw": "{{base_url}}/api/v1/health/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "health", ""]
+              "raw": "{{prod_url}}/api/v1/auth/login/",
+              "host": ["{{prod_url}}"],
+              "path": ["api", "v1", "auth", "login", ""]
             }
           }
         },
         {
-          "name": "GET /health/detailed/ (com DB check)",
+          "name": "Get Current User",
           "request": {
             "method": "GET",
-            "header": [],
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
             "url": {
-              "raw": "{{base_url}}/health/detailed/",
-              "host": ["{{base_url}}"],
-              "path": ["health", "detailed", ""]
-            }
-          }
-        },
-        {
-          "name": "GET /api/v1/health/detailed/ (com DB check)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/v1/health/detailed/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "health", "detailed", ""]
+              "raw": "{{prod_url}}/api/v1/auth/me/",
+              "host": ["{{prod_url}}"],
+              "path": ["api", "v1", "auth", "me", ""]
             }
           }
         }
       ]
     },
     {
-      "name": "📋 Profissionais",
+      "name": "Professionals",
       "item": [
         {
-          "name": "Listar Todos",
+          "name": "List All",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/api/v1/professionals/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", ""]
-            }
-          }
-        },
-        {
-          "name": "Filtrar por Serviço",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/?service=Reiki",
-              "host": ["{{base_url}}"],
+              "raw": "{{prod_url}}/api/v1/professionals/?limit=12",
+              "host": ["{{prod_url}}"],
               "path": ["api", "v1", "professionals", ""],
               "query": [
-                {"key": "service", "value": "Reiki"}
+                {
+                  "key": "limit",
+                  "value": "12"
+                }
               ]
             }
           }
         },
         {
-          "name": "Filtrar por Cidade",
+          "name": "Get by ID",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/api/v1/professionals/?city=São Paulo",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", ""],
-              "query": [
-                {"key": "city", "value": "São Paulo"}
-              ]
-            }
-          }
-        },
-        {
-          "name": "Detalhes do Profissional",
-          "request": {
-            "method": "GET",
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/1/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", "1", ""]
+              "raw": "{{prod_url}}/api/v1/professionals/{{professional_id}}/",
+              "host": ["{{prod_url}}"],
+              "path": ["api", "v1", "professionals", "{{professional_id}}", ""]
             }
           }
         }
       ]
     },
     {
-      "name": "🔐 Autenticação",
+      "name": "Email Verification",
       "item": [
         {
-          "name": "Registrar SEM Foto",
+          "name": "Verify Token",
           "request": {
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
-              "mode": "formdata",
-              "formdata": [
-                {"key": "full_name", "value": "João Silva", "type": "text"},
-                {"key": "email", "value": "joao@example.com", "type": "text"},
-                {"key": "password", "value": "SenhaForte123!", "type": "text"},
-                {"key": "bio", "value": "Terapeuta holístico com 10 anos de experiência", "type": "text"},
-                {"key": "services", "value": "[\"Reiki\", \"Meditação\"]", "type": "text"},
-                {"key": "price_per_session", "value": "150", "type": "text"},
-                {"key": "attendance_type", "value": "online", "type": "text"},
-                {"key": "state", "value": "SP", "type": "text"},
-                {"key": "city", "value": "São Paulo", "type": "text"},
-                {"key": "neighborhood", "value": "Centro", "type": "text"},
-                {"key": "whatsapp", "value": "11987654321", "type": "text"}
-              ]
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"PASTE_TOKEN_HERE\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/professionals/register/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", "register", ""]
-            },
-            "description": "full_name, bio 20+, services JSON"
-          }
-        },
-        {
-          "name": "Registrar COM Foto",
-          "request": {
-            "method": "POST",
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {"key": "full_name", "value": "Maria Santos", "type": "text"},
-                {"key": "email", "value": "maria@example.com", "type": "text"},
-                {"key": "password", "value": "SenhaSegura456!", "type": "text"},
-                {"key": "bio", "value": "Instrutora certificada de yoga holístico", "type": "text"},
-                {"key": "services", "value": "[\"Yoga\", \"Pilates\"]", "type": "text"},
-                {"key": "price_per_session", "value": "120", "type": "text"},
-                {"key": "attendance_type", "value": "presencial", "type": "text"},
-                {"key": "state", "value": "RJ", "type": "text"},
-                {"key": "city", "value": "Rio de Janeiro", "type": "text"},
-                {"key": "neighborhood", "value": "Copacabana", "type": "text"},
-                {"key": "whatsapp", "value": "21987654321", "type": "text"},
-                {"key": "photo", "type": "file", "src": []}
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/register/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", "register", ""]
-            }
-          }
-        },
-        {
-          "name": "Verificar Email",
-          "request": {
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "body": {"mode": "raw", "raw": "{\"token\": \"seu-token-aqui\"}"},
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/verify-email/",
-              "host": ["{{base_url}}"],
+              "raw": "{{prod_url}}/api/v1/professionals/verify-email/",
+              "host": ["{{prod_url}}"],
               "path": ["api", "v1", "professionals", "verify-email", ""]
             }
           }
-        },
-        {
-          "name": "Reenviar Email",
-          "request": {
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "body": {"mode": "raw", "raw": "{\"email\": \"seu-email@example.com\"}"},
-            "url": {
-              "raw": "{{base_url}}/api/v1/professionals/resend-verification/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", "resend-verification", ""]
-            }
-          }
         }
       ]
     },
     {
-      "name": "📱 Serviços",
+      "name": "Health",
       "item": [
         {
-          "name": "Listar Tipos",
+          "name": "Check",
           "request": {
             "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/api/v1/professionals/service_types/",
-              "host": ["{{base_url}}"],
-              "path": ["api", "v1", "professionals", "service_types", ""]
+              "raw": "{{prod_url}}/health/",
+              "host": ["{{prod_url}}"],
+              "path": ["health", ""]
             }
           }
         }
@@ -223,8 +150,17 @@
     }
   ],
   "variable": [
-    {"key": "base_url", "value": "http://localhost:8000", "type": "string", "description": "Change to: https://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com for production"},
-    {"key": "access_token", "value": "", "type": "string"},
-    {"key": "refresh_token", "value": "", "type": "string"}
+    {
+      "key": "prod_url",
+      "value": "https://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com"
+    },
+    {
+      "key": "access_token",
+      "value": ""
+    },
+    {
+      "key": "professional_id",
+      "value": ""
+    }
   ]
 }

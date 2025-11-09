@@ -78,14 +78,37 @@ class ResendEmailBackend(BaseEmailBackend):
             logger.info("📧 From: %s", message.from_email)
             logger.info("📧 Subject: %s", message.subject)
             
-            # Call Resend API with proper params
-            # Emails.send expects a SendParams dict with required 'to' key
-            response = Emails.send({
+            # Extract HTML or text content
+            # Django stores HTML in alternatives when using EmailMessage with html_message param
+            html_content = None
+            text_content = message.body
+            
+            # Check if there are alternatives (HTML version)
+            if hasattr(message, 'alternatives'):
+                for alternative, mimetype in message.alternatives:
+                    if mimetype == "text/html":
+                        html_content = alternative
+                        break
+            
+            # Resend requires either html or text
+            email_params = {
                 "from": message.from_email,
                 "to": recipients,
                 "subject": message.subject,
-                "html": message.body,
-            })
+            }
+            
+            # Add HTML if available, otherwise use text
+            if html_content:
+                email_params["html"] = html_content
+                logger.info("📧 Using HTML content")
+            else:
+                email_params["text"] = text_content
+                logger.info("📧 Using text content")
+            
+            logger.info("📧 Email params keys: %s", list(email_params.keys()))
+            
+            # Call Resend API with proper params
+            response = Emails.send(email_params)
             
             logger.info("✅ Email sent successfully! Response ID: %s", response.get('id'))
             return True

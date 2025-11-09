@@ -5,6 +5,8 @@ Handles API request/response serialization with comprehensive validation.
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.mail import EmailMessage
+from django.conf import settings
 from .models import Professional
 from .validators import (
     validate_name,
@@ -16,6 +18,9 @@ from .validators import (
     validate_profile_photo,
 )
 from .constants import SERVICE_TYPES
+import logging
+
+logger = logging.getLogger('professionals')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -478,14 +483,15 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
 </body>
 </html>"""
                 
-                send_mail(
+                # Use EmailMessage to properly send HTML with Resend backend
+                msg = EmailMessage(
                     subject='Verifique seu email - HolisticMatch',
-                    message='',  # Plain text fallback (not used)
-                    html_message=email_body,  # HTML email
+                    body='Verifique seu email - HolisticMatch',  # Plain text fallback
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[email],
-                    fail_silently=False,  # Raise exception to log it
+                    to=[email],
                 )
+                msg.attach_alternative(email_body, "text/html")
+                msg.send(fail_silently=False)
                 logger.info(f'✅ Verification email sent successfully to {email}')
             except Exception as e:
                 logger.error(f'❌ Failed to send verification email to {email}', exc_info=True)

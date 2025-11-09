@@ -228,14 +228,16 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
 </body>
 </html>"""
                     
-                    send_mail(
+                    # Use EmailMessage to properly send HTML with Resend backend
+                    from django.core.mail import EmailMessage
+                    msg = EmailMessage(
                         subject='Verifique seu email - HolisticMatch',
-                        message='',  # Plain text fallback (not used)
-                        html_message=email_body,  # HTML email
+                        body='Verifique seu email - HolisticMatch',  # Plain text fallback
                         from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[email],
-                        fail_silently=False,
+                        to=[email],
                     )
+                    msg.attach_alternative(email_body, "text/html")
+                    msg.send(fail_silently=False)
                     logger.info(f'✅ Resend verification email sent to {email}')
                 except Exception as e:
                     import logging

@@ -2,6 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Email Backend - HTML Parsing Fix] - 2025-11-09
+
+### 🔧 CRITICAL EMAIL BACKEND FIX
+- **Problem**: Resend API validation error "Missing `html` or `text` field" on email send
+- **Root Cause**: `send_mail()` function with `html_message` parameter was not properly passing HTML to custom Resend backend
+- **Solution**: Switched from `send_mail()` to `EmailMessage` with `attach_alternative()` method
+- **Impact**: Email verification emails now send successfully with proper HTML rendering
+
+### Changed Files
+- **backend/professionals/email_backend.py**:
+  - Enhanced `_send()` method to extract HTML from `message.alternatives` 
+  - Added logic to check for `text/html` mimetype in alternatives
+  - Properly constructs Resend API params with `html` or `text` field
+  - Added detailed logging for debugging HTML vs text content selection
+  - Email params now validated before sending to Resend API
+
+- **backend/professionals/serializers.py**:
+  - Changed registration email from `send_mail()` to `EmailMessage`
+  - Uses `msg.attach_alternative(email_body, "text/html")` for HTML
+  - Added imports for `EmailMessage` and `settings`
+  - Added module-level logger for consistent logging
+
+- **backend/professionals/views.py**:
+  - Changed resend-verification endpoint from `send_mail()` to `EmailMessage`
+  - Same pattern: create EmailMessage with text body, attach HTML alternative
+  - Proper HTML email now sent when user requests new verification token
+
+### Why This Works
+✅ Django's `send_mail()` with `html_message` doesn't store HTML in alternatives correctly for custom backends
+✅ Using `EmailMessage` + `attach_alternative()` ensures HTML is accessible via message.alternatives
+✅ Custom backend can now extract HTML correctly and pass to Resend API
+✅ Resend API receives valid params with required `html` or `text` field
+
 ## [Email & Auth UX Improvements] - 2025-11-08
 
 ### 🎨 Email Template - Professional HTML Design
