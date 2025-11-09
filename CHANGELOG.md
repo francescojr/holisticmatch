@@ -2,6 +2,40 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Email & Auth UX Improvements] - 2025-11-08
+
+### 🎨 Email Template - Professional HTML Design
+- **Improved Email Layout**: Changed from plain text to professional HTML template
+- **Token Highlight**: Verification token now displayed in highlighted green box with monospace font for easy copy-paste
+- **Removed Auto-Link**: No longer includes clickable verification link (caused timeout issues)
+- **Clear Instructions**: Email now shows step-by-step instructions for token verification
+- **Design**: Professional card layout with HolisticMatch branding, expiry warning in yellow box
+- **Mobile Responsive**: CSS-based responsive design for email clients
+
+### 🔧 Email Backend Updates
+- **backend/professionals/serializers.py**: HTML email template for registration verification
+- **backend/professionals/views.py**: HTML email template for resend-verification endpoint
+- Both endpoints now use `html_message` parameter for proper HTML email rendering
+- Resend backend correctly processes HTML emails via Emails.send() API
+
+### 🐛 Auth Login Response - Professional ID Fix
+- **CRITICAL BUG FIX**: `/auth/login/` endpoint now includes `professional_id` in user response
+- **Before**: Login returned only `id`, `email`, `username` (missing professional_id)
+- **After**: Login now includes `professional_id` from user's professional profile
+- **Impact**: Dashboard now correctly loads - frontend has professional_id immediately after login
+- **backend/authentication/views.py**: Added safe professional_id extraction with fallback
+
+### ✅ Email Verification Flow Confirmation
+- **Backend verification**: Already working correctly - user.is_active set to True on first token verification
+- **No loops**: Token validation prevents re-verification of same token
+- **Security**: Email verification token marked is_verified=True after use
+
+### Why These Changes Matter
+- ✅ Users get professional HTML emails instead of plain text
+- ✅ Token is easy to copy from highlighted box (no more typos)
+- ✅ Dashboard loads immediately after login (no ID not found errors)
+- ✅ Complete verification flow works: register → verify → login → dashboard
+
 ## [Email Verification Flow - Token-Based] - 2025-11-08
 
 ### ✅ Implementation Complete
@@ -88,6 +122,7 @@ All notable changes to this project will be documented in this file.
 - **.env**: Removed API key value (now empty, will be set via environment variable)
 - **.gitignore**: Added `logs/` directory to ignore generated logs
 - **EMAIL_CONFIGURATION.md**: Replaced all API key references with `<seu_resend_api_key>` placeholder
+
 
 - **GITHUB_SECRET_SETUP.md**: Replaced hardcoded key with placeholder
 - **RESEND_IMPLEMENTATION.md**: All environment examples now use placeholders

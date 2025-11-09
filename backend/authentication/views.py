@@ -91,6 +91,13 @@ class LoginView(views.APIView):
 
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
+        
+        # Get professional info if it exists
+        professional_id = None
+        try:
+            professional_id = user.professional.id
+        except:
+            pass  # User might not have professional yet
 
         return Response({
             'access': str(refresh.access_token),
@@ -98,7 +105,8 @@ class LoginView(views.APIView):
             'user': {
                 'id': user.id,
                 'email': user.email,
-                'username': user.username
+                'username': user.username,
+                'professional_id': professional_id
             }
         }, status=status.HTTP_200_OK)
 

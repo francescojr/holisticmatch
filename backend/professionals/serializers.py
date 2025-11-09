@@ -405,27 +405,83 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
                 
                 logger.info(f'📤 Attempting to send verification email...')
                 
-                # Token-based verification: send token as plain text, not as link
+                # Token-based verification: send token as plain text with HTML styling
                 verification_token = email_token.token
-                email_body = f"""
-Bem-vindo ao HolisticMatch!
+                email_body = f"""<html>
+<head>
+  <style>
+    body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }}
+    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f6f8f7; }}
+    .card {{ background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
+    .header {{ text-align: center; margin-bottom: 30px; }}
+    .logo {{ font-size: 28px; font-weight: bold; color: #10b981; margin-bottom: 10px; }}
+    .title {{ font-size: 24px; font-weight: 600; color: #1f2937; margin-bottom: 20px; }}
+    .content {{ margin-bottom: 25px; }}
+    .content p {{ margin: 10px 0; }}
+    .token-section {{ background: #f3fdf5; border-left: 4px solid #10b981; padding: 15px; border-radius: 4px; margin: 20px 0; }}
+    .token-label {{ font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px; }}
+    .token {{ 
+      background: white; 
+      padding: 12px; 
+      border-radius: 4px; 
+      font-family: 'Courier New', monospace; 
+      font-size: 14px; 
+      font-weight: 600;
+      word-break: break-all;
+      color: #10b981;
+      border: 1px solid #d1fae5;
+      text-align: center;
+    }}
+    .instruction {{ font-size: 14px; color: #6b7280; margin-top: 12px; }}
+    .expiry {{ background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; border-radius: 4px; margin: 15px 0; font-size: 13px; color: #92400e; }}
+    .footer {{ text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 12px; }}
+    .button {{ display: inline-block; background: #10b981; color: white; padding: 12px 30px; border-radius: 4px; text-decoration: none; margin: 15px 0; font-weight: 600; }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="logo">🌿 HolisticMatch</div>
+        <h1 class="title">Bem-vindo!</h1>
+      </div>
+      
+      <div class="content">
+        <p>Olá,</p>
+        <p>Obrigado por se registrar no <strong>HolisticMatch</strong>! Para começar, você precisa verificar seu endereço de email.</p>
+        
+        <div class="token-section">
+          <div class="token-label">Seu código de verificação:</div>
+          <div class="token">{verification_token}</div>
+          <div class="instruction">👉 Copie o código acima e cole na página de verificação</div>
+        </div>
 
-Para verificar seu email, use o código abaixo na página de verificação:
+        <p><strong>Como verificar seu email:</strong></p>
+        <ol>
+          <li>Copie o código acima</li>
+          <li>Abra <a href="https://holisticmatch.vercel.app/verify-email" style="color: #10b981;">https://holisticmatch.vercel.app/verify-email</a></li>
+          <li>Cole o código no campo de verificação</li>
+          <li>Clique em "Verificar E-mail"</li>
+        </ol>
 
-{verification_token}
+        <div class="expiry">
+          ⏱️ Este código expira em <strong>24 horas</strong>. Se não receber, pode solicitar um novo na página de verificação.
+        </div>
+      </div>
 
-Você também pode usar este link direto para verificação automática:
-https://holisticmatch.vercel.app/verify-email/{verification_token}
-
-Este código expira em 24 horas.
-
-Atenciosamente,
-Equipe HolisticMatch
-                """.strip()
+      <div class="footer">
+        <p>© 2025 HolisticMatch. Todos os direitos reservados.</p>
+        <p>Dúvidas? Responda este email ou entre em contato conosco.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>"""
                 
                 send_mail(
                     subject='Verifique seu email - HolisticMatch',
-                    message=email_body,
+                    message='',  # Plain text fallback (not used)
+                    html_message=email_body,  # HTML email
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     recipient_list=[email],
                     fail_silently=False,  # Raise exception to log it
