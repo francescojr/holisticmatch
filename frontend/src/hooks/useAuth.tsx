@@ -35,11 +35,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           
           if (userProfile) {
             console.log('[useAuth.checkAuth] ✅ User profile loaded:', userProfile.email)
-            setUser(userProfile)
+            
+            // Also get professional_id from localStorage
+            const professionalId = localStorage.getItem('professional_id')
+            const fullUser = {
+              ...userProfile,
+              professional_id: userProfile.professional_id || (professionalId ? parseInt(professionalId) : undefined),
+            }
+            
+            setUser(fullUser)
           } else {
             console.warn('[useAuth.checkAuth] ⚠️ API endpoint returned no user, using minimal data')
             // If API endpoint doesn't exist, user is still authenticated but we'll use minimal data
-            setUser({ id: 0, email: '' })
+            const professionalId = localStorage.getItem('professional_id')
+            setUser({ 
+              id: 0, 
+              email: '',
+              professional_id: professionalId ? parseInt(professionalId) : undefined,
+            })
           }
         } else {
           console.log('[useAuth.checkAuth] ℹ️ No authentication token found')
@@ -60,8 +73,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('[useAuth.login] 🚀 Calling authService.login...')
     const response = await authService.login(credentials)
     console.log('[useAuth.login] ✅ Login response received, setting user:', response.user?.email)
-    setUser(response.user)
-    console.log('[useAuth.login] 👤 User state updated')
+    
+    // Extract professional_id from localStorage (stored by authService during login)
+    const professionalId = localStorage.getItem('professional_id')
+    
+    const userData = {
+      id: response.user.id,
+      email: response.user.email,
+      professional_id: response.user.professional_id || (professionalId ? parseInt(professionalId) : undefined),
+    }
+    
+    setUser(userData)
+    console.log('[useAuth.login] 👤 User state updated with professional_id:', userData.professional_id)
   }
 
   const register = async (data: RegisterRequest) => {

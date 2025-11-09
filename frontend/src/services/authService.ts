@@ -85,6 +85,12 @@ export const authService = {
       console.log('[authService.register] 💾 Storing tokens to localStorage...')
       localStorage.setItem('access_token', normalizedData.access_token)
       localStorage.setItem('refresh_token', normalizedData.refresh_token)
+      
+      // Store professional_id from registration response
+      if (normalizedData.professional_id) {
+        console.log('[authService.register] 💾 Storing professional_id:', normalizedData.professional_id)
+        localStorage.setItem('professional_id', normalizedData.professional_id.toString())
+      }
 
       // Verify storage
       const storedAccess = localStorage.getItem('access_token')
@@ -142,10 +148,16 @@ export const authService = {
         user: response.data.user,
       }
 
-      // Store tokens
+      // Store tokens and professional_id
       console.log('[authService.login] 💾 Storing tokens to localStorage...')
       localStorage.setItem('access_token', normalizedData.access_token)
       localStorage.setItem('refresh_token', normalizedData.refresh_token)
+      
+      // Store professional_id from login response
+      if (response.data.user?.professional_id) {
+        console.log('[authService.login] 💾 Storing professional_id:', response.data.user.professional_id)
+        localStorage.setItem('professional_id', response.data.user.professional_id.toString())
+      }
 
       // Verify storage
       const storedAccess = localStorage.getItem('access_token')

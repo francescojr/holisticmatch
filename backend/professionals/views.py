@@ -232,7 +232,7 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
                     from django.core.mail import send_mail
                     send_mail(
                         subject='Verifique seu email - HolisticMatch',
-                        message=f'Código de verificação: {verification_token}\n\nCopie este código e cole em: https://holisticmatch.vercel.app/verify-email\n\nEste código expira em 24 horas.',
+                        message=f'Código de verificação: {verification_token}\n\nCopie este código e cole na página de verificação.\n\nEste código expira em 5 minutos.',
                         from_email=settings.DEFAULT_FROM_EMAIL,
                         recipient_list=[email],
                         fail_silently=False,

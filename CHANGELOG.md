@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Email Verification & Dashboard Fixes] - 2025-11-09
+
+### ✅ FIXED: Email Verification Token Expiry
+- **Issue**: Email text said "24 horas" but token only valid 5 minutes
+- **Cause**: Frontend shows 300 seconds (5 min) but backend was creating 24-hour tokens
+- **Fix**: Changed `EmailVerificationToken.create_token()` expiry from 24 hours to 5 minutes
+- **Files**: `backend/professionals/models.py` - `create_token()` method
+- **Email Updates**: Removed link reference + updated time to "5 minutos"
+  - `backend/professionals/serializers.py` (registration)
+  - `backend/professionals/views.py` (resend-verification)
+
+### ✅ FIXED: Dashboard Green Screen Loop After Login
+- **Issue**: After login, user stuck in infinite green loading screen - dashboard never loads
+- **Root Cause**: 
+  - Backend login endpoint returns `professional_id` ✅
+  - Frontend wasn't storing `professional_id` from login response
+  - Dashboard failed with "ID do profissional não encontrado"
+  - User redirected to login again → infinite loop
+- **Fix**: Persist `professional_id` to localStorage during login/register
+- **Files**:
+  - `frontend/src/services/authService.ts`: Store `professional_id` in both `login()` and `register()`
+  - `frontend/src/hooks/useAuth.tsx`: Restore `professional_id` from localStorage in `checkAuth()` and `login()`
+- **Result**: Dashboard now loads correctly with all professional data
+
+### Flow After Fix
+1. Register → Backend returns professional_id ✅
+2. localStorage stores professional_id ✅
+3. Verify email → localStorage retained ✅
+4. Login → professional_id restored from localStorage ✅
+5. Dashboard loads with user.professional_id ✅
+6. Logout → localStorage cleared including professional_id ✅
+
 ## [Email Backend - Revert to Text Only] - 2025-11-09
 
 ### 🎯 ROOT CAUSE IDENTIFIED
