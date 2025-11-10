@@ -255,15 +255,16 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
 </body>
 </html>"""
                     
-                    # Simple text email - Resend backend will handle it
-                    from django.core.mail import send_mail
-                    send_mail(
+                    # Send HTML email for tracking
+                    from django.core.mail import EmailMessage
+                    email_message = EmailMessage(
                         subject='Verifique seu email - HolisticMatch',
-                        message=f'Código de verificação: {verification_token}\n\nCopie este código e cole na página de verificação.\n\nEste código expira em 5 minutos.',
+                        body=f'Código de verificação: {verification_token}\n\nCopie este código e cole na página de verificação.\n\nEste código expira em 24 horas.',
                         from_email=settings.DEFAULT_FROM_EMAIL,
-                        recipient_list=[email],
-                        fail_silently=False,
+                        to=[email],
                     )
+                    email_message.attach_alternative(email_body, "text/html")
+                    email_message.send(fail_silently=False)
                     logger.info(f'✅ Resend verification email sent to {email}')
                 except Exception as e:
                     import logging

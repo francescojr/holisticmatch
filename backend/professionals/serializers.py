@@ -483,15 +483,17 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
 </body>
 </html>"""
                 
-                # Simple text email - Resend backend will handle it
-                from django.core.mail import send_mail
-                send_mail(
+                # Send HTML email for proper tracking in Resend
+                from django.core.mail import EmailMessage
+                email_message = EmailMessage(
                     subject='Verifique seu email - HolisticMatch',
-                    message=f'Código de verificação: {verification_token}\n\nCopie este código e cole na página de verificação.\n\nEste código expira em 5 minutos.',
+                    body=f'Código de verificação: {verification_token}\n\nCopie este código e cole na página de verificação.\n\nEste código expira em 5 minutos.',
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[email],
-                    fail_silently=False,
+                    to=[email],
                 )
+                # Attach HTML version for Resend tracking
+                email_message.attach_alternative(email_body, "text/html")
+                email_message.send(fail_silently=False)
                 logger.info(f'✅ Verification email sent successfully to {email}')
             except Exception as e:
                 logger.error(f'❌ Failed to send verification email to {email}', exc_info=True)
@@ -514,7 +516,7 @@ class EmailVerificationSerializer(serializers.Serializer):
     token = serializers.CharField(required=True, write_only=True)
     
     def validate_token(self, value):
-        """Validate that token exists and is valid"""
+        """Validate that token exists and is not expired"""
         from .models import EmailVerificationToken
         import logging
         logger = logging.getLogger(__name__)
@@ -526,19 +528,15 @@ class EmailVerificationSerializer(serializers.Serializer):
             logger.info(f'[EmailVerificationSerializer.validate_token] ✅ Token found')
             logger.info(f'[EmailVerificationSerializer.validate_token] 📊 is_verified: {email_token.is_verified}')
             logger.info(f'[EmailVerificationSerializer.validate_token] 📊 is_expired(): {email_token.is_expired()}')
-            logger.info(f'[EmailVerificationSerializer.validate_token] 📊 is_valid(): {email_token.is_valid()}')
             
-            # Check if already verified - if so, allow it (don't block)
-            if email_token.is_verified:
-                logger.info(f'[EmailVerificationSerializer.validate_token] ⚠️ Token already verified - allowing anyway')
-                return value
-            
-            # Check if expired
+            # Only check expiry - that's the only hard blocker
             if email_token.is_expired():
                 logger.warning(f'[EmailVerificationSerializer.validate_token] ⏰ Token expired')
                 raise serializers.ValidationError('Token expirado')
             
-            logger.info(f'[EmailVerificationSerializer.validate_token] ✅ Token is valid')
+            # Token exists and is not expired - that's all we need here
+            # Whether it was already verified is handled in models.verify_token()
+            logger.info(f'[EmailVerificationSerializer.validate_token] ✅ Token is valid (not expired)')
             return value
         except EmailVerificationToken.DoesNotExist:
             logger.error(f'[EmailVerificationSerializer.validate_token] ❌ Token not found')
