@@ -127,8 +127,9 @@ function EmailVerificationPage() {
         message: 'Verifique sua caixa de entrada'
       })
       
-      // Reset countdown
+      // Reset countdown and clear old token to prevent verification with expired token
       setCountdown(300)
+      setToken('')
       setState('input')
       setErrorMessage('')
     } catch (error: any) {

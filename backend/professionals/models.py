@@ -162,9 +162,9 @@ class EmailVerificationToken(models.Model):
         return timezone.now() > self.expires_at
     
     @classmethod
-    def create_token(cls, user, expiry_minutes=5):
+    def create_token(cls, user, expiry_hours=24):
         """Create or update verification token for user"""
-        expires_at = timezone.now() + timedelta(minutes=expiry_minutes)
+        expires_at = timezone.now() + timedelta(hours=expiry_hours)
         token_string = secrets.token_urlsafe(32)
         token, created = cls.objects.update_or_create(
             user=user,
