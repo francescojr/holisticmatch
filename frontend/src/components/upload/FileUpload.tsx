@@ -63,6 +63,8 @@ const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0] || null
       handleFileSelect(file)
+      // Reset input value so same file can be selected again
+      e.target.value = ''
     }
 
     const handleDrop = (e: React.DragEvent) => {

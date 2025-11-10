@@ -95,12 +95,14 @@ class ResendEmailBackend(BaseEmailBackend):
                 "from": message.from_email,
                 "to": recipients,
                 "subject": message.subject,
+                "track_opens": True,  # Enable open tracking
+                "track_clicks": True,  # Enable click tracking
             }
             
             # Add HTML if available, otherwise use text
             if html_content:
                 email_params["html"] = html_content
-                logger.info("📧 Using HTML content")
+                logger.info("📧 Using HTML content with open tracking enabled")
             else:
                 email_params["text"] = text_content
                 logger.info("📧 Using text content")

@@ -2,6 +2,50 @@
 
 All notable changes to this project will be documented in this file.
 
+## [FIXED: Email Verification & File Upload Double-Click] - 2025-11-10
+
+### Email Verification: Object Refresh Fix
+- **Problem**: User validates email successfully, but login blocks with 403 "email not verified". Must validate again.
+- **Root Cause**: After `transaction.atomic()` commits to DB, Python objects in memory remain STALE
+- **Solution**: Added `refresh_from_db()` in 3 locations:
+  1. `backend/professionals/models.py` - After transaction in `verify_token()`
+  2. `backend/professionals/views.py` - After calling `verify_token()` in endpoint
+  3. `backend/authentication/views.py` - In `LoginView` after fetching user
+- **Result**: Email verifies ONCE → Login works immediately ✅
+
+### File Upload: Input Reset Fix
+- **Problem**: When selecting file via dialog (not drag-drop), must click "choose file" TWICE
+- **Root Cause**: HTML input type=file doesn't reset value after selection. On second click, `onChange` doesn't fire
+- **Solution**: Reset input value after file selection in `frontend/src/components/upload/FileUpload.tsx`
+  ```tsx
+  const handleInputChange = (e) => {
+    const file = e.target.files?.[0] || null
+    handleFileSelect(file)
+    e.target.value = ''  // ← Reset so same file can be selected again
+  }
+  ```
+- **Result**: Photo selection works on FIRST click ✅
+
+### Resend Email Tracking: Re-Enable Open/Click Tracking
+- **Problem**: Email open tracking feature disappeared from Resend emails
+- **Root Cause**: Missing `track_opens` and `track_clicks` parameters in email_params
+- **Solution**: Added tracking parameters to `backend/professionals/email_backend.py`
+  ```python
+  email_params = {
+    ...
+    "track_opens": True,   # Enable open tracking
+    "track_clicks": True,  # Enable click tracking
+  }
+  ```
+- **Result**: Resend dashboard now shows email open/click metrics again ✅
+
+### Files Modified
+- ✅ `backend/professionals/models.py` - EmailVerificationToken.verify_token()
+- ✅ `backend/professionals/views.py` - verify_email() endpoint
+- ✅ `backend/authentication/views.py` - LoginView.post()
+- ✅ `frontend/src/components/upload/FileUpload.tsx` - handleInputChange()
+- ✅ `backend/professionals/email_backend.py` - Added tracking parameters
+
 ## [FIXED: Double Email Validation - Object Cache Issue] - 2025-11-10
 
 ### ✅ CRITICAL FIX: Missing refresh_from_db() After Transaction + Logic Conflict
