@@ -464,8 +464,7 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         <p><strong>Como verificar seu email:</strong></p>
         <ol>
           <li>Copie o código acima</li>
-          <li>Abra <a href="https://holisticmatch.vercel.app/verify-email" style="color: #10b981;">https://holisticmatch.vercel.app/verify-email</a></li>
-          <li>Cole o código no campo de verificação</li>
+          <li>Cole o código no campo de verificação em https://holisticmatch.vercel.app/verify-email</li>
           <li>Clique em "Verificar E-mail"</li>
         </ol>
 
