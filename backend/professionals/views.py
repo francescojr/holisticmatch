@@ -129,6 +129,10 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
                 logger.info(f'[verify_email] 🔍 verify_token returned: {result}')
                 
                 if result == 'verified':
+                    # CRITICAL: Refresh from DB to ensure we have latest state
+                    email_token.refresh_from_db()
+                    email_token.user.refresh_from_db()
+                    
                     logger.info(f'[verify_email] ✅ Token verified successfully')
                     logger.info(f'[verify_email] 👤 User email: {email_token.user.email}')
                     logger.info(f'[verify_email] 🔑 User is_active: {email_token.user.is_active}')

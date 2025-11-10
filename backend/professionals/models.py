@@ -189,13 +189,23 @@ class EmailVerificationToken(models.Model):
             email_token = cls.objects.get(token=token)
             logger.info(f'[EmailVerificationToken.verify_token] ✅ Token found in DB')
             logger.info(f'[EmailVerificationToken.verify_token] 📧 User: {email_token.user.email}')
-            logger.info(f'[EmailVerificationToken.verify_token] is_valid(): {email_token.is_valid()}')
             logger.info(f'[EmailVerificationToken.verify_token] is_verified: {email_token.is_verified}')
             logger.info(f'[EmailVerificationToken.verify_token] is_expired(): {email_token.is_expired()}')
+            logger.info(f'[EmailVerificationToken.verify_token] is_valid(): {email_token.is_valid()}')
             
-            if not email_token.is_valid():
-                logger.warning(f'[EmailVerificationToken.verify_token] ❌ Token not valid')
+            # Check if expired
+            if email_token.is_expired():
+                logger.warning(f'[EmailVerificationToken.verify_token] ❌ Token expired')
                 return None, 'invalid_or_expired'
+            
+            # If already verified, that's OK - user is trying to verify again
+            # This is allowed - just return success without re-saving
+            if email_token.is_verified:
+                logger.info(f'[EmailVerificationToken.verify_token] ℹ️ Token already verified')
+                email_token.refresh_from_db()
+                email_token.user.refresh_from_db()
+                logger.info(f'[EmailVerificationToken.verify_token] 🔑 User is_active: {email_token.user.is_active}')
+                return email_token, 'verified'
             
             # Use atomic transaction to ensure both updates are saved together
             with transaction.atomic():
@@ -213,6 +223,12 @@ class EmailVerificationToken(models.Model):
                 logger.info(f'[EmailVerificationToken.verify_token] ✅ User marked as active')
                 
                 logger.info(f'[EmailVerificationToken.verify_token] 🎉 Transaction committed successfully')
+            
+            # CRITICAL FIX: Reload objects from database after transaction
+            # The objects in memory may be stale/cached
+            email_token.refresh_from_db()
+            email_token.user.refresh_from_db()
+            logger.info(f'[EmailVerificationToken.verify_token] 🔄 Reloaded from DB - is_active: {email_token.user.is_active}')
             
             return email_token, 'verified'
         except cls.DoesNotExist:

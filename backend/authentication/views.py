@@ -85,6 +85,11 @@ class LoginView(views.APIView):
         # User must be active (is_active=True set during email verification)
         import logging
         logger = logging.getLogger(__name__)
+        
+        # CRITICAL: Refresh from DB to ensure we have the latest is_active status
+        # This prevents cache misses when user was just verified
+        user.refresh_from_db()
+        
         logger.info(f'[login] 🔍 Checking is_active for user: {email}')
         logger.info(f'[login] 📊 user.is_active = {user.is_active}')
         
