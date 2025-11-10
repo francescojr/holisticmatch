@@ -179,6 +179,7 @@ class EmailVerificationToken(models.Model):
     @classmethod
     def verify_token(cls, token):
         """Verify token and mark email as verified"""
+        from django.db import transaction
         import logging
         logger = logging.getLogger(__name__)
         
@@ -196,18 +197,23 @@ class EmailVerificationToken(models.Model):
                 logger.warning(f'[EmailVerificationToken.verify_token] ❌ Token not valid')
                 return None, 'invalid_or_expired'
             
-            logger.info(f'[EmailVerificationToken.verify_token] 🔄 Setting is_verified=True')
-            email_token.is_verified = True
-            email_token.save()
-            logger.info(f'[EmailVerificationToken.verify_token] ✅ Token marked as verified')
+            # Use atomic transaction to ensure both updates are saved together
+            with transaction.atomic():
+                logger.info(f'[EmailVerificationToken.verify_token] 🔄 Starting atomic transaction')
+                
+                logger.info(f'[EmailVerificationToken.verify_token] 🔄 Setting is_verified=True')
+                email_token.is_verified = True
+                email_token.save()
+                logger.info(f'[EmailVerificationToken.verify_token] ✅ Token marked as verified')
+                
+                # Mark user email as verified
+                logger.info(f'[EmailVerificationToken.verify_token] 🔄 Setting user.is_active=True')
+                email_token.user.is_active = True
+                email_token.user.save()
+                logger.info(f'[EmailVerificationToken.verify_token] ✅ User marked as active')
+                
+                logger.info(f'[EmailVerificationToken.verify_token] 🎉 Transaction committed successfully')
             
-            # Mark user email as verified
-            logger.info(f'[EmailVerificationToken.verify_token] 🔄 Setting user.is_active=True')
-            email_token.user.is_active = True
-            email_token.user.save()
-            logger.info(f'[EmailVerificationToken.verify_token] ✅ User marked as active')
-            
-            logger.info(f'[EmailVerificationToken.verify_token] 🎉 Verification complete')
             return email_token, 'verified'
         except cls.DoesNotExist:
             logger.error(f'[EmailVerificationToken.verify_token] ❌ Token not found in DB')

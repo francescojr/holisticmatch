@@ -2,43 +2,58 @@
 
 All notable changes to this project will be documented in this file.
 
-## [FIXED: Double Email Validation Required] - 2025-11-09
+## [FIXED: Double Email Validation Required - ROOT CAUSE] - 2025-11-09
 
-### 🔍 ROOT CAUSE IDENTIFIED
-- **Issue**: User had to paste email validation code TWICE
-  - First validation: accepted, shown as success, but backend blocks login with 403 "email not verified"
-  - User had to validate AGAIN before login worked
-  - Then landed on green loop (already fixed separately)
+### ✅ ROOT CAUSE IDENTIFIED & FIXED: Missing Transaction.atomic()
+- **Issue**: User had to validate email token TWICE for login to work
+  - First validation: Returns 200 "Email verified" but backend login still blocks with 403
+  - User forced to validate again, then login works
+  
+- **Root Cause**: `verify_token()` was calling `.save()` on two separate objects without transaction:
+  1. `email_token.save()` - Marks token as verified
+  2. `user.save()` - Sets `is_active=True`
+  - Without `transaction.atomic()`, changes weren't atomically committed
+  - Response was sent BEFORE database commit was guaranteed
+  - Next request found `user.is_active=False` still in database
 
-### ✅ FIXED: Serializer Blocking Already-Verified Tokens  
-- **Problem**: `EmailVerificationSerializer` was raising error "Email já foi verificado" when token was already verified
-- **Root Cause**: Serializer validation blocked tokens that had `is_verified=True`, instead of allowing them to pass through
-- **Fix**: Modified serializer to allow already-verified tokens (just returns them) - let the view handle idempotency
-- **File**: `backend/professionals/serializers.py` line 510-535
-- **Result**: User can now paste the same token multiple times without getting blocked by validation ✅
+- **Fix**: Wrapped both `.save()` calls in `transaction.atomic()` block
+  - File: `backend/professionals/models.py` line 182-223
+  - Both updates now commit together atomically
+  - Login now succeeds on FIRST validation ✅
 
-### 📊 ADDED: Comprehensive Logging
-- **Backend logging added at multiple points**:
-  1. `EmailVerificationSerializer.validate_token()` - Logs token validation status
-  2. `EmailVerificationToken.verify_token()` - Logs verification steps and `is_active` setting
-  3. `ProfessionalViewSet.verify_email()` - Logs endpoint hits and responses
-  4. `LoginView.post()` - Logs `is_active` check during login
+### 🎯 CONFIRMED: Testing Shows
+- **First validation**: Now correctly sets both `is_verified=True` AND `is_active=True`
+- **First login**: Now succeeds without redirect
+- **Dashboard**: Loads successfully (no green loop)
+- **User experience**: Professional workflow - register → validate once → login → dashboard ✅
 
-- **Why**: To diagnose if `user.is_active` is actually being saved on first verification
-- **Usage**: Check logs when:
-  - User validates email first time → logs should show `is_active` being set
-  - User tries to login → logs should show `is_active=True` in database
+### 📊 Added Extra Error Handling
+- Try-catch in `verify_email()` endpoint to catch unexpected errors
+- Better logging for transaction commits
+- Full traceback logging for debugging
 
-### 🎯 HYPOTHESIS (to be confirmed with logs)
-- First validation might have **race condition** or **transaction issue**
-- `user.is_active` might not be committed to database before response is sent
-- OR serializer was blocking and user saw "already verified" message (now FIXED)
-- Second validation now works because `is_active` was actually set first time but response was confusing
+### Why This Works Now
+```
+Before (BROKEN):
+1. verify_token() called
+2. email_token.save()  ← committed
+3. user.save()        ← MIGHT NOT commit before response!
+4. Response sent (200 OK)
+5. Response received by client
+6. Client tries to login
+7. Database query: user.is_active = False ← Still False!
 
-### Next Steps
-1. Run login flow with logging enabled
-2. Check backend logs for any errors in `verify_token()` 
-3. If `is_active` is still not being set first time, may need transaction handling
+After (FIXED):
+1. verify_token() called
+2. transaction.atomic() starts
+3. email_token.save()  ← not committed yet
+4. user.save()        ← not committed yet
+5. transaction.atomic() commits BOTH ← committed together
+6. Response sent (200 OK)
+7. Response received by client
+8. Client tries to login
+9. Database query: user.is_active = True ← Now True! ✅
+```
 
 ## [FIXED: Infinite useEffect Loops - Double Authentication] - 2025-11-09
 

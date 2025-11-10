@@ -118,38 +118,46 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
         import logging
         logger = logging.getLogger(__name__)
         
-        serializer = EmailVerificationSerializer(data=request.data)
-        if serializer.is_valid():
-            token = serializer.validated_data['token']
-            logger.info(f'[verify_email] 📧 Attempting to verify token: {token[:20]}...')
-            
-            email_token, result = EmailVerificationToken.verify_token(token)
-            
-            logger.info(f'[verify_email] 🔍 verify_token returned: {result}')
-            
-            if result == 'verified':
-                logger.info(f'[verify_email] ✅ Token verified successfully')
-                logger.info(f'[verify_email] 👤 User email: {email_token.user.email}')
-                logger.info(f'[verify_email] 🔑 User is_active: {email_token.user.is_active}')
-                logger.info(f'[verify_email] 🏆 Token is_verified: {email_token.is_verified}')
+        try:
+            serializer = EmailVerificationSerializer(data=request.data)
+            if serializer.is_valid():
+                token = serializer.validated_data['token']
+                logger.info(f'[verify_email] 📧 Attempting to verify token: {token[:20]}...')
                 
-                return Response({
-                    'message': 'Email verificado com sucesso!',
-                    'email': email_token.user.email,
-                }, status=status.HTTP_200_OK)
-            elif result == 'invalid_or_expired':
-                logger.warning(f'[verify_email] ⏰ Token expired or invalid')
-                return Response({
-                    'error': 'Token expirado. Solicite um novo email de verificação.'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            else:  # not_found
-                logger.error(f'[verify_email] ❌ Token not found')
-                return Response({
-                    'error': 'Token inválido'
-                }, status=status.HTTP_400_BAD_REQUEST)
+                email_token, result = EmailVerificationToken.verify_token(token)
+                
+                logger.info(f'[verify_email] 🔍 verify_token returned: {result}')
+                
+                if result == 'verified':
+                    logger.info(f'[verify_email] ✅ Token verified successfully')
+                    logger.info(f'[verify_email] 👤 User email: {email_token.user.email}')
+                    logger.info(f'[verify_email] 🔑 User is_active: {email_token.user.is_active}')
+                    logger.info(f'[verify_email] 🏆 Token is_verified: {email_token.is_verified}')
+                    
+                    return Response({
+                        'message': 'Email verificado com sucesso!',
+                        'email': email_token.user.email,
+                    }, status=status.HTTP_200_OK)
+                elif result == 'invalid_or_expired':
+                    logger.warning(f'[verify_email] ⏰ Token expired or invalid')
+                    return Response({
+                        'error': 'Token expirado. Solicite um novo email de verificação.'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                else:  # not_found
+                    logger.error(f'[verify_email] ❌ Token not found')
+                    return Response({
+                        'error': 'Token inválido'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            
+            logger.error(f'[verify_email] ❌ Serializer validation failed: {serializer.errors}')
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-        logger.error(f'[verify_email] ❌ Serializer validation failed: {serializer.errors}')
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f'[verify_email] ❌ UNEXPECTED ERROR: {str(e)}')
+            logger.exception(f'[verify_email] 📋 Full traceback:')
+            return Response({
+                'error': 'Erro interno ao verificar email'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny], url_path='resend-verification')
     def resend_verification(self, request):
