@@ -126,7 +126,6 @@ const FileUpload = forwardRef<HTMLInputElement, FileUploadProps>(
             accept={accept}
             onChange={handleInputChange}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            required={required}
           />
 
           {preview ? (

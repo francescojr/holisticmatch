@@ -256,8 +256,8 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
 </html>"""
                     
                     # Send HTML email for tracking
-                    from django.core.mail import EmailMessage
-                    email_message = EmailMessage(
+                    from django.core.mail import EmailMultiAlternatives
+                    email_message = EmailMultiAlternatives(
                         subject='Verifique seu email - HolisticMatch',
                         body=f'Código de verificação: {verification_token}\n\nCopie este código e cole na página de verificação.\n\nEste código expira em 24 horas.',
                         from_email=settings.DEFAULT_FROM_EMAIL,

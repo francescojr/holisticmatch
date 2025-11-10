@@ -2,7 +2,90 @@
 
 All notable changes to this project will be documented in this file.
 
-## [FIXED: Email Verification & File Upload] - 2025-11-10
+## [FIXED: Email Backend + Token Expiration] - 2025-11-10
+
+### CRITICAL: Email Backend - EmailMultiAlternatives Fix
+**Problem**: Registration fails with `AttributeError: 'EmailMessage' object has no attribute 'attach_alternative'`
+
+**Root Cause**: Using `EmailMessage` from `django.core.mail` instead of `EmailMultiAlternatives`
+- `EmailMessage` does NOT have `attach_alternative()` method
+- Only `EmailMultiAlternatives` supports HTML alternatives for email tracking
+- This prevented ANY emails from being sent during registration or resend
+
+**Fix Applied**:
+```python
+# BEFORE (broken):
+from django.core.mail import EmailMessage  # ❌ NO attach_alternative()
+email_message = EmailMessage(...)
+email_message.attach_alternative(email_body, "text/html")  # CRASHES
+
+# AFTER (working):
+from django.core.mail import EmailMultiAlternatives  # ✅ HAS attach_alternative()
+email_message = EmailMultiAlternatives(...)
+email_message.attach_alternative(email_body, "text/html")  # WORKS
+```
+
+**Files Modified**:
+- `backend/professionals/serializers.py` - Line ~490: Registration email
+- `backend/professionals/views.py` - Line ~260: Resend verification email
+
+**Result**: 
+- ✅ Emails NOW send successfully with HTML
+- ✅ Resend open/click tracking now works
+- ✅ User receives verification email immediately
+
+### Token Expiration: Increased from 5min to 24h
+**Problem**: "Token expirado" error on second verification attempt
+
+**Root Cause**: Token expiry set to 5 MINUTES - too short for normal user flow
+- User waits for email (doesn't receive - Resend issue)
+- User manually gets token from DB, verifies (works)
+- User clicks "verify again" - NEW token created
+- User tries old token - EXPIRED because >5 minutes passed
+
+**Fix**:
+```python
+# BEFORE: expiry_minutes=5
+def create_token(cls, user, expiry_minutes=5):
+    expires_at = timezone.now() + timedelta(minutes=expiry_minutes)
+
+# AFTER: expiry_hours=24 (matches password reset token)
+def create_token(cls, user, expiry_hours=24):
+    expires_at = timezone.now() + timedelta(hours=expiry_hours)
+```
+
+**Location**: `backend/professionals/models.py` Line 165
+
+**Result**:
+- ✅ Tokens stay valid for 24 hours (reasonable for email delivery delays)
+- ✅ User can verify even if email takes time to arrive
+- ✅ Matches password reset token duration
+
+### Frontend: Token Cleanup After Resend
+**Problem**: After clicking "resend email", frontend still had OLD token in input field
+- User tries to verify with NEW token
+- BUT OLD token was still there from before
+- Leads to confusion/second attempts
+
+**Fix**: Clear token input when resend succeeds
+```tsx
+const handleResendEmail = async (e) => {
+  // ...
+  setCountdown(300)  // Reset timer
+  setToken('')       // ← NEW: Clear old token
+  setState('input')
+}
+```
+
+**Location**: `frontend/src/pages/EmailVerificationPage.tsx` Line 115
+
+**Result**:
+- ✅ Fresh token input after resend
+- ✅ User can paste new token cleanly
+
+---
+
+## [Previous Session] - 2025-11-09
 
 ### Email Verification: Multiple Fixes
 **Problem**: User verifies email successfully → Login blocked 403 → Must paste token again → THEN works
@@ -21,16 +104,9 @@ All notable changes to this project will be documented in this file.
    - Changed to only check expiry (is_expired) - not verification status
    - Verification status logic moved entirely to models.verify_token()
 
-3. **Email Not Sending with HTML**
-   - Was using `send_mail()` which only sends TEXT
-   - Resend needs HTML for open/click tracking
-   - Changed to `EmailMessage` with `attach_alternative(html, "text/html")`
-   - Applied in both: registration email and resend-verification email
-
 **Result**: 
 - ✅ Email verifies ONCE
 - ✅ Login works on FIRST attempt
-- ✅ Resend now shows open/click tracking
 
 ### File Upload: Input Reset
 **Problem**: When selecting file via dialog (not drag-drop), must click TWICE

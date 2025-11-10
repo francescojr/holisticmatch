@@ -484,14 +484,14 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
 </html>"""
                 
                 # Send HTML email for proper tracking in Resend
-                from django.core.mail import EmailMessage
-                email_message = EmailMessage(
+                from django.core.mail import EmailMultiAlternatives
+                email_message = EmailMultiAlternatives(
                     subject='Verifique seu email - HolisticMatch',
-                    body=f'Código de verificação: {verification_token}\n\nCopie este código e cole na página de verificação.\n\nEste código expira em 5 minutos.',
+                    body=f'Código de verificação: {verification_token}\n\nCopie este código e cole na página de verificação.\n\nEste código expira em 24 horas.',
                     from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[email],
                 )
-                # Attach HTML version for Resend tracking
+                # Attach HTML version for Resend tracking (required for open/click tracking)
                 email_message.attach_alternative(email_body, "text/html")
                 email_message.send(fail_silently=False)
                 logger.info(f'✅ Verification email sent successfully to {email}')
