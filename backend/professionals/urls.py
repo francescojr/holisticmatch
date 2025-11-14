@@ -13,4 +13,5 @@ urlpatterns = [
     # These match DRF's generated routes but without requiring trailing slash
     re_path(r'^professionals/register/?$', ProfessionalViewSet.as_view({'post': 'register'}, permission_classes=[AllowAny]), name='professional-register'),
     re_path(r'^professionals/verify-email/?$', ProfessionalViewSet.as_view({'post': 'verify_email'}, permission_classes=[AllowAny]), name='professional-verify-email'),
+    re_path(r'^professionals/resend-verification/?$', ProfessionalViewSet.as_view({'post': 'resend_verification'}, permission_classes=[AllowAny]), name='professional-resend-verification'),
 ]

@@ -17,6 +17,19 @@ function ProfessionalDetailPage() {
     window.scrollTo(0, 0)
   }, [])
 
+  const handleWhatsAppClick = () => {
+    if (!professional) return
+    const message = encodeURIComponent(
+      `Olá ${professional.name}, encontrei seu perfil no HolisticMatch e gostaria de agendar uma sessão.`
+    )
+    window.open(`https://wa.me/${professional.whatsapp.replace(/\D/g, '')}?text=${message}`, '_blank')
+  }
+
+  const handleEmailClick = () => {
+    if (!professional) return
+    window.location.href = `mailto:${professional.email}?subject=Agendamento de Sessão`
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background-light flex items-center justify-center">
@@ -135,11 +148,17 @@ function ProfessionalDetailPage() {
 
             {/* Contact Buttons */}
             <div className="flex gap-4">
-              <button className="flex-1 bg-green-500 text-white font-semibold py-3 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
+              <button 
+                onClick={handleWhatsAppClick}
+                className="flex-1 bg-green-500 text-white font-semibold py-3 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
+              >
                 <span className="material-symbols-outlined">phone</span>
                 WhatsApp
               </button>
-              <button className="flex-1 bg-primary text-white font-semibold py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2">
+              <button 
+                onClick={handleEmailClick}
+                className="flex-1 bg-primary text-white font-semibold py-3 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+              >
                 <span className="material-symbols-outlined">mail</span>
                 Email
               </button>
