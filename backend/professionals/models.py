@@ -135,7 +135,7 @@ class EmailVerificationToken(models.Model):
         related_name='email_verification_token'
     )
     token = models.CharField(
-        max_length=255,
+        max_length=6,
         unique=True
     )
     is_verified = models.BooleanField(default=False)
@@ -165,7 +165,8 @@ class EmailVerificationToken(models.Model):
     def create_token(cls, user, expiry_hours=24):
         """Create or update verification token for user"""
         expires_at = timezone.now() + timedelta(hours=expiry_hours)
-        token_string = secrets.token_urlsafe(32)
+        # Generate 6-digit numeric token (000000-999999)
+        token_string = str(secrets.randbelow(1000000)).zfill(6)
         token, created = cls.objects.update_or_create(
             user=user,
             defaults={

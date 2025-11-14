@@ -96,8 +96,8 @@ function EmailVerificationPage() {
   }
 
   const handleTokenInput = (value: string) => {
-    // Remove spaces and special characters, keep only alphanumeric, dash, underscore
-    const cleanedToken = value.replace(/[^a-zA-Z0-9\-_]/g, '')
+    // Keep only digits, max 6
+    const cleanedToken = value.replace(/[^0-9]/g, '').slice(0, 6)
     setToken(cleanedToken)
   }
 
@@ -226,7 +226,8 @@ function EmailVerificationPage() {
                   type="text"
                   value={token}
                   onChange={(e) => handleTokenInput(e.target.value)}
-                  placeholder="Cole seu código aqui ou abra o link do e-mail"
+                  maxLength={6}
+                  placeholder="000000"
                   disabled={state === 'expired'}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg font-mono text-center text-lg tracking-widest disabled:bg-gray-50 disabled:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 />

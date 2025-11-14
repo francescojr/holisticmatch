@@ -46,6 +46,7 @@ function DashboardPage() {
     email: '',
     phone: '',
     bio: '',
+    attendanceType: 'presencial' as 'presencial' | 'online' | 'ambos',
     services: [] as Array<{ name: string; price: number }>
   })
 
@@ -80,6 +81,7 @@ function DashboardPage() {
           email: data.email,
           phone: data.phone || data.whatsapp || '',
           bio: data.bio,
+          attendanceType: data.attendance_type || 'presencial',
           services: data.services?.map((service: any) => ({
             name: service.type || service.name || service,
             price: service.price || data.price_per_session || 0
@@ -92,6 +94,7 @@ function DashboardPage() {
           email: data.email,
           phone: data.phone || data.whatsapp || '',
           bio: data.bio,
+          attendanceType: data.attendance_type || 'presencial',
           services: data.services?.map((service: any) => ({
             name: service.type || service.name || service,
             price: service.price || data.price_per_session || 0
@@ -347,6 +350,7 @@ function DashboardPage() {
     if (formData.phone !== originalData.phone) changes.phone = formData.phone
     if (formData.bio !== originalData.bio) changes.bio = formData.bio
     if (formData.location !== originalData.location) changes.location = formData.location
+    if (formData.attendanceType !== originalData.attendanceType) changes.attendanceType = formData.attendanceType
 
     // Check if services changed
     const servicesChanged = JSON.stringify(formData.services) !== JSON.stringify(originalData.services)
@@ -473,6 +477,7 @@ function DashboardPage() {
         updateData.city = city || ''
         updateData.state = state || ''
       }
+      if (changes.attendanceType) updateData.attendance_type = changes.attendanceType
       if (changes.services) {
         updateData.services = changes.services.map(service => service.name)
       }
@@ -598,17 +603,6 @@ function DashboardPage() {
                   >
                     <span className="material-symbols-outlined text-[#111814] dark:text-white" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
                     <p className="text-[#111814] dark:text-white text-sm font-medium leading-normal">Edit Profile</p>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('bookings')}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
-                      activeTab === 'bookings'
-                        ? 'bg-[#f0f4f2] dark:bg-primary/20'
-                        : 'hover:bg-[#f0f4f2] dark:hover:bg-primary/20'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[#111814] dark:text-white">calendar_month</span>
-                    <p className="text-[#111814] dark:text-white text-sm font-medium leading-normal">My Bookings</p>
                   </button>
                   <button
                     onClick={() => setActiveTab('settings')}
@@ -740,6 +734,21 @@ function DashboardPage() {
                           required
                           placeholder="City, State"
                         />
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Como você atende? *
+                          </label>
+                          <select
+                            value={formData.attendanceType}
+                            onChange={(e) => handleFieldChange('attendanceType', e.target.value)}
+                            disabled={!isEditing || isSaving}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1a2e22] text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <option value="presencial">Presencial</option>
+                            <option value="online">Online</option>
+                            <option value="ambos">Ambos (Presencial + Online)</option>
+                          </select>
+                        </div>
                       </div>
 
                       <div className="mb-6">
@@ -957,20 +966,6 @@ function DashboardPage() {
                           {isLoggingOut ? 'Saindo...' : 'Logout'}
                         </button>
                       </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                {activeTab === 'bookings' && (
-                  <motion.div
-                    variants={itemVariants}
-                    className="bg-white dark:bg-[#1a2e22] rounded-xl border border-[#dbe6e0] dark:border-[#2a3f34] p-8"
-                  >
-                    <h1 className="text-[#111814] dark:text-white text-2xl font-bold leading-tight tracking-[-0.015em] mb-6">My Bookings</h1>
-                    <div className="text-center py-12">
-                      <span className="material-symbols-outlined text-gray-400 text-6xl mb-4 block">calendar_month</span>
-                      <h3 className="text-[#111814] dark:text-white text-xl font-semibold mb-2">No bookings yet</h3>
-                      <p className="text-[#618975] dark:text-gray-400">Your upcoming appointments will appear here</p>
                     </div>
                   </motion.div>
                 )}

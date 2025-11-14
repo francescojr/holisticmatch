@@ -35,6 +35,7 @@ interface Step1FormData {
 interface Step2FormData {
   services: string[]  // Just service names, no individual prices
   pricePerSession: number  // Single base price for all services
+  attendanceType: 'presencial' | 'online' | 'ambos'  // How they offer services
 }
 
 function RegisterProfessionalPage() {
@@ -61,7 +62,8 @@ function RegisterProfessionalPage() {
 
   const [step2Data, setStep2Data] = useState<Step2FormData>({
     services: [],
-    pricePerSession: 0
+    pricePerSession: 0,
+    attendanceType: 'presencial'
   })
 
   const { errors, validate, setFieldError } = useFormValidation()
@@ -351,7 +353,7 @@ function RegisterProfessionalPage() {
         price_per_session: step2Data.pricePerSession,  // Single base price
         city: step1Data.city,
         state: step1Data.state,
-        attendance_type: 'ambos',
+        attendance_type: step2Data.attendanceType,
         whatsapp: step1Data.phone,
         bio: `Profissional de terapias holísticas especializado em ${step2Data.services.join(', ')}.`,
         ...(step1Data.photo && { photo: step1Data.photo })
@@ -380,7 +382,7 @@ function RegisterProfessionalPage() {
         photo: step1Data.photo || undefined,
         services: step2Data.services,  // Just the service names array
         price_per_session: step2Data.pricePerSession,  // Single base price
-        attendance_type: 'ambos',  // ← FIXED: Backend expects 'ambos', not 'both'
+        attendance_type: step2Data.attendanceType,
         state: step1Data.state,
         city: step1Data.city,
         neighborhood: 'default',
@@ -736,6 +738,26 @@ function RegisterProfessionalPage() {
                     step="0.01"
                     required
                   />
+
+                  {/* Attendance Type Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Como você atende? *
+                    </label>
+                    <select
+                      value={step2Data.attendanceType}
+                      onChange={(e) => setStep2Data(prev => ({
+                        ...prev,
+                        attendanceType: e.target.value as 'presencial' | 'online' | 'ambos'
+                      }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      required
+                    >
+                      <option value="presencial">Presencial</option>
+                      <option value="online">Online</option>
+                      <option value="ambos">Ambos (Presencial + Online)</option>
+                    </select>
+                  </div>
 
                   {step2Data.pricePerSession > 0 && (
                     <p className="text-sm text-gray-600">
