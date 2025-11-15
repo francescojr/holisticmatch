@@ -42,9 +42,12 @@ class TestRegistrationWithoutPhoto:
         assert response.status_code == 201, f"Expected 201, got {response.status_code}. Errors: {response.json()}"
         
         data = response.json()
-        assert 'professional' in data
-        assert 'access_token' in data
-        assert 'refresh_token' in data
+        assert 'email' in data
+        assert 'professional_id' in data
+        assert 'message' in data
+        assert data['email'] == 'test_reg_nophoto@example.com'
+        # NOTE: JWT tokens are NOT returned from register endpoint anymore
+        # User must verify email first, then login to get tokens
         
         # Verify user and professional created
         user = User.objects.get(email='test_reg_nophoto@example.com')

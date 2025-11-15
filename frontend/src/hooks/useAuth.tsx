@@ -91,16 +91,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log('[useAuth.register] 🚀 Calling authService.register...')
     const response = await authService.register(data)
     console.log('[useAuth.register] ✅ Register response received')
-    console.log('[useAuth.register] 📊 User ID:', response.user_id)
+    console.log('[useAuth.register] 📧 Email:', response.email)
     console.log('[useAuth.register] 📊 Professional ID:', response.professional_id)
     
-    const newUser = {
-      id: response.user_id,
-      email: data.email,
-      professional_id: response.professional_id,
-    }
-    setUser(newUser)
-    console.log('[useAuth.register] 👤 User state updated')
+    // NOTE: User is NOT logged in after registration
+    // They must verify their email first, then login to get tokens
+    // So we don't set user state here
+    console.log('[useAuth.register] ℹ️  User NOT logged in yet (must verify email first, then login)')
   }
 
   const logout = async () => {

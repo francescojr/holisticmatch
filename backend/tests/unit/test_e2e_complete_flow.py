@@ -60,23 +60,21 @@ class TestCompleteAuthenticationFlow:
         
         response_data = register_response.json()
         
-        # Verify response has JWT tokens
-        assert 'access_token' in response_data, "Missing 'access_token' token in response"
-        assert 'refresh_token' in response_data, "Missing 'refresh_token' token in response"
-        assert 'professional' in response_data, "Missing 'professional' in response"
+        # Verify response has expected fields (JWT tokens are NOT returned from register)
+        assert 'email' in response_data, "Missing 'email' in response"
+        assert 'professional_id' in response_data, "Missing 'professional_id' in response"
+        assert 'message' in response_data, "Missing 'message' in response"
         
-        access_token = response_data['access_token']
-        refresh_token = response_data['refresh_token']
-        professional_id = response_data['professional']['id']
+        professional_id = response_data['professional_id']
         
-        print(f"   ✅ User registered successfully")
-        print(f"   ✅ JWT access token received: {access_token[:50]}...")
-        print(f"   ✅ JWT refresh token received: {refresh_token[:50]}...")
+        print("   ✅ User registered successfully")
+        print(f"   ✅ Professional ID: {professional_id}")
+        print("   ℹ️ NOTE: JWT tokens are NOT returned from register (user must verify email + login)")
         
         # Verify User was created with is_active=False
         user = User.objects.get(email=test_email)
         assert not user.is_active, "User should be is_active=False until email verification"
-        print(f"   ✅ User created with is_active=False (pending email verification)")
+        print("   ✅ User created with is_active=False (pending email verification)")
         
         # Get verification token
         email_token = EmailVerificationToken.objects.get(user=user)
@@ -105,7 +103,7 @@ class TestCompleteAuthenticationFlow:
         
         error_response = login_response.json()
         assert 'detail' in error_response, "Expected 'detail' in error response"
-        print(f"   ✅ Login correctly blocked with 403")
+        print("   ✅ Login correctly blocked with 403")
         print(f"   ✅ Message: {error_response['detail']}")
         
         # ====================================================================
@@ -128,13 +126,13 @@ class TestCompleteAuthenticationFlow:
             f"Expected 200, got {verify_response.status_code}"
         
         verify_result = verify_response.json()
-        print(f"   ✅ Email verified successfully")
+        print("   ✅ Email verified successfully")
         print(f"   ✅ Message: {verify_result['message']}")
         
         # Verify User is now is_active=True
         user.refresh_from_db()
         assert user.is_active, "User should be is_active=True after email verification"
-        print(f"   ✅ User is now is_active=True (email verified)")
+        print("   ✅ User is now is_active=True (email verified)")
         
         # ====================================================================
         # STEP 4: LOGIN AFTER EMAIL VERIFICATION (expect 200)
@@ -161,7 +159,7 @@ class TestCompleteAuthenticationFlow:
         login_access_token = login_result['access']
         login_refresh_token = login_result['refresh']
         
-        print(f"   ✅ Login successful with 200")
+        print("   ✅ Login successful with 200")
         print(f"   ✅ Access token: {login_access_token[:50]}...")
         print(f"   ✅ Refresh token: {login_refresh_token[:50]}...")
         
@@ -185,7 +183,7 @@ class TestCompleteAuthenticationFlow:
             f"Expected 200 for authenticated request, got {profile_response.status_code}"
         
         profile_data = profile_response.json()
-        print(f"   ✅ Authenticated request successful with JWT token")
+        print("   ✅ Authenticated request successful with JWT token")
         print(f"   ✅ Retrieved professional: {profile_data['name']}")
         
         # ====================================================================

@@ -42,10 +42,11 @@ export interface RegisterRequest {
 }
 
 export interface RegisterResponse {
-  user_id: number
+  message: string
+  email: string
   professional_id: number
-  access_token: string
-  refresh_token: string
+  access_token?: string
+  refresh_token?: string
 }
 
 export interface RefreshRequest {

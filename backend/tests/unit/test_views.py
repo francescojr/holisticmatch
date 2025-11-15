@@ -188,8 +188,12 @@ class TestProfessionalViewSet:
         response = api_client.post('/api/v1/professionals/register/', data, format='json')
         
         assert response.status_code == 201, f"Expected 201, got {response.status_code}. Response: {response.data}"
-        assert 'professional' in response.data
-        assert response.data['professional']['name'] == 'New Professional'
+        assert 'email' in response.data
+        assert 'professional_id' in response.data
+        assert 'message' in response.data
+        assert response.data['email'] == 'newpro@example.com'
+        # NOTE: JWT tokens are NOT returned from register endpoint anymore
+        # User must verify email first, then login to get tokens
         
         # Check that user was created
         assert User.objects.filter(email='newpro@example.com').exists()
@@ -282,12 +286,13 @@ class TestProfessionalViewSet:
         response = api_client.post('/api/v1/professionals/register/', data, format='json')
         
         assert response.status_code == 201
-        # Verify JWT tokens are present
-        assert 'access_token' in response.data, "JWT access token missing from register response"
-        assert 'refresh_token' in response.data, "JWT refresh token missing from register response"
-        # Verify tokens are non-empty strings
-        assert isinstance(response.data['access_token'], str) and len(response.data['access_token']) > 0
-        assert isinstance(response.data['refresh_token'], str) and len(response.data['refresh_token']) > 0
+        # Verify response has expected fields (JWT tokens are NOT returned from register)
+        assert 'email' in response.data, "Email missing from register response"
+        assert 'professional_id' in response.data, "Professional ID missing from register response"
+        assert 'message' in response.data, "Message missing from register response"
+        assert response.data['email'] == 'jwt@example.com'
+        # NOTE: JWT tokens are NOT returned from register endpoint
+        # User must verify email first, then login to get tokens
         # Verify User was created but is inactive (pending email verification)
         user = User.objects.get(email='jwt@example.com')
         assert user.is_active is False, "New user should be inactive until email verification"

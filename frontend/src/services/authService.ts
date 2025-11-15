@@ -60,46 +60,21 @@ export const authService = {
       console.log('[authService.register] ✅ API Response Status:', response.status)
       console.log('[authService.register] 📥 Response Keys:', Object.keys(response.data).join(', '))
 
-      // Normalize response format (handle both conventions)
-      const accessToken = response.data.access_token || response.data.access
-      const refreshToken = response.data.refresh_token || response.data.refresh
-
-      console.log('[authService.register] 🔑 Token Extraction:')
-      console.log('[authService.register]    - Access Token:', accessToken ? '✅ Found' : '❌ NOT FOUND')
-      console.log('[authService.register]    - Refresh Token:', refreshToken ? '✅ Found' : '❌ NOT FOUND')
-
-      if (!accessToken || !refreshToken) {
-        console.error('[authService.register] ❌ CRITICAL: Missing tokens in response!')
-        console.error('[authService.register] Response data:', response.data)
-        throw new Error('Backend did not return tokens')
-      }
+      // Backend response structure: { message, email, professional_id }
+      // NOTE: JWT tokens are NOT returned from register endpoint
+      // User must verify email first, then login to get tokens
+      console.log('[authService.register] ℹ️  JWT tokens NOT returned from register endpoint')
+      console.log('[authService.register] ℹ️  User must verify email first, then login to get tokens')
 
       const normalizedData: RegisterResponse = {
-        user_id: response.data.user_id,
+        email: response.data.email,
+        message: response.data.message,
         professional_id: response.data.professional_id,
-        access_token: accessToken,
-        refresh_token: refreshToken,
       }
-
-      // Store tokens
-      console.log('[authService.register] 💾 Storing tokens to localStorage...')
-      localStorage.setItem('access_token', normalizedData.access_token)
-      localStorage.setItem('refresh_token', normalizedData.refresh_token)
-      
-      // Store professional_id from registration response
-      if (normalizedData.professional_id) {
-        console.log('[authService.register] 💾 Storing professional_id:', normalizedData.professional_id)
-        localStorage.setItem('professional_id', normalizedData.professional_id.toString())
-      }
-
-      // Verify storage
-      const storedAccess = localStorage.getItem('access_token')
-      const storedRefresh = localStorage.getItem('refresh_token')
-      console.log('[authService.register] ✅ Verification after storage:')
-      console.log('[authService.register]    - access_token stored:', storedAccess ? '✅ yes' : '❌ NO')
-      console.log('[authService.register]    - refresh_token stored:', storedRefresh ? '✅ yes' : '❌ NO')
 
       console.log('[authService.register] 🎉 Registration complete!')
+      console.log('[authService.register] 📧 Email:', normalizedData.email)
+      console.log('[authService.register] 🆔 Professional ID:', normalizedData.professional_id)
       return normalizedData
     } catch (error: any) {
       console.error('[authService.register] ❌ REGISTRATION FAILED!')
