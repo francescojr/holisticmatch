@@ -46,7 +46,7 @@ export function DashboardSkeleton() {
 
       {/* Main Content Skeleton */}
       <main className="lg:col-span-9">
-        <div className="bg-white dark:bg-[#1a2e22] rounded-xl border border-[#dbe6e0] dark:border-[#2a3f34] p-8">
+        <div className="bg-white dark:bg-card-dark rounded-xl border border-[#dbe6e0] dark:border-border-dark p-8">
           {/* Header Skeleton */}
           <div className="flex items-center justify-between mb-8">
             <div>

@@ -73,9 +73,9 @@ export default function ConfirmDialog({
             exit="exit"
             className="fixed inset-0 flex items-center justify-center z-50 p-4"
           >
-            <div className="bg-white dark:bg-[#1a2e22] rounded-xl border border-[#dbe6e0] dark:border-[#2a3f34] p-6 w-full max-w-sm">
+            <div className="bg-white dark:bg-card-dark rounded-xl border border-[#dbe6e0] dark:border-border-dark p-6 w-full max-w-sm">
               <div className="flex items-center gap-3 mb-4">
-                <div className={`p-2 rounded-full bg-gray-100 dark:bg-[#2a3f34]`}>
+                <div className={`p-2 rounded-full bg-gray-100 dark:bg-border-dark`}>
                   <span className={`material-symbols-outlined ${styles.iconColor}`}>{styles.icon}</span>
                 </div>
                 <div>

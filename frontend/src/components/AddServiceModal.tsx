@@ -88,14 +88,14 @@ export default function AddServiceModal({ isOpen, onClose, onAdd }: AddServiceMo
             exit="exit"
             className="fixed inset-0 flex items-center justify-center z-50 p-4"
           >
-            <div className="bg-white dark:bg-[#1a2e22] rounded-xl border border-[#dbe6e0] dark:border-[#2a3f34] p-6 w-full max-w-md">
+            <div className="bg-white dark:bg-card-dark rounded-xl border border-[#dbe6e0] dark:border-border-dark p-6 w-full max-w-md">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-[#111814] dark:text-white text-xl font-bold leading-tight">
                   Adicionar Serviço
                 </h2>
                 <button
                   onClick={handleClose}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-[#2a3f34] rounded-full transition-colors"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-border-dark rounded-full transition-colors"
                 >
                   <span className="material-symbols-outlined text-gray-500">close</span>
                 </button>

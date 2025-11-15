@@ -32,7 +32,35 @@ Deployed:   https://holisticmatch.vercel.app (frontend)
 
 ## 🚀 CURRENT SESSION (November 14-15, 2025)
 
-### Final Fixes (November 15)
+### Final Fixes (November 15 - Part 2)
+
+#### **BUG: Hardcoded Green Colors in Dark Mode Components** ✅ FIXED
+- **Problem**: Some components still had hardcoded green colors in dark mode:
+  - `LoadingSkeleton.tsx`: `dark:bg-[#1a2e22]` e `dark:border-[#2a3f34]`
+  - `ConfirmDialog.tsx`: `dark:bg-[#1a2e22]`, `dark:border-[#2a3f34]`, `dark:hover:bg-[#2a3f34]`
+  - `AddServiceModal.tsx`: `dark:bg-[#1a2e22]`, `dark:border-[#2a3f34]`, `dark:hover:bg-[#2a3f34]`
+- **Solution**: Replaced all hardcoded colors with theme variables
+  - `dark:bg-[#1a2e22]` → `dark:bg-card-dark` (#27272a - neutral)
+  - `dark:border-[#2a3f34]` → `dark:border-border-dark` (#3f3f46 - neutral)
+  - `dark:hover:bg-[#2a3f34]` → `dark:hover:bg-border-dark` (neutral)
+- **Files Modified**: LoadingSkeleton.tsx, ConfirmDialog.tsx, AddServiceModal.tsx
+- **Build Results**: ✅ Success, no green colors in compiled CSS
+
+#### **BUG: HomePage Background Color Not Full Height** ✅ FIXED
+- **Problem**: HomePage container didn't have `min-h-screen`, so background color only appeared where content existed
+- **Solution**: Added `min-h-screen` to main HomePage container
+  - Changed from: `<div className="bg-background-light dark:bg-background-dark">`
+  - Changed to: `<div className="min-h-screen bg-background-light dark:bg-background-dark">`
+- **File Modified**: `frontend/src/pages/HomePage.tsx`
+- **Result**: Full-page background now displays correctly in light and dark modes
+
+### Test Results After All Fixes
+- ✅ Backend: 171/171 tests passing
+- ✅ Frontend: 0 TypeScript errors, successful build (2.07s)
+- ✅ No hardcoded green colors remaining in CSS
+- ✅ All pages have proper full-height background support
+
+### Final Fixes (November 15 - Part 1)
 
 #### **BUG: EditProfessionalPage - price_per_session Type Error** ✅ FIXED
 - **Problem**: `TypeError: S.price_per_session.toFixed is not a function`
