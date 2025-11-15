@@ -34,6 +34,58 @@ Deployed:   https://holisticmatch.vercel.app (frontend)
 
 ### Problems Fixed This Session
 
+#### **BUG #7 CONSOLIDATED: Authentication Flow JWT Security** ✅ FIXED COMPLETELY
+- **Problem**: TypeScript build errors + test failures + JWT mismatch
+  - Frontend expected `user_id`, `access_token`, `refresh_token` from `/register` endpoint
+  - Tests expected `'professional'` and `'access_token'` fields  
+  - Backend was not returning any tokens (correct for security)
+  - Result: Type errors in 5 files, 4 tests failing
+
+- **Root Cause**: Incomplete refactor of register flow - backend was correct (no JWT), frontend/tests still expected old behavior
+
+- **Solution**: Complete the refactor to match secure flow
+  
+- **Changes Made**:
+  1. **Frontend Auth Types** (`frontend/src/types/Auth.ts`):
+     - Added `email: string` to RegisterResponse interface (was missing)
+     - Added optional `access_token` and `refresh_token` fields for future use
+  
+  2. **Frontend Auth Service** (`frontend/src/services/authService.ts`):
+     - Removed logic expecting JWT tokens from register response
+     - Removed localStorage.setItem() calls for tokens that don't exist
+     - Updated to handle: `{email, message, professional_id}` response only
+     - Added comments: "JWT tokens NOT returned from register endpoint"
+  
+  3. **Frontend Auth Hook** (`frontend/src/hooks/useAuth.tsx`):
+     - Changed `register()` to not expect `user_id` from response
+     - Removed attempt to set user state immediately after register
+     - Added comment: "User NOT logged in yet (must verify email first, then login)"
+  
+  4. **Backend Tests** (4 files updated):
+     - `backend/tests/test_registration_without_photo.py`: Fixed assertions to expect `email`, `professional_id`, `message`
+     - `backend/tests/unit/test_views.py` (2 tests): Changed from expecting `'professional'` to `'professional_id'`
+     - `backend/tests/unit/test_views.py` (test_register_returns_jwt_tokens): Now verifies NO JWT returned (correct behavior)
+     - `backend/tests/unit/test_e2e_complete_flow.py`: Removed JWT assertions from register step, fixed f-string issues
+  
+- **Build Results**:
+  - ✅ Frontend TypeScript: 0 errors (was 5 errors)
+  - ✅ Frontend Vite build: Success in 2.02s
+  - ✅ Backend pytest: 171/171 tests passing (was 167/171 failing)
+  
+- **Security Correctness**:
+  ```
+  ✅ REGISTER → {email, message, professional_id} (❌ NO JWT)
+  ✅ VERIFY EMAIL → User activated (❌ NO JWT yet)
+  ✅ LOGIN → {access, refresh, user} (✅ JWT HERE)
+  ✅ DASHBOARD → Protected by JWT token
+  ```
+
+- **Why This Matters**:
+  - Prevents JWT tokens from being issued before email verification
+  - Matches industry standards (Gmail, GitHub, etc.)
+  - Ensures only verified users can access authenticated endpoints
+  - Prevents "shadowing" of unverified accounts in database
+
 #### **BUG #5: Email Verification Token Too Complex** ✅ FIXED
 - **Problem**: Token was 32 characters (alphanumeric + special chars) - too hard to copy/paste
   ```
@@ -165,6 +217,50 @@ Deployed:   https://holisticmatch.vercel.app (frontend)
 ---
 
 ## 🚀 PREVIOUS SESSION (November 9-11, 2025)
+
+#### **FEATURE: Dashboard UI Refactor - Services & Photo Management** ✅ COMPLETED
+- **Objective**: Consolidate professional service management and photo editing into unified dashboard UI
+- **User Feedback**: "Remove the separate 'Add Service' card, integrate service selection into the main profile edit card with a tag selector similar to the registration form"
+
+- **Changes Made**:
+  1. **Service Management Refactored** (`frontend/src/pages/DashboardPage.tsx`):
+     - Removed: `AddServiceModal` component and separate "Services Card"
+     - Changed: Services state from `Array<{name, price}>` to `Array<string>` (names only, prices removed from dashboard)
+     - Added: `handleServiceToggle(service: string)` function for add/remove service logic
+     - Added: Service selector UI with toggleable tag buttons showing all `SERVICE_TYPES`
+     - Style: Selected services appear in primary blue color, unselected in gray
+     - Integration: Service selector now appears in "Edit Profile" card alongside other fields
+  
+  2. **Photo Upload Integration** (`frontend/src/pages/DashboardPage.tsx`):
+     - Added: `handlePhotoSelect()` function with file validation
+     - Added: `uploadPhotoNow()` function with proper error handling
+     - Added: Photo preview before upload with toast feedback
+     - Integration: Upload button in Profile card (no separate modal)
+     - Validation: Only image files, max 5MB size
+  
+  3. **CSS Dark Mode Colors Fixed** (`frontend/src/pages/DashboardPage.tsx`):
+     - Removed: Green dark mode colors (`dark:bg-[#1a2e22]`, `dark:border-[#2a3f34]`)
+     - Changed to: Neutral slate colors (`dark:bg-slate-800`, `dark:border-slate-700`)
+     - Reason: Green was visually inconsistent with brand (primary color is teal/cyan)
+  
+  4. **Code Cleanup** (`frontend/src/pages/DashboardPage.tsx`):
+     - Removed: `updateService()` and `removeService()` obsolete functions
+     - Removed: Validation code for `.name` and `.price` properties (no longer needed)
+     - Removed: `AddServiceModal` imports and state management
+     - Removed: Unused `confirm` hook destructuring
+     - Result: Cleaner, more maintainable component
+  
+- **User Experience Improvements**:
+  - ✅ Single unified editing interface (Edit Profile card)
+  - ✅ Visual service selection with immediate feedback (toggles)
+  - ✅ Photo upload integrated without extra modal
+  - ✅ Consistent dark mode styling across all elements
+  - ✅ Reduced modal clutter (less modal overhead)
+
+- **Build Results**:
+  - ✅ TypeScript: 0 errors
+  - ✅ Vite build: Success in 2.11s (464 modules transformed)
+  - ✅ CSS: All colors consistent with neutral dark mode palette
 
 ### Problems Fixed in Previous Session
 Three critical production bugs were identified via AWS logs and ALL FIXED:

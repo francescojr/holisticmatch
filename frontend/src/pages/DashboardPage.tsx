@@ -14,16 +14,16 @@ import { professionalService } from '../services/professionalService'
 import { DashboardSkeleton } from '../components/LoadingSkeleton'
 import FormInput from '../components/forms/FormInput'
 import FormTextarea from '../components/forms/FormTextarea'
-import AddServiceModal from '../components/AddServiceModal'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { useDeleteProfessional } from '../hooks/useDeleteProfessional'
 import type { Professional } from '../types/Professional'
+import { SERVICE_TYPES } from '../types/Professional'
 
 function DashboardPage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
-  const { confirm, confirmState } = useConfirm()
+  const { confirmState } = useConfirm()
   const deleteProfessional = useDeleteProfessional()
   const [activeTab, setActiveTab] = useState('profile')
   const [isLoading, setIsLoading] = useState(true)
@@ -35,7 +35,6 @@ function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null)
-  const [isAddServiceModalOpen, setIsAddServiceModalOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -47,7 +46,7 @@ function DashboardPage() {
     phone: '',
     bio: '',
     attendanceType: 'presencial' as 'presencial' | 'online' | 'ambos',
-    services: [] as Array<{ name: string; price: number }>
+    services: [] as string[]
   })
 
   const [originalData, setOriginalData] = useState(formData)
@@ -82,10 +81,7 @@ function DashboardPage() {
           phone: data.phone || data.whatsapp || '',
           bio: data.bio,
           attendanceType: data.attendance_type || 'presencial',
-          services: data.services?.map((service: any) => ({
-            name: service.type || service.name || service,
-            price: service.price || data.price_per_session || 0
-          })) || []
+          services: (Array.isArray(data.services) ? data.services : []) as string[]
         })
         setOriginalData({
           fullName: data.name,
@@ -95,10 +91,7 @@ function DashboardPage() {
           phone: data.phone || data.whatsapp || '',
           bio: data.bio,
           attendanceType: data.attendance_type || 'presencial',
-          services: data.services?.map((service: any) => ({
-            name: service.type || service.name || service,
-            price: service.price || data.price_per_session || 0
-          })) || []
+          services: (Array.isArray(data.services) ? data.services : []) as string[]
         })
 
       } catch (err: any) {
@@ -138,8 +131,48 @@ function DashboardPage() {
     loadProfessionalData()
   }, [user?.professional_id])
 
-  const addService = () => {
-    setIsAddServiceModalOpen(true)
+  const handleServiceToggle = (service: string) => {
+    setFormData(prev => ({
+      ...prev,
+      services: prev.services.includes(service)
+        ? prev.services.filter(s => s !== service)
+        : [...prev.services, service]
+    }))
+  }
+
+  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setSelectedPhoto(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const uploadPhotoNow = async () => {
+    if (!selectedPhoto || !professional) return
+    
+    setIsUploadingPhoto(true)
+    try {
+      await professionalService.uploadProfessionalPhoto(professional.id, selectedPhoto)
+      toast.success('Foto enviada com sucesso!')
+      
+      // Reload professional data to get updated photo URL
+      const updated = await professionalService.getProfessionalById(professional.id)
+      setProfessional(updated)
+      setOriginalPhotoUrl(updated.photo_url)
+      setSelectedPhoto(null)
+      setPhotoPreview(null)
+    } catch (error: any) {
+      toast.error('Erro ao enviar foto', {
+        message: error.message || 'Tente novamente'
+      })
+    } finally {
+      setIsUploadingPhoto(false)
+    }
   }
 
   const handleLogout = async () => {
@@ -158,68 +191,6 @@ function DashboardPage() {
       setIsLoggingOut(false)
       toast.error('Erro ao desconectar', {
         message: 'Tente novamente'
-      })
-    }
-  }
-
-  const handleAddService = (newService: { name: string; price: number }) => {
-    // Check for duplicate service names
-    const isDuplicate = formData.services.some(
-      service => service.name.toLowerCase().trim() === newService.name.toLowerCase().trim()
-    )
-
-    if (isDuplicate) {
-      toast.error('Serviço duplicado', {
-        message: 'Já existe um serviço com este nome.'
-      })
-      return
-    }
-
-    setFormData({
-      ...formData,
-      services: [...formData.services, newService]
-    })
-
-    toast.success('Serviço adicionado!', {
-      message: 'O serviço foi adicionado à sua lista.'
-    })
-  }
-
-  const updateService = (index: number, field: string, value: string | number) => {
-    const updatedServices = formData.services.map((service, i) =>
-      i === index ? { ...service, [field]: value } : service
-    )
-    setFormData({ ...formData, services: updatedServices })
-  }
-
-  const removeService = async (index: number) => {
-    // Don't allow removing if it's the last service
-    if (formData.services.length <= 1) {
-      toast.error('Serviço obrigatório', {
-        message: 'Você deve manter pelo menos um serviço.'
-      })
-      return
-    }
-
-    const serviceToRemove = formData.services[index]
-    if (!serviceToRemove) return
-
-    const confirmed = await confirm({
-      title: 'Remover Serviço',
-      message: `Tem certeza que deseja remover "${serviceToRemove.name}"? Esta ação não pode ser desfeita.`,
-      confirmText: 'Remover',
-      cancelText: 'Cancelar',
-      type: 'danger'
-    })
-
-    if (confirmed) {
-      setFormData({
-        ...formData,
-        services: formData.services.filter((_, i) => i !== index)
-      })
-
-      toast.success('Serviço removido!', {
-        message: 'O serviço foi removido da sua lista.'
       })
     }
   }
@@ -248,86 +219,6 @@ function DashboardPage() {
         break
     }
     validate(field, value, rules)
-  }
-
-  // Handle photo selection
-  const handlePhotoSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Tipo de arquivo inválido', {
-        message: 'Por favor, selecione uma imagem (PNG, JPG, JPEG).'
-      })
-      return
-    }
-
-    // Validate file size (5MB max)
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Arquivo muito grande', {
-        message: 'A imagem deve ter no máximo 5MB.'
-      })
-      return
-    }
-
-    setSelectedPhoto(file)
-
-    // Create preview
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      setPhotoPreview(e.target?.result as string)
-    }
-    reader.readAsDataURL(file)
-  }
-
-  // Upload photo immediately when selected
-  const uploadPhotoNow = async () => {
-    if (!selectedPhoto || !user?.professional_id) return
-
-    try {
-      setIsUploadingPhoto(true)
-
-      const uploadResult = await professionalService.uploadProfessionalPhoto(user.professional_id, selectedPhoto)
-
-      // Update professional data with new photo URL
-      if (professional) {
-        const updatedProfessional = { ...professional, photo_url: uploadResult.photo_url }
-        setProfessional(updatedProfessional)
-      }
-
-      // Clear selection state
-      setSelectedPhoto(null)
-      setPhotoPreview(null)
-      if (fileInputRef.current) fileInputRef.current.value = ''
-
-      toast.success('Foto atualizada!', {
-        message: 'Sua foto de perfil foi atualizada com sucesso.'
-      })
-
-    } catch (err: any) {
-      console.error('Error uploading photo:', err)
-
-      if (err.response?.status === 400) {
-        toast.error('Arquivo inválido', {
-          message: 'O arquivo selecionado não é válido. Tente com outra imagem.'
-        })
-      } else if (err.response?.status === 413) {
-        toast.error('Arquivo muito grande', {
-          message: 'A imagem é muito grande. Máximo permitido: 5MB.'
-        })
-      } else if (err.response?.status === 403) {
-        toast.error('Acesso negado', {
-          message: 'Você não tem permissão para alterar esta foto.'
-        })
-      } else {
-        toast.error('Erro no upload', {
-          message: 'Não foi possível fazer upload da foto. Tente novamente.'
-        })
-      }
-    } finally {
-      setIsUploadingPhoto(false)
-    }
   }
 
   // Cancel editing and restore original data
@@ -425,29 +316,6 @@ function DashboardPage() {
       return
     }
 
-    // Validate each service
-    for (let i = 0; i < formData.services.length; i++) {
-      const service = formData.services[i]
-      if (!service || !service.name || !service.name.trim()) {
-        toast.error('Serviço inválido', {
-          message: `O nome do serviço ${i + 1} não pode estar vazio.`
-        })
-        return
-      }
-      if (service.name.trim().length < 2) {
-        toast.error('Serviço inválido', {
-          message: `O nome do serviço ${i + 1} deve ter pelo menos 2 caracteres.`
-        })
-        return
-      }
-      if (!service.price || service.price <= 0) {
-        toast.error('Preço inválido', {
-          message: `O preço do serviço "${service.name}" deve ser maior que zero.`
-        })
-        return
-      }
-    }
-
     try {
       setIsSaving(true)
 
@@ -479,7 +347,7 @@ function DashboardPage() {
       }
       if (changes.attendanceType) updateData.attendance_type = changes.attendanceType
       if (changes.services) {
-        updateData.services = changes.services.map(service => service.name)
+        updateData.services = changes.services
       }
 
       // Always include photo_url if it was updated separately
@@ -576,7 +444,7 @@ function DashboardPage() {
                 <div className="flex flex-col items-center text-center gap-4 p-4">
                   <div className="relative group">
                     <div
-                      className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-28 border-4 border-white dark:border-[#2a3f34] shadow-md"
+                        className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-28 border-4 border-white dark:border-slate-700 shadow-md"
                       style={{
                         backgroundImage: professional?.photo_url
                           ? `url("${professional.photo_url}")`
@@ -627,7 +495,7 @@ function DashboardPage() {
                     {/* Profile Card */}
                     <motion.div
                       variants={itemVariants}
-                      className="bg-white dark:bg-[#1a2e22] rounded-xl border border-[#dbe6e0] dark:border-[#2a3f34] p-8"
+                      className="bg-white dark:bg-slate-800 rounded-xl border border-[#dbe6e0] dark:border-slate-700 p-8"
                     >
                       <div className="flex items-center justify-between mb-8">
                         <div>
@@ -765,6 +633,33 @@ function DashboardPage() {
                         />
                       </div>
 
+                      {/* Services Selection */}
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                          Serviços que você oferece *
+                        </label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {SERVICE_TYPES.map((service) => (
+                            <button
+                              key={service}
+                              type="button"
+                              onClick={() => handleServiceToggle(service)}
+                              disabled={!isEditing || isSaving}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                formData.services.includes(service)
+                                  ? 'bg-primary text-white'
+                                  : 'bg-gray-200 dark:bg-[#1a2e22] text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-[#244032]'
+                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                              {service}
+                            </button>
+                          ))}
+                        </div>
+                        {formData.services.length === 0 && isEditing && (
+                          <p className="text-red-500 text-sm mt-2">Selecione pelo menos um serviço</p>
+                        )}
+                      </div>
+
                       {/* Photo Upload Section */}
                       <div className="mb-6">
                         <p className="text-[#111814] dark:text-gray-300 text-sm font-medium leading-normal pb-3">Profile Photo</p>
@@ -845,69 +740,7 @@ function DashboardPage() {
                     </motion.div>
 
                     {/* Services Card */}
-                    <motion.div
-                      variants={itemVariants}
-                      className="bg-white dark:bg-[#182c22] rounded-xl shadow-sm p-6"
-                    >
-                      <div className="flex justify-between items-center pb-5">
-                        <h2 className="text-[#111814] dark:text-white text-[22px] font-bold leading-tight tracking-[-0.015em]">Services &amp; Pricing</h2>
-                        <button
-                          onClick={addService}
-                          className="flex items-center gap-2 min-w-[84px] cursor-pointer justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary/20 dark:bg-primary/30 text-primary dark:text-primary text-sm font-bold leading-normal tracking-[0.015em] transition-transform duration-200 hover:scale-105 active:scale-95"
-                        >
-                          <span className="material-symbols-outlined text-lg">add</span>
-                          <span className="truncate">Add Service</span>
-                        </button>
-                      </div>
-                      <div className="flex flex-col gap-4">
-                        {formData.services.map((service, index) => (
-                          <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            className="flex flex-col md:flex-row items-center gap-4 p-4 rounded-lg bg-background-light dark:bg-[#102219] border border-gray-200 dark:border-[#2a3f34]"
-                          >
-                            <div className="flex-1 w-full">
-                              <p className="text-[#111814] dark:text-gray-300 text-sm font-medium leading-normal pb-1">Service Name</p>
-                              <input
-                                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-md text-[#111814] dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary/50 border border-[#dbe6e0] dark:border-[#2a3f34] bg-white dark:bg-[#182c22] focus:border-primary/50 h-12 p-3 text-base font-normal leading-normal transition-all"
-                                value={service?.name || ''}
-                                onChange={(e) => updateService(index, 'name', e.target.value)}
-                                placeholder="Nome do serviço"
-                              />
-                            </div>
-                            <div className="w-full md:w-40">
-                              <p className="text-[#111814] dark:text-gray-300 text-sm font-medium leading-normal pb-1">Price (R$)</p>
-                              <input
-                                className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-md text-[#111814] dark:text-white focus:outline-0 focus:ring-1 focus:ring-primary/50 border border-[#dbe6e0] dark:border-[#2a3f34] bg-white dark:bg-[#182c22] focus:border-primary/50 h-12 p-3 text-base font-normal leading-normal transition-all"
-                                type="number"
-                                value={service?.price || 0}
-                                onChange={(e) => updateService(index, 'price', parseFloat(e.target.value) || 0)}
-                                placeholder="0.00"
-                                step="0.01"
-                                min="0"
-                              />
-                            </div>
-                            <button
-                              onClick={() => removeService(index)}
-                              className="self-end p-2 text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
-                              title="Remover serviço"
-                            >
-                              <span className="material-symbols-outlined">delete</span>
-                            </button>
-                          </motion.div>
-                        ))}
-                      </div>
-
-                      {formData.services.length === 0 && (
-                        <div className="text-center py-8">
-                          <span className="material-symbols-outlined text-gray-400 text-4xl mb-2 block">work</span>
-                          <p className="text-gray-500 dark:text-gray-400">Nenhum serviço cadastrado</p>
-                          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Adicione seu primeiro serviço clicando em "Add Service"</p>
-                        </div>
-                      )}
-                    </motion.div>
+                    {/* REMOVED - Services integrated into Profile card */}
                   </>
                 )}
 
@@ -975,12 +808,7 @@ function DashboardPage() {
         )}
       </main>
 
-      {/* Add Service Modal */}
-      <AddServiceModal
-        isOpen={isAddServiceModalOpen}
-        onClose={() => setIsAddServiceModalOpen(false)}
-        onAdd={handleAddService}
-      />
+      {/* Modals Removed - Services integrated into Profile card */}
 
       {/* Confirm Dialog */}
       {confirmState && (

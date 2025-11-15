@@ -234,6 +234,10 @@ class TestProfessionalModelValidation:
     @pytest.mark.django_db
     def test_model_ordering(self, valid_user):
         """Test that professionals are ordered by created_at descending"""
+        from datetime import timedelta
+        from django.utils import timezone
+        import time
+        
         # Clear any existing professionals to ensure consistent test state
         Professional.objects.all().delete()
         
@@ -250,6 +254,9 @@ class TestProfessionalModelValidation:
             whatsapp='11999999999',
             email='prof1@example.com',
         )
+
+        # Add a small delay to ensure created_at is different
+        time.sleep(0.1)
 
         # Create another user for second professional
         user2 = User.objects.create_user(
