@@ -266,7 +266,7 @@ function EditProfessionalPage() {
       variants={pageVariants}
       initial="hidden"
       animate="visible"
-      className="min-h-screen bg-background-light px-4 py-8"
+      className="min-h-screen bg-background-light dark:bg-background-dark px-4 py-8"
     >
       <ToastContainer toasts={toasts} onDismiss={dismiss} />
 
@@ -411,7 +411,7 @@ function EditProfessionalPage() {
                 <div key={service.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
                   <div>
                     <p className="font-medium text-gray-900">{service.service_type}</p>
-                    <p className="text-sm text-gray-600">R$ {service.price_per_session.toFixed(2)}</p>
+                    <p className="text-sm text-gray-600">R$ {(typeof service.price_per_session === 'string' ? parseFloat(service.price_per_session) : service.price_per_session).toFixed(2)}</p>
                   </div>
                   <button
                     type="button"

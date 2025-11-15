@@ -17,7 +17,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Show loading skeleton while checking authentication
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background-light p-4">
+      <div className="min-h-screen bg-background-light dark:bg-background-dark p-4">
         <DashboardSkeleton />
       </div>
     )

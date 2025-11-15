@@ -402,7 +402,7 @@ function DashboardPage() {
   }
 
   return (
-    <div className="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden font-display bg-background-light">
+    <div className="relative flex h-auto min-h-screen w-full flex-col group/design-root overflow-x-hidden font-display bg-background-light dark:bg-background-dark">
       {/* Header is already included in App.tsx */}
 
       <main className="flex-1 w-full max-w-7xl mx-auto p-6 md:p-10">

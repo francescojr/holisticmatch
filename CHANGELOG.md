@@ -30,11 +30,52 @@ Deployed:   https://holisticmatch.vercel.app (frontend)
 
 ---
 
-## 🚀 CURRENT SESSION (November 14, 2025)
+## 🚀 CURRENT SESSION (November 14-15, 2025)
 
-### Problems Fixed This Session
+### Final Fixes (November 15)
 
-#### **BUG #7 CONSOLIDATED: Authentication Flow JWT Security** ✅ FIXED COMPLETELY
+#### **BUG: EditProfessionalPage - price_per_session Type Error** ✅ FIXED
+- **Problem**: `TypeError: S.price_per_session.toFixed is not a function`
+  - Service price_per_session received as string instead of number
+  - Caused crash when rendering services list (line 414)
+- **Solution**: Added type check and conversion in render
+  ```tsx
+  (typeof service.price_per_session === 'string' ? parseFloat(service.price_per_session) : service.price_per_session).toFixed(2)
+  ```
+- **File Modified**: `frontend/src/pages/EditProfessionalPage.tsx`
+- **Result**: ✅ Services list renders correctly regardless of type
+
+#### **BUG: Dark Mode Background Colors Wrong** ✅ FIXED
+- **Problem**: Dashboard and other pages had dark green background (`#102219`) instead of neutral
+  - Tailwind config had old green dark colors:
+    - `background-dark`: `#102219` (dark green)
+    - `card-dark`: `#182c22` (dark green)
+    - `border-dark`: `#2a3f34` (green)
+- **Solution**: Updated Tailwind colors to neutral gray/slate
+  ```javascript
+  "background-dark": "#1f2937",  // Slate 800 equivalent
+  "card-dark": "#27272a",         // Zinc 900 equivalent
+  "border-dark": "#3f3f46",       // Zinc 800 equivalent
+  ```
+- **Files Modified**:
+  1. `frontend/tailwind.config.js` - Updated color definitions
+  2. Added `dark:bg-background-dark` to all main page containers:
+     - `DashboardPage.tsx`
+     - `RegisterProfessionalPage.tsx`
+     - `LoginPage.tsx`
+     - `HomePage.tsx`
+     - `EditProfessionalPage.tsx`
+     - `ProfessionalDetailPage.tsx`
+     - `ProtectedRoute.tsx`
+- **Build Results**:
+  - ✅ TypeScript: 0 errors
+  - ✅ Vite build: Success in 2.11-2.13s
+  - ✅ All pages now have consistent neutral dark mode
+- **Result**: ✅ All dark mode colors are now neutral (gray/slate), matching brand
+
+### Problems Fixed Earlier This Session (November 14)
+
+#### **FEATURE: Dashboard UI Refactor - Services & Photo Management** ✅ COMPLETED
 - **Problem**: TypeScript build errors + test failures + JWT mismatch
   - Frontend expected `user_id`, `access_token`, `refresh_token` from `/register` endpoint
   - Tests expected `'professional'` and `'access_token'` fields  

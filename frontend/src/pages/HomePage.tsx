@@ -39,7 +39,7 @@ function HomePage() {
   }
 
   return (
-    <div className="bg-background-light">
+    <div className="bg-background-light dark:bg-background-dark">
       {/* Hero Section with Parallax */}
       <section className="relative h-[400px] overflow-hidden">
         {/* Parallax Background Image */}

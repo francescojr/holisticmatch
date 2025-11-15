@@ -59,7 +59,7 @@ function ProfessionalDetailPage() {
       variants={pageVariants}
       initial="hidden"
       animate="visible"
-      className="min-h-screen bg-background-light py-8"
+      className="min-h-screen bg-background-light dark:bg-background-dark py-8"
     >
       <div className="max-w-4xl mx-auto px-4">
         {/* Back Button */}

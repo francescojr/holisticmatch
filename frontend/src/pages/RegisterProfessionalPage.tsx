@@ -473,7 +473,7 @@ function RegisterProfessionalPage() {
       variants={pageVariants}
       initial="hidden"
       animate="visible"
-      className="min-h-screen bg-background-light py-12 px-4"
+      className="min-h-screen bg-background-light dark:bg-background-dark py-12 px-4"
     >
       <div className="max-w-md mx-auto">
         {/* Header */}
