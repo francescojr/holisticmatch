@@ -235,15 +235,16 @@ Deployed:   https://holisticmatch.vercel.app (frontend)
      - Added: `handlePhotoSelect()` function with file validation
      - Added: `uploadPhotoNow()` function with proper error handling
      - Added: Photo preview before upload with toast feedback
-     - Integration: Upload button in Profile card (no separate modal)
+     - Integration: Click sidebar photo to edit (hover shows edit icon) - single point of edit
+     - **REMOVED**: Redundant "Profile Photo" edit section from form (was causing duplicate UI)
      - Validation: Only image files, max 5MB size
   
   3. **CSS Dark Mode Colors Fixed** (`frontend/src/pages/DashboardPage.tsx`):
-     - Removed: Green dark mode colors (`dark:bg-[#1a2e22]`, `dark:border-[#2a3f34]`)
-     - Changed to: Neutral slate colors (`dark:bg-slate-800`, `dark:border-slate-700`)
+     - Removed ALL green dark mode colors: `dark:bg-[#1a2e22]`, `dark:border-[#2a3f34]`, `dark:bg-[#102219]`, `dark:hover:bg-[#244032]`
+     - Changed to: Neutral slate colors `dark:bg-slate-800`, `dark:border-slate-700`, `dark:bg-slate-700`, `dark:hover:bg-slate-600`
      - Reason: Green was visually inconsistent with brand (primary color is teal/cyan)
   
-  4. **Code Cleanup** (`frontend/src/pages/DashboardPage.tsx`):
+  4. **Code Cleanup & UI Deduplication** (`frontend/src/pages/DashboardPage.tsx`):
      - Removed: `updateService()` and `removeService()` obsolete functions
      - Removed: Validation code for `.name` and `.price` properties (no longer needed)
      - Removed: `AddServiceModal` imports and state management
@@ -253,14 +254,15 @@ Deployed:   https://holisticmatch.vercel.app (frontend)
 - **User Experience Improvements**:
   - ✅ Single unified editing interface (Edit Profile card)
   - ✅ Visual service selection with immediate feedback (toggles)
-  - ✅ Photo upload integrated without extra modal
-  - ✅ Consistent dark mode styling across all elements
-  - ✅ Reduced modal clutter (less modal overhead)
+  - ✅ Photo upload via sidebar hover only (clean, no duplicate controls)
+  - ✅ Consistent dark mode styling across all elements (neutral grays, no green)
+  - ✅ Reduced UI clutter (no redundant photo section)
 
 - **Build Results**:
   - ✅ TypeScript: 0 errors
-  - ✅ Vite build: Success in 2.11s (464 modules transformed)
-  - ✅ CSS: All colors consistent with neutral dark mode palette
+  - ✅ Vite build: Success in 2.12s (464 modules transformed)
+  - ✅ CSS: All colors consistent with neutral dark mode palette (all greens removed)
+  - ✅ Backend tests: 171/171 passing (fixed flaky test_model_ordering with time.sleep(0.1))
 
 ### Problems Fixed in Previous Session
 Three critical production bugs were identified via AWS logs and ALL FIXED:

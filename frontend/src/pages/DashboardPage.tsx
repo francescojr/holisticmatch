@@ -442,7 +442,7 @@ function DashboardPage() {
             <aside className="lg:col-span-3">
               <div className="sticky top-28 flex flex-col gap-6">
                 <div className="flex flex-col items-center text-center gap-4 p-4">
-                  <div className="relative group">
+                  <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
                     <div
                         className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-28 border-4 border-white dark:border-slate-700 shadow-md"
                       style={{
@@ -610,7 +610,7 @@ function DashboardPage() {
                             value={formData.attendanceType}
                             onChange={(e) => handleFieldChange('attendanceType', e.target.value)}
                             disabled={!isEditing || isSaving}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-[#1a2e22] text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <option value="presencial">Presencial</option>
                             <option value="online">Online</option>
@@ -648,7 +648,7 @@ function DashboardPage() {
                               className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                                 formData.services.includes(service)
                                   ? 'bg-primary text-white'
-                                  : 'bg-gray-200 dark:bg-[#1a2e22] text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-[#244032]'
+                                  : 'bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600'
                               } disabled:opacity-50 disabled:cursor-not-allowed`}
                             >
                               {service}
@@ -666,7 +666,7 @@ function DashboardPage() {
                         <div className="flex items-center gap-4">
                           <div className="relative">
                             <div
-                              className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-20 border-4 border-white dark:border-[#2a3f34] shadow-md"
+                              className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-20 border-4 border-white dark:border-slate-700 shadow-md"
                               style={{
                                 backgroundImage: photoPreview
                                   ? `url("${photoPreview}")`
@@ -739,7 +739,7 @@ function DashboardPage() {
                       </div>
                     </motion.div>
 
-                    {/* Services Card */}
+                    {/* Services Card - REMOVED (integrated into Profile card above) */}
                     {/* REMOVED - Services integrated into Profile card */}
                   </>
                 )}
@@ -747,11 +747,11 @@ function DashboardPage() {
                 {activeTab === 'settings' && (
                   <motion.div
                     variants={itemVariants}
-                    className="bg-white dark:bg-[#1a2e22] rounded-xl border border-[#dbe6e0] dark:border-[#2a3f34] p-8"
+                    className="bg-white dark:bg-slate-800 rounded-xl border border-[#dbe6e0] dark:border-slate-700 p-8"
                   >
                     <h1 className="text-[#111814] dark:text-white text-2xl font-bold leading-tight tracking-[-0.015em] mb-6">Account Settings</h1>
                     <div className="space-y-6">
-                      <div className="flex items-center justify-between p-4 rounded-lg bg-background-light dark:bg-[#102219] border border-gray-200 dark:border-[#2a3f34]">
+                      <div className="flex items-center justify-between p-4 rounded-lg bg-background-light dark:bg-slate-700 border border-gray-200 dark:border-slate-600">
                         <div>
                           <h3 className="text-[#111814] dark:text-white text-lg font-semibold">Edit Profile</h3>
                           <p className="text-[#618975] dark:text-gray-400 text-sm">Access the full profile editing page with additional options</p>
