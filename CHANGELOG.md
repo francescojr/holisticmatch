@@ -1,6 +1,6 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 14, 2025
+**Last Updated**: November 14, 2025 (Auth Flow Refactor Complete)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
 **Status**: ✅ **PRODUCTION READY** (all critical bugs fixed, awaiting final deployment testing)
@@ -84,6 +84,79 @@ Deployed:   https://holisticmatch.vercel.app (frontend)
      - Removed "My Bookings" tab button (was lines 608-617)
      - Removed "My Bookings" content section with placeholder (was lines 984-993)
 - **Result**: ✅ Dashboard now shows only functional tabs: Edit Profile, Services, Settings
+
+#### **BUG #7: Authentication Flow Was Backwards** ✅ FIXED
+- **Problem**: Flawed authentication flow that violated security best practices
+  - JWT tokens were being returned from `/register` endpoint (too early)
+  - Users could access dashboard WITHOUT email verification
+  - Email verification was optional/advisory
+  - Frontend tended to use expired/invalid tokens
+- **Root Cause**: System was designed backwards - giving JWT before email verified
+- **Correct Flow Should Be**:
+  ```
+  1. User registers → Backend creates user (inactive) + sends email code
+  2. User gets 6-digit code in email → Types into verification page
+  3. User verifies email → Backend marks user as active (is_active=True)
+  4. User does login → Backend returns JWT token (only if email verified)
+  5. User accesses dashboard → JWT token validates automatically
+  ```
+- **Solution**: Refactored entire auth flow to be security-compliant
+- **Backend Changes**:
+  1. `backend/professionals/views.py`:
+     - Modified `/professionals/register/` to NOT return JWT
+     - Only returns: `{message, email, professional_id}`
+     - User must verify email + login to get tokens
+     - Removed: `access_token`, `refresh_token` from register response
+  2. `backend/authentication/views.py`:
+     - LoginView already checks `is_active` before issuing JWT ✅
+     - Rejects login if user hasn't verified email (is_active=False)
+     - Returns 403 with message "Por favor, verifique seu email antes de fazer login"
+  3. `backend/professionals/models.py`:
+     - EmailVerificationToken.verify_token() marks user as `is_active=True` ✅
+     - Already implemented correctly
+- **Frontend Changes**:
+  1. `frontend/src/pages/RegisterProfessionalPage.tsx`:
+     - Removed code expecting JWT from register endpoint
+     - Removed lines that stored `access_token` from registration
+     - Now just redirects to `/verify-email?email=...` after registration
+  2. `frontend/src/services/api.ts`:
+     - Updated interceptor to NOT send JWT for public endpoints:
+       - `/professionals/register/`
+       - `/professionals/verify-email/`
+       - `/professionals/resend-verification/`
+       - `/auth/login/`
+       - `/auth/refresh/`
+     - This prevents invalid token errors on endpoints with `AllowAny` permission
+  3. `frontend/src/pages/ProfessionalDetailPage.tsx`:
+     - Fixed WhatsApp and Email buttons that were missing onClick handlers
+     - Added handlers: `handleWhatsAppClick()` and `handleEmailClick()`
+- **Backend URL Changes**:
+  1. `backend/professionals/urls.py`:
+     - Removed explicit route overrides
+     - Trusting router + `get_permissions()` instead
+     - Cleaner and more maintainable
+- **New Secure Flow**:
+  ✅ Register → Email sent (no JWT)
+  ✅ Verify code → User activated (no JWT yet)
+  ✅ Login → JWT issued (only if email verified)
+  ✅ Dashboard → Protected by JWT check
+  ✅ No orphaned unverified accounts with JWT
+- **Security Improvements**:
+  - Users can't access authenticated endpoints without verified email
+  - Prevents token reuse for unverified accounts
+  - Eliminates "shadowing" accounts in database
+  - Matches industry best practices (Gmail, GitHub, etc.)
+- **Files Modified**:
+  - Backend: `professionals/views.py`, `professionals/urls.py`, `authentication/views.py` (no changes needed)
+  - Frontend: `RegisterProfessionalPage.tsx`, `api.ts`, `ProfessionalDetailPage.tsx`
+- **Testing Checklist**:
+  - [ ] Register → No JWT returned
+  - [ ] Verify email code → Marks user active
+  - [ ] Login (unverified email) → 403 error
+  - [ ] Login (verified email) → Returns JWT
+  - [ ] Dashboard without JWT → Redirects to login
+  - [ ] Dashboard with JWT → Loads profile
+- **Result**: ✅ Authentication now follows industry-standard security practices
      - Added `maxLength={6}` to input field
 - **User Experience**: Now users copy/paste simple 6-digit codes instead of complex 32-char tokens
 - **Security**: Still secure (1 in 1,000,000 chance of guessing, plus 24h expiry)

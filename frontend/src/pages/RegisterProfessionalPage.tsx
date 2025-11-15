@@ -393,23 +393,12 @@ function RegisterProfessionalPage() {
       console.log('[RegisterPage.Step2] ✅✅✅ Professional created successfully! ✅✅✅')
       console.log('[RegisterPage.Step2] 🆔 Professional ID:', registerResult.professional_id)
       
-      // Check if tokens were returned
-      console.log('[RegisterPage.Step2] 🔑 Checking for tokens in response:')
-      const hasAccessToken = registerResult.access_token
-      const hasRefreshToken = registerResult.refresh_token
-      console.log('[RegisterPage.Step2]   - access_token: ' + (hasAccessToken ? '✅ FOUND' : '❌ NOT in response'))
-      console.log('[RegisterPage.Step2]   - refresh_token: ' + (hasRefreshToken ? '✅ FOUND' : '❌ NOT in response'))
-      
-      if (hasAccessToken) {
-        console.log('[RegisterPage.Step2]     Access Token value:', hasAccessToken.substring(0, 30) + '...')
-        console.log('[RegisterPage.Step2] 💾 Tokens stored in localStorage by authService')
-      }
+      // IMPORTANT: Backend no longer returns JWT from register endpoint
+      // User must verify email first, then login to get tokens
+      console.log('[RegisterPage.Step2] 📧 Email registered:', registerResult.email)
+      console.log('[RegisterPage.Step2] ℹ️ JWT tokens NOT returned from register (user must verify email + login)')
 
-      // Store professional ID
-      console.log('[RegisterPage.Step2] 💾 Storing professional_id:', registerResult.professional_id)
-      localStorage.setItem('professional_id', registerResult.professional_id.toString())
-
-      // Clear session storage
+      // Clear session storage (Step 1 data)
       sessionStorage.removeItem('registerStep1')
       console.log('[RegisterPage.Step2] 🧹 Cleared session storage')
 

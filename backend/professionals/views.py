@@ -73,9 +73,10 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
         """
         POST /api/professionals/register/
         Register a new professional with password authentication
-        Creates user account automatically and returns JWT tokens
+        Creates user account and sends verification email.
+        User must verify email before they can login.
+        NOTE: Does NOT return JWT tokens - user must verify email first, then login
         """
-        from rest_framework_simplejwt.tokens import RefreshToken
         from django.db import IntegrityError
         
         serializer = ProfessionalCreateSerializer(data=request.data, context={'request': request})
@@ -83,18 +84,14 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
             try:
                 professional = serializer.save()
                 
-                # Generate JWT tokens for immediate use
-                # Note: User is inactive until email verification
-                # Login endpoint will enforce is_active check
-                refresh = RefreshToken.for_user(professional.user)
+                # NOTE: We do NOT generate JWT tokens here
+                # User must verify email first via /verify-email/
+                # Then login via /login/ to get tokens
                 
                 return Response(
                     {
                         'message': 'Profissional criado com sucesso. Verifique seu email para ativar a conta.',
-                        'professional': ProfessionalSerializer(professional).data,
-                        'access_token': str(refresh.access_token),
-                        'refresh_token': str(refresh),
-                        'user_id': professional.user.id,
+                        'email': professional.user.email,
                         'professional_id': professional.id,
                     },
                     status=status.HTTP_201_CREATED

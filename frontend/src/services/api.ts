@@ -34,9 +34,21 @@ export const api = axios.create({
 // Request interceptor - add JWT token and handle FormData
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Add JWT token if available
+    // Endpoints that don't require authentication (AllowAny)
+    const publicEndpoints = [
+      '/professionals/register/',
+      '/professionals/verify-email/',
+      '/professionals/resend-verification/',
+      '/auth/login/',
+      '/auth/refresh/',
+    ]
+
+    // Check if this is a public endpoint
+    const isPublicEndpoint = publicEndpoints.some(endpoint => config.url?.includes(endpoint))
+
+    // Add JWT token if available AND not a public endpoint
     const token = localStorage.getItem('access_token')
-    if (token && config.headers) {
+    if (token && config.headers && !isPublicEndpoint) {
       config.headers.Authorization = `Bearer ${token}`
     }
 
