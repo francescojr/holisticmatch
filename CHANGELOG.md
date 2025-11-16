@@ -32,6 +32,26 @@ Deployed:   https://holisticmatch.vercel.app (frontend)
 
 ## 🚀 CURRENT SESSION (November 14-16, 2025)
 
+### Bug Fixes (November 16 - Part 2)
+
+#### **BUG: Background Still Dark Blue (#1f2937) Despite Fix** ✅ FIXED
+- **Problem**: Even after adding `bg-background-light dark:bg-background-dark` to html/body, background was still showing dark blue (#1f2937)
+  - Root cause: Tailwind was using `prefers-color-scheme: dark` by default
+  - If user's system had dark mode enabled, it would always show dark background
+  - The fix added `dark:` styles but didn't prevent dark mode from being triggered
+- **Solution**: Changed Tailwind dark mode strategy from system preference to explicit class
+  ```javascript
+  // Added to tailwind.config.js
+  darkMode: 'class',
+  ```
+- **How it works**: 
+  - Without `darkMode: 'class'`: Dark mode triggered by OS/browser dark mode setting
+  - With `darkMode: 'class'`: Dark mode only triggered if `dark` class is on html element
+  - Since we never add the `dark` class in code, dark mode stays disabled
+  - Result: Light mode always shown (correct behavior for this app)
+- **File Modified**: `frontend/tailwind.config.js`
+- **Result**: ✅ Background now correctly shows white (#f6f8f7) in all cases
+
 ### Bug Fixes (November 16)
 
 #### **BUG: Logout Shows Strange Error Message** ✅ FIXED
