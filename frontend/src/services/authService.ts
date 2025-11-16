@@ -154,22 +154,15 @@ export const authService = {
   },
 
   /**
-   * Logout - clear tokens and blacklist refresh token
+   * Logout - clear tokens
+   * Note: Backend doesn't have a dedicated logout endpoint,
+   * so we just clear local tokens
    */
   async logout(): Promise<void> {
     try {
       console.log('[authService.logout] 🚀 Starting logout...')
-      const refreshToken = localStorage.getItem('refresh_token')
-
-      if (refreshToken) {
-        console.log('[authService.logout] 📤 Sending logout to API...')
-        await api.post('/auth/logout/', { refresh_token: refreshToken })
-        console.log('[authService.logout] ✅ API logout successful')
-      }
-    } catch (error: any) {
-      console.warn('[authService.logout] ⚠️ API logout failed (continuing with local cleanup):', error.message)
-    } finally {
-      // Always clear local storage even if API call fails
+      
+      // Clear local storage
       console.log('[authService.logout] 🧹 Clearing localStorage...')
       localStorage.removeItem('access_token')
       localStorage.removeItem('refresh_token')
@@ -178,6 +171,9 @@ export const authService = {
       
       console.log('[authService.logout] ✅ localStorage cleared')
       console.log('[authService.logout] 🎉 Logout complete!')
+    } catch (error: any) {
+      console.error('[authService.logout] ❌ Logout failed:', error.message)
+      throw error
     }
   },
 

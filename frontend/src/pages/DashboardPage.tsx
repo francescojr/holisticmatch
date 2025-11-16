@@ -751,19 +751,6 @@ function DashboardPage() {
                   >
                     <h1 className="text-[#111814] dark:text-white text-2xl font-bold leading-tight tracking-[-0.015em] mb-6">Account Settings</h1>
                     <div className="space-y-6">
-                      <div className="flex items-center justify-between p-4 rounded-lg bg-background-light dark:bg-slate-700 border border-gray-200 dark:border-slate-600">
-                        <div>
-                          <h3 className="text-[#111814] dark:text-white text-lg font-semibold">Edit Profile</h3>
-                          <p className="text-[#618975] dark:text-gray-400 text-sm">Access the full profile editing page with additional options</p>
-                        </div>
-                        <button
-                          onClick={() => window.location.href = `/edit/${user?.professional_id}`}
-                          className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors"
-                        >
-                          Edit Profile
-                        </button>
-                      </div>
-
                       <div className="flex items-center justify-between p-4 rounded-lg bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800">
                         <div>
                           <h3 className="text-red-800 dark:text-red-200 text-lg font-semibold">Delete Account</h3>

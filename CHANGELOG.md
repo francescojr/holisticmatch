@@ -30,7 +30,71 @@ Deployed:   https://holisticmatch.vercel.app (frontend)
 
 ---
 
-## 🚀 CURRENT SESSION (November 14-15, 2025)
+## 🚀 CURRENT SESSION (November 14-16, 2025)
+
+### Bug Fixes (November 16)
+
+#### **BUG: Logout Shows Strange Error Message** ✅ FIXED
+- **Problem**: When user clicked logout, a strange error message would appear
+  - Root cause: Frontend was trying to POST to `/auth/logout/` endpoint which doesn't exist in backend
+  - 404 error was being caught by response interceptor and displayed as error toast
+- **Solution**: Removed the call to non-existent `/auth/logout/` endpoint
+  - Logout now only clears local tokens (access_token, refresh_token, professional_id, just_verified_email)
+  - No API call needed since backend has no logout blacklisting logic
+- **File Modified**: `frontend/src/services/authService.ts`
+- **Before**: 
+  ```typescript
+  const refreshToken = localStorage.getItem('refresh_token')
+  if (refreshToken) {
+    await api.post('/auth/logout/', { refresh_token: refreshToken })
+  }
+  // then clear localStorage
+  ```
+- **After**:
+  ```typescript
+  // Just clear localStorage, no API call needed
+  localStorage.removeItem('access_token')
+  localStorage.removeItem('refresh_token')
+  // ... other fields
+  ```
+- **Result**: ✅ Logout now works silently without error messages
+
+### UX Fixes (November 16)
+
+#### **BUG: All Pages Had Dark Blue Background** ✅ FIXED
+- **Problem**: All pages showing dark blue/gray background instead of white
+  - Root cause: `html` and `body` elements had no explicit background color
+  - Browser default or CSS reset was showing a dark background
+- **Solution**: Added explicit background colors to base HTML/body elements
+  ```css
+  @layer base {
+    html, body {
+      @apply bg-background-light dark:bg-background-dark;
+    }
+  }
+  ```
+- **File Modified**: `frontend/src/index.css`
+- **Result**: ✅ All pages now show white background in light mode, proper dark background in dark mode
+
+#### **FEATURE: Removed Redundant Edit Profile Page** ✅ COMPLETED
+- **Problem**: Dashboard had "Account Settings" tab with "Edit Profile" button that linked to a separate `/edit/:id` page
+  - User stated all editing needs are already in the dashboard itself
+  - Two separate pages were redundant and confusing
+- **Solution**: 
+  1. Removed "Edit Profile" button from Account Settings tab
+  2. Removed `/edit/:id` route from App.tsx
+  3. Removed EditProfessionalPage import from App.tsx
+- **Files Modified**:
+  - `frontend/src/pages/DashboardPage.tsx` - Removed Edit Profile section
+  - `frontend/src/App.tsx` - Removed route and import
+- **Result**: 
+  - ✅ Users now only edit in dashboard (single source of truth)
+  - ✅ Bundle size reduced: 186.59 kB → 178.69 kB JavaScript
+  - ✅ Simplified navigation flow
+
+### Test Results
+- ✅ Backend: 171/171 tests passing
+- ✅ Frontend: 0 TypeScript errors, build time 2.38s
 
 ### Final Fixes (November 15 - Part 2)
 

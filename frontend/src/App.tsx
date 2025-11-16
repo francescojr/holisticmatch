@@ -12,7 +12,6 @@ import RegisterProfessionalPage from './pages/RegisterProfessionalPage'
 import EmailVerificationPage from './pages/EmailVerificationPage'
 import ProfessionalDetailPage from './pages/ProfessionalDetailPage'
 import DashboardPage from './pages/DashboardPage'
-import EditProfessionalPage from './pages/EditProfessionalPage'
 import { ToastContainer } from './components/toast'
 
 function AppContent() {
@@ -40,14 +39,6 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/edit/:id"
-            element={
-              <ProtectedRoute>
-                <EditProfessionalPage />
               </ProtectedRoute>
             }
           />
