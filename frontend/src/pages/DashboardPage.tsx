@@ -470,7 +470,7 @@ function DashboardPage() {
                     }`}
                   >
                     <span className="material-symbols-outlined text-[#111814] dark:text-white" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
-                    <p className="text-[#111814] dark:text-white text-sm font-medium leading-normal">Edit Profile</p>
+                    <p className="text-[#111814] dark:text-white text-sm font-medium leading-normal">Editar Perfil</p>
                   </button>
                   <button
                     onClick={() => setActiveTab('settings')}
@@ -499,8 +499,8 @@ function DashboardPage() {
                     >
                       <div className="flex items-center justify-between mb-8">
                         <div>
-                          <h1 className="text-[#111814] dark:text-white text-2xl font-bold leading-tight tracking-[-0.015em]">Edit Profile</h1>
-                          <p className="text-[#618975] dark:text-gray-400 text-base font-normal leading-normal">Update your professional information</p>
+                          <h1 className="text-[#111814] dark:text-white text-2xl font-bold leading-tight tracking-[-0.015em]">Editar Perfil</h1>
+                          <p className="text-[#618975] dark:text-gray-400 text-base font-normal leading-normal">Atualize suas informações profissionais</p>
                           {hasConflicts && (
                             <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                               <div className="flex items-center gap-2">
@@ -515,12 +515,12 @@ function DashboardPage() {
                         <div className="flex gap-3">
                           {isEditing ? (
                             <>
-                              <button
+                                <button
                                 onClick={cancelEditing}
                                 disabled={isSaving}
                                 className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
                               >
-                                Cancel
+                                Cancelar
                               </button>
                               <button
                                 onClick={saveChanges}
@@ -536,7 +536,7 @@ function DashboardPage() {
                                     refresh
                                   </motion.span>
                                 )}
-                                {isSaving ? 'Saving...' : 'Save Changes'}
+                                {isSaving ? 'Salvando...' : 'Salvar Alterações'}
                               </button>
                             </>
                           ) : (
@@ -544,7 +544,7 @@ function DashboardPage() {
                               onClick={() => setIsEditing(true)}
                               className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors"
                             >
-                              Edit Profile
+                              Editar Perfil
                             </button>
                           )}
                         </div>
@@ -563,7 +563,7 @@ function DashboardPage() {
                           placeholder="Seu nome completo"
                         />
                         <FormInput
-                          label="Professional Title"
+                          label="Título Profissional"
                           type="text"
                           value={formData.professionalTitle}
                           onChange={(value) => handleFieldChange('professionalTitle', value)}
@@ -573,7 +573,7 @@ function DashboardPage() {
                           placeholder="Ex: Personal Trainer, Nutricionista"
                         />
                         <FormInput
-                          label="Email"
+                          label="E-mail"
                           type="email"
                           value={formData.email}
                           onChange={(value) => handleFieldChange('email', value)}
@@ -583,7 +583,7 @@ function DashboardPage() {
                           placeholder="seu@email.com"
                         />
                         <FormInput
-                          label="Phone"
+                          label="Telefone"
                           type="tel"
                           value={formData.phone}
                           onChange={(value) => handleFieldChange('phone', value)}
@@ -593,14 +593,14 @@ function DashboardPage() {
                           placeholder="(11) 99999-9999"
                         />
                         <FormInput
-                          label="Location"
+                          label="Localização"
                           type="text"
                           value={formData.location}
                           onChange={(value) => handleFieldChange('location', value)}
                           error={errors.location}
                           disabled={!isEditing || isSaving}
                           required
-                          placeholder="City, State"
+                          placeholder="Cidade, Estado"
                         />
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -662,7 +662,7 @@ function DashboardPage() {
 
                       {/* Photo Upload Section */}
                       <div className="mb-6">
-                        <p className="text-[#111814] dark:text-gray-300 text-sm font-medium leading-normal pb-3">Profile Photo</p>
+                        <p className="text-[#111814] dark:text-gray-300 text-sm font-medium leading-normal pb-3">Foto de Perfil</p>
                         <div className="flex items-center gap-4">
                           <div className="relative">
                             <div
@@ -814,10 +814,10 @@ function DashboardPage() {
       {/* Delete Account Confirm Dialog */}
       <ConfirmDialog
         isOpen={deleteProfessional.isOpen}
-        title="Delete Account"
-        message={`Are you sure you want to delete your account "${deleteProfessional.deletingProfessionalName}"? This action cannot be undone and will permanently remove all your data.`}
-        confirmText="Delete Account"
-        cancelText="Cancel"
+        title="Deletar Conta"
+        message={`Tem certeza que deseja deletar sua conta "${deleteProfessional.deletingProfessionalName}"? Esta ação não pode ser desfeita e removerá permanentemente todos os seus dados.`}
+        confirmText="Deletar Conta"
+        cancelText="Cancelar"
         type="danger"
         onConfirm={deleteProfessional.handleDeleteConfirm}
         onCancel={deleteProfessional.closeDeleteConfirm}

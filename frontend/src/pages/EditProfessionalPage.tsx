@@ -64,7 +64,7 @@ function EditProfessionalPage() {
     instagram: '',
   })
 
-  const { cities, loading: citiesLoading } = useCities(formData.state)
+  const { citiesRaw, loading: citiesLoading } = useCities(formData.state)
 
   const [formServices, setFormServices] = useState<FormServices>({
     services: [],
@@ -343,7 +343,7 @@ function EditProfessionalPage() {
               label="Cidade"
               value={formData.city}
               onChange={(value: string) => handleSelectChange('city', value)}
-              options={cities}
+              options={citiesRaw}
               disabled={saving || citiesLoading}
               required
             />

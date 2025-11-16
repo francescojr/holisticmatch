@@ -3,11 +3,17 @@
  * Manages loading and caching cities for a given Brazilian state
  * Handles API communication with backend cities endpoint
  */
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import api from '../services/api'
 
+interface CityOption {
+  value: string
+  label: string
+}
+
 interface UseCitiesReturn {
-  cities: string[]
+  cities: CityOption[]
+  citiesRaw: string[]
   loading: boolean
   error: string | null
   refetch: () => Promise<void>
@@ -17,14 +23,22 @@ interface UseCitiesReturn {
 const cityCache = new Map<string, string[]>()
 
 export const useCities = (state: string | null | undefined): UseCitiesReturn => {
-  const [cities, setCities] = useState<string[]>([])
+  const [citiesRaw, setCitiesRaw] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Transform raw cities to CityOption format
+  const cities = useMemo<CityOption[]>(() => {
+    return citiesRaw.map((city) => ({
+      value: city,
+      label: city,
+    }))
+  }, [citiesRaw])
 
   const fetchCities = useCallback(async () => {
     // Don't fetch if state is empty
     if (!state || state.trim() === '') {
-      setCities([])
+      setCitiesRaw([])
       setError(null)
       return
     }
@@ -33,7 +47,7 @@ export const useCities = (state: string | null | undefined): UseCitiesReturn => 
 
     // Check cache first
     if (cityCache.has(stateUpper)) {
-      setCities(cityCache.get(stateUpper) || [])
+      setCitiesRaw(cityCache.get(stateUpper) || [])
       setError(null)
       setLoading(false)
       return
@@ -50,12 +64,12 @@ export const useCities = (state: string | null | undefined): UseCitiesReturn => 
       // Cache the results
       cityCache.set(stateUpper, fetchedCities)
       
-      setCities(fetchedCities)
+      setCitiesRaw(fetchedCities)
       setError(null)
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || 'Erro ao carregar cidades'
       setError(errorMessage)
-      setCities([])
+      setCitiesRaw([])
       console.error('Error fetching cities:', err)
     } finally {
       setLoading(false)
@@ -78,6 +92,7 @@ export const useCities = (state: string | null | undefined): UseCitiesReturn => 
 
   return {
     cities,
+    citiesRaw,
     loading,
     error,
     refetch,

@@ -10,7 +10,7 @@ import { pageVariants, itemVariants } from '../lib/animations'
 import { useFormValidation } from '../hooks/useFormValidation'
 import { useCities } from '../hooks/useCities'
 import { useToast } from '../hooks/useToast'
-import { FormInput, FileUpload, FormSelect, ToastContainer } from '../components'
+import { FormInput, FileUpload, FormSelect, SearchableSelect, ToastContainer } from '../components'
 import { authService } from '../services/authService'
 import { professionalService } from '../services/professionalService'
 
@@ -577,7 +577,7 @@ function RegisterProfessionalPage() {
               />
 
               {/* Cidade */}
-              <FormSelect
+              <SearchableSelect
                 label="Cidade"
                 value={step1Data.city}
                 onChange={(value) => handleStep1InputChange('city', value)}
@@ -589,12 +589,10 @@ function RegisterProfessionalPage() {
                       : 'Selecione sua cidade'
                     : 'Selecione um estado primeiro'
                 }
-                error={errors.city || citiesError || undefined}
-                required
+                errorText={errors.city || citiesError || undefined}
                 disabled={!step1Data.state || citiesLoading}
-                helperText={
-                  step1Data.state ? `${cities.length} cidades disponíveis` : 'Selecione um estado primeiro'
-                }
+                isLoading={citiesLoading}
+                maxHeight="300px"
               />
 
               {/* Senha */}
