@@ -51,12 +51,11 @@ jobs:
           curl -X POST \
             -H "Content-Type: application/json" \
             -d '{"ref":"refs/heads/main"}' \
-            http://${{ secrets.EC2_HOST }}:8000/deploy
+            http://${{ secrets.EC2_HOST }}/webhook/deploy
           
           echo "✅ Webhook triggered successfully!"
-          echo "🔄 Deployment script running on EC2 in background..."
-          sleep 3
-          echo "Check EC2 instance for deployment progress"
+          echo "🔄 Deployment running on EC2 in background..."
+          sleep 2
             
             echo "→ Installing dependencies..."
             cd backend
