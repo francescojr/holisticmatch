@@ -18,11 +18,9 @@ export const registerErrorHandler = (callback: (error: { title: string; message:
   errorHandlerCallback = callback
 }
 
-// Use direct EC2 backend URL in production, relative in development
-// Vercel will proxy /api to EC2 via vercel.json rewrites
-const API_BASE_URL = import.meta.env.MODE === 'production'
-  ? 'http://44.197.112.222/api'
-  : '/api'
+// Always use /api which Vercel will proxy to EC2 backend
+// Vercel's rewrites in vercel.json handle the proxying
+const API_BASE_URL = '/api'
 
 // Create axios instance
 export const api = axios.create({
