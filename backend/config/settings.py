@@ -2,6 +2,7 @@
 Django settings for HolisticMatch project.
 """
 
+import sys
 from pathlib import Path
 from decouple import config
 from datetime import timedelta
@@ -21,16 +22,18 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver'
 # SECURITY SETTINGS - PRODUCTION HARDENING
 # ============================================================================
 # HTTPS & SSL Configuration
-SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=not DEBUG, cast=bool)
+# Disable SSL redirect in testing to avoid 301 redirects breaking tests
+TESTING = 'pytest' in sys.modules or 'test' in sys.argv
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=not DEBUG and not TESTING, cast=bool)
 SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
 # Cookie Security
-CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=not DEBUG, cast=bool)
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=not DEBUG and not TESTING, cast=bool)
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Strict'
-SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=not DEBUG, cast=bool)
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=not DEBUG and not TESTING, cast=bool)
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Strict'
 
