@@ -47,44 +47,28 @@ jobs:
       
       - name: Trigger deployment via webhook
         run: |
-          echo "🚀 Triggering deployment via webhook..."
-          curl -X POST \
-            -H "Content-Type: application/json" \
-            -d '{"ref":"refs/heads/main"}' \
-            http://${{ secrets.EC2_HOST }}/webhook/deploy
+          python3 << 'EOF'
+          import json
+          import subprocess
+          import sys
           
-          echo "✅ Webhook triggered successfully!"
-          echo "🔄 Deployment running on EC2 in background..."
-          sleep 2
-            
-            echo "→ Installing dependencies..."
-            cd backend
-            pip install -r requirements.txt --quiet
-            
-            echo "→ Running database migrations..."
-            python manage.py migrate --noinput
-            
-            echo "→ Collecting static files..."
-            python manage.py collectstatic --noinput --clear
-            
-            echo "→ Restarting Gunicorn..."
-            sudo systemctl restart gunicorn
-            
-            sleep 3
-            
-            if sudo systemctl is-active --quiet gunicorn; then
-              echo "✓ Gunicorn is active and running"
-            else
-              echo "✗ Gunicorn failed to start"
-              sudo systemctl status gunicorn
-              exit 1
-            fi
-            
-            echo "→ Running API health check..."
-      - name: Notify Success
-        if: success()
-        run: echo "✅ Backend deployment triggered successfully!"
-      
-      - name: Notify Failure
-        if: failure()
-        run: echo "❌ Webhook trigger failed!!"
+          webhook_data = json.dumps({"ref": "refs/heads/main"})
+          
+          result = subprocess.run([
+              'curl', '-X', 'POST',
+              '-H', 'Content-Type: application/json',
+              '--data', webhook_data,
+              'http://${{ secrets.EC2_HOST }}/webhook/deploy'
+          ], capture_output=True, text=True, timeout=10)
+          
+          print("🚀 Webhook response:")
+          print(result.stdout)
+          
+          if result.returncode != 0:
+              print("❌ Webhook trigger failed!")
+              print("Error:", result.stderr)
+              sys.exit(1)
+          
+          print("✅ Webhook triggered successfully!")
+          print("🔄 Deployment running on EC2 in background...")
+          EOF
