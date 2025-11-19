@@ -18,9 +18,9 @@ export const registerErrorHandler = (callback: (error: { title: string; message:
   errorHandlerCallback = callback
 }
 
-// Use direct EC2 backend URL
-// Vercel will proxy /api to this URL via vercel.json rewrites
-const API_BASE_URL = process.env.NODE_ENV === 'production'
+// Use direct EC2 backend URL in production, relative in development
+// Vercel will proxy /api to EC2 via vercel.json rewrites
+const API_BASE_URL = import.meta.env.MODE === 'production'
   ? 'http://44.197.112.222/api'
   : '/api'
 
