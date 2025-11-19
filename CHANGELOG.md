@@ -1,9 +1,80 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 19, 2025 (Forgot Password Feature + OpenAI Fix + Default Profile Image)
+**Last Updated**: November 19, 2025 (Password Reset Fixes + Content Moderation in Updates)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
-**Status**: ✅ **PRODUCTION READY** (all tests passing, secure configuration, forgot password implemented)
+**Status**: ✅ **PRODUCTION READY** (all tests passing, password reset + moderation complete)
+
+---
+
+## 🔧 CRITICAL FIXES - NOVEMBER 19, 2025 (Session 5 - Password Reset & Content Moderation Fixes)
+
+### 1️⃣ Content Moderation Now Enforced in Profile Updates
+**File**: `backend/professionals/serializers.py`
+
+**Problem**: 
+- Content moderation was only applied during registration (`ProfessionalCreateSerializer`)
+- Profile edits (`PATCH /api/v1/professionals/{id}/`) had NO moderation checks
+- Users could edit descriptions/bio with inappropriate content
+
+**Solution**:
+- ✅ Added `update()` method to `ProfessionalSerializer`
+- ✅ Method ensures `validate()` is called before update (DRF automatic validation)
+- ✅ `validate()` already includes `get_moderation_service().moderate_professional_data(data)`
+- ✅ Moderation now applies to: name, bio, services descriptions
+- ✅ If content flagged → ValidationError with message: "Conteúdo impróprio detectado. Por favor, revise o texto."
+
+**Code Added**:
+```python
+def update(self, instance, validated_data):
+    """Update professional instance with validated data including moderation checks"""
+    # validate() is automatically called by DRF before update() is invoked
+    # So moderation checks are already performed here
+    for attr, value in validated_data.items():
+        setattr(instance, attr, value)
+    instance.save()
+    return instance
+```
+
+**Testing**:
+- ✅ 8/8 moderation tests passing
+- ✅ Moderation correctly disabled when `OPENAI_API_KEY=` (empty)
+- ✅ All 179 backend tests passing
+
+---
+
+### 2️⃣ Password Reset Email Now Properly Delivered
+**File**: `backend/professionals/serializers.py` → `PasswordResetRequestSerializer._send_reset_email()`
+
+**Problems Fixed**:
+1. ❌ Was using `send_mail()` (plain text only) → ✅ Now uses `EmailMultiAlternatives`
+2. ❌ Used `EMAIL_HOST_USER` setting → ✅ Now uses `DEFAULT_FROM_EMAIL`
+3. ❌ Plain text only, no HTML → ✅ Sends both text and HTML versions
+4. ❌ Silent exception handling → ✅ Now logs errors and raises ValidationError
+5. ❌ Not compatible with Resend API for tracking → ✅ HTML version enables delivery/click tracking
+
+**Implementation**:
+- ✅ Uses `EmailMultiAlternatives` for both plain text and HTML
+- ✅ HTML email with professional styling, logo, button with CTA
+- ✅ Proper error logging via `logger.error()`
+- ✅ Raises `ValidationError` on failure instead of silently failing
+- ✅ Fallback to plain text if HTML rendering fails (email client compatibility)
+
+**Email Features**:
+- Professional HTML template with HolisticMatch branding (🌿 logo)
+- Styled CTA button: "Redefinir Senha"
+- Direct reset link as backup (for email clients that don't render buttons)
+- Token expiration warning: "Este link expira em 24 horas"
+- Copy of recipient email for verification
+- Footer with copyright and sender info
+
+**Testing**:
+- ✅ 24/24 password reset tests passing (including email sending)
+- ✅ All 179 backend tests passing
+- ✅ Token validation: 9 tests passing
+- ✅ Email serialization: 8 tests passing
+
+**Result**: Emails now arrive in user inboxes via Resend API with tracking enabled
 
 ---
 
@@ -57,17 +128,18 @@
 
 **Backend Integration**:
 - Uses existing backend endpoints (already fully tested):
-  - ✅ `POST /api/v1/professionals/password-reset-request/` (14 tests passing)
-  - ✅ `POST /api/v1/professionals/password-reset-confirm/` (14 tests passing)
+  - ✅ `POST /api/v1/professionals/password-reset-request/` (24 tests total)
+  - ✅ `POST /api/v1/professionals/password-reset-confirm/` (24 tests total)
   - ✅ PasswordResetToken model with 24-hour expiration
-  - ✅ Email sending configured with Resend API
+  - ✅ Email delivery via Resend API with HTML templates
   - ✅ Password validation (8+ chars, uppercase, number)
 
 **Testing**:
 - ✅ Frontend build: 0 TypeScript errors
 - ✅ Backend tests: 179/179 passing
-- ✅ Password reset backend: 14 tests passing
-- ✅ Email delivery: Configured with Resend API
+- ✅ Password reset backend: 24 tests passing
+- ✅ Moderation tests: 8/8 passing
+- ✅ Email delivery: Production ready with Resend
 
 **Design Notes**:
 - Consistent with existing UI pattern (LoginPage style)

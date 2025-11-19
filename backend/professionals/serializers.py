@@ -166,6 +166,15 @@ class ProfessionalSerializer(serializers.ModelSerializer):
         
         return data
 
+    def update(self, instance, validated_data):
+        """Update professional instance with validated data including moderation checks"""
+        # validate() is automatically called by DRF before update() is invoked
+        # So moderation checks are already performed here
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
 
 class ProfessionalSummarySerializer(serializers.ModelSerializer):
     """
@@ -593,15 +602,19 @@ class PasswordResetRequestSerializer(serializers.Serializer):
         return reset_token
 
     def _send_reset_email(self, user, reset_token):
-        """Envia email com link de reset"""
-        from django.core.mail import send_mail
+        """
+        Envia email com link de reset via Resend
+        Usa EmailMultiAlternatives para suportar tanto texto plano quanto HTML
+        """
+        from django.core.mail import EmailMultiAlternatives
         from django.conf import settings
 
         reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token.token}"
         
         subject = "HolisticMatch - Redefinir Senha"
-        message = f"""
-Olá {user.first_name or user.username},
+        
+        # Email em texto plano (fallback)
+        text_body = f"""Olá {user.first_name or user.username},
 
 Você solicitou para redefinir sua senha. Clique no link abaixo:
 
@@ -612,19 +625,90 @@ Este link expira em 24 horas.
 Se você não solicitou isso, ignore este email.
 
 Atenciosamente,
-Equipe HolisticMatch
-        """
+Equipe HolisticMatch"""
+        
+        # Email em HTML (necessário para Resend rastrear entrega e cliques)
+        html_body = f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ text-align: center; margin-bottom: 30px; }}
+        .logo {{ font-size: 28px; font-weight: bold; color: #10b981; margin-bottom: 10px; }}
+        .title {{ font-size: 24px; color: #1f2937; margin: 0; }}
+        .content {{ background: white; padding: 30px; border-radius: 8px; }}
+        .button {{ display: inline-block; background: #10b981; color: white; padding: 12px 30px; border-radius: 4px; text-decoration: none; margin: 20px 0; font-weight: 600; }}
+        .button:hover {{ background: #059669; }}
+        .warning {{ background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }}
+        .footer {{ text-align: center; color: #9ca3af; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }}
+        .link-text {{ word-break: break-all; background: #f3f4f6; padding: 10px; font-size: 12px; margin: 15px 0; }}
+    </style>
+</head>
+<body style="background-color: #f6f8f7;">
+    <div class="container">
+        <div class="header">
+            <div class="logo">🌿 HolisticMatch</div>
+            <h1 class="title">Redefinir Senha</h1>
+        </div>
+        
+        <div class="content">
+            <p>Olá <strong>{user.first_name or user.username}</strong>,</p>
+            
+            <p>Você solicitou para redefinir sua senha. Clique no botão abaixo para criar uma nova senha:</p>
+            
+            <div style="text-align: center;">
+                <a href="{reset_url}" class="button">Redefinir Senha</a>
+            </div>
+            
+            <p style="font-size: 12px; color: #6b7280;">Ou copie este link no seu navegador:</p>
+            <div class="link-text">{reset_url}</div>
+            
+            <div class="warning">
+                <p style="margin: 0; color: #92400e;">
+                    ⏱️ Este link expira em <strong>24 horas</strong>.
+                </p>
+            </div>
+            
+            <p style="margin-top: 20px; font-size: 12px; color: #6b7280;">
+                Se você não solicitou isso, ignore este email. Sua conta permanecerá segura.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 HolisticMatch. Todos os direitos reservados.</p>
+            <p>Este email foi enviado para <strong>{user.email}</strong></p>
+        </div>
+    </div>
+</body>
+</html>"""
 
         try:
-            send_mail(
-                subject,
-                message,
-                settings.EMAIL_HOST_USER,
-                [user.email],
-                fail_silently=False,
+            # Criar mensagem com texto plano como fallback
+            email_message = EmailMultiAlternatives(
+                subject=subject,
+                body=text_body,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email],
             )
-        except Exception:
-            pass
+            
+            # Adicionar versão HTML
+            email_message.attach_alternative(html_body, "text/html")
+            
+            # Enviar via Resend (configurado em settings.EMAIL_BACKEND)
+            result = email_message.send(fail_silently=False)
+            
+            logger.info(f"✅ Email de reset de senha enviado para {user.email} (resultado: {result})")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao enviar email de reset para {user.email}: {str(e)}")
+            # Log o erro mas não falha silenciosamente - permite que o usuário saiba
+            # que o email pode não ter sido entregue
+            raise serializers.ValidationError(
+                'Erro ao enviar email de reset. Por favor, tente novamente em alguns instantes.'
+            )
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
