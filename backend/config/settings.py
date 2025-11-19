@@ -15,7 +15,7 @@ SECRET_KEY = config('SECRET_KEY', default='django-insecure-dev-key-change-in-pro
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver,hollisticmatch.online,44.197.112.222').split(',')
 
 # ============================================================================
 # SECURITY SETTINGS - PRODUCTION HARDENING
@@ -224,10 +224,16 @@ CACHES = {
 # CORS Settings - only localhost for dev, Vercel proxy handles production
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:5173,http://127.0.0.1:5173'
+    default='http://localhost:5173,http://127.0.0.1:5173,https://holisticmatch.vercel.app,https://hollisticmatch.online'
 ).split(',')
 
 CORS_ALLOW_CREDENTIALS = True
+
+# CSRF Trusted Origins for secure forms
+CSRF_TRUSTED_ORIGINS = [
+    'https://holisticmatch.vercel.app',
+    'https://hollisticmatch.online',
+]
 
 # ============================================================================
 # FILE UPLOAD SETTINGS
