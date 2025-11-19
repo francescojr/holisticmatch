@@ -21,21 +21,22 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver'
 # SECURITY SETTINGS - PRODUCTION HARDENING
 # ============================================================================
 # HTTPS & SSL Configuration
-# NOTE: SECURE_SSL_REDIRECT disabled because AWS ALB/nginx handles HTTPS
-# Setting to True causes 301 redirects on internal HTTP connections, breaking health checks
-# HSTS headers still protect against downgrade attacks
+# AWS ALB terminates HTTPS at edge, proxies to Django via HTTP internally
+# SECURE_PROXY_SSL_HEADER tells Django to trust X-Forwarded-Proto from ALB
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
-SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_SECONDS = 31536000  # 1 year - protects browser against downgrade
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
 # Cookie Security
-# Only enforce secure cookies if explicitly set via env var
-# Default to False because AWS ALB proxies via HTTP internally
-CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=False, cast=bool)
+# Secure flag enabled for HTTPS-only transmission (ALB tells Django it's HTTPS via X-Forwarded-Proto)
+# HttpOnly prevents JavaScript access (XSS protection)
+# SameSite=Strict prevents CSRF attacks
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=True, cast=bool)
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Strict'
-SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=False, cast=bool)
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=True, cast=bool)
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Strict'
 
