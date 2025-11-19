@@ -1,5 +1,5 @@
 /**
- * Login page for clients and professionals
+ * Login page for clients and professionals :)
  */
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'

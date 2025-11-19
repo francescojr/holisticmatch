@@ -402,7 +402,7 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
                 is_active=False  # User starts inactive until email verification
             )
             
-            # Create professional profile
+            # Create professional profile :)
             professional = Professional.objects.create(
                 user=user,
                 **validated_data
