@@ -1,9 +1,43 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 19, 2025 (GitHub Actions + Webhook Deployment)
+**Last Updated**: November 19, 2025 (Domain Setup + SSL Certificate Preparation)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
-**Status**: 🔧 **IN PROGRESS** - CI/CD Pipeline (Webhook deployment working, API proxy issue under investigation)
+**Status**: 🚀 **DEPLOYING** - Domain hollisticmatch.online configured, awaiting DNS propagation for SSL
+
+---
+
+## 🌐 DOMAIN & SSL SETUP - NOVEMBER 19, 2025
+
+### Production Domain: hollisticmatch.online
+
+**Domain Configuration**:
+- ✅ Domain purchased: hollisticmatch.online
+- ✅ DNS A Record: @ → 44.197.112.222 (EC2 IP)
+- ⏳ DNS propagation in progress (NXDOMAIN - typically 5-60 minutes)
+
+**Backend Preparation (Completed)**:
+- ✅ Certbot + python3-certbot-nginx installed on EC2
+- ✅ UFW firewall configured: ports 80, 443 open
+- ✅ Django settings.py updated:
+  - ALLOWED_HOSTS: hollisticmatch.online, 44.197.112.222
+  - CORS_ALLOWED_ORIGINS: https://holisticmatch.vercel.app, https://hollisticmatch.online
+  - CSRF_TRUSTED_ORIGINS: hollisticmatch.online, holisticmatch.vercel.app
+- ✅ Nginx SSL config prepared (ready to apply after certbot)
+- ✅ Changes deployed via webhook pipeline
+
+**Pending (Awaiting DNS)**:
+1. Generate Let's Encrypt certificate: `sudo certbot --nginx -d hollisticmatch.online`
+2. Apply Nginx SSL configuration with Unix socket proxy
+3. Test HTTPS endpoint: `curl https://hollisticmatch.online/api/v1/professionals/`
+4. Update Vercel frontend env: `API_BASE_URL=https://hollisticmatch.online/api/v1`
+5. Verify end-to-end Frontend → Backend HTTPS connectivity
+
+**Security**:
+- Let's Encrypt SSL (90-day auto-renewal)
+- HTTPS redirect for all HTTP traffic
+- CORS limited to Vercel domain
+- 100MB client_max_body_size for profile photos
 
 ---
 
@@ -42,9 +76,10 @@ Deploy Script: git pull → pip install → migrate → restart gunicorn
 - ✅ Webhook listener: Active and responding
 - ✅ Deploy script: Tested, successful deployments logged
 - ✅ GitHub Actions: Workflow executing, triggering deployments
-- 🔴 **ISSUE**: Frontend → EC2 API proxy not working (investigating Vercel rewrites)
+- ✅ Django configured for production domain hollisticmatch.online
+- ⏳ DNS propagation in progress (required for SSL certificate generation)
 
-**Next Action**: Investigate Vercel rewrite configuration and API connectivity before making further changes.
+**Next Action**: Monitor DNS propagation, generate SSL certificate with certbot once domain resolves, apply Nginx SSL config.
 
 ---
 
