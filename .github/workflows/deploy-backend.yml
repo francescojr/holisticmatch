@@ -45,19 +45,26 @@ jobs:
         run: |
           pytest tests/ -v --tb=short
       
-      - name: Test SSH Connection
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          timeout: 60s
-          command_timeout: 60s
-          script: |
-            echo "✓ SSH connection successful!"
-            echo "Host: $(hostname)"
-            echo "User: $(whoami)"
-            echo "Working directory: $(pwd)"
+      - name: Debug - Check SSH Key Format
+        run: |
+          echo "EC2_HOST: ${{ secrets.EC2_HOST }}"
+          echo "EC2_USER: ${{ secrets.EC2_USER }}"
+          KEY_LENGTH=$(echo '${{ secrets.EC2_SSH_KEY }}' | wc -c)
+          echo "SSH Key length: $KEY_LENGTH"
+          if [ $KEY_LENGTH -lt 1000 ]; then
+            echo "❌ WARNING: SSH Key seems too short (< 1000 chars)"
+          fi
+      
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo '${{ secrets.EC2_SSH_KEY }}' > ~/.ssh/deploy_key.pem
+          chmod 600 ~/.ssh/deploy_key.pem
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+      
+      - name: Test SSH Connection with Native SSH
+        run: |
+          ssh -i ~/.ssh/deploy_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo 'SSH Connection successful!'; whoami; pwd"
       
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -65,8 +72,8 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          timeout: 300s
-          command_timeout: 300s
+          timeout: 60s
+          command_timeout: 60s
           script: |
             set -e
             
