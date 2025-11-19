@@ -97,7 +97,7 @@
                     method: 'POST',
                     body: formData,
                     // DO NOT set Content-Type header - let browser set it!
-                    // headers: { 'Content-Type': 'application/json' } ← This would break it!
+                    // headers: { 'Content-Type': 'application/json' } ← This would break it! :)
                 });
 
                 const data = await response.json();
