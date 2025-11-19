@@ -1,13 +1,160 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 19, 2025 (3 UX/Session Fixes + Secure Auth Proxy Configuration)
+**Last Updated**: November 19, 2025 (Forgot Password Feature + OpenAI Fix + Default Profile Image)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
-**Status**: ✅ **PRODUCTION READY** (all tests passing, secure configuration live)
+**Status**: ✅ **PRODUCTION READY** (all tests passing, secure configuration, forgot password implemented)
 
 ---
 
-## 🐛 BUGFIXES - NOVEMBER 19, 2025 (Session 2)
+## 🔐 FEATURES - NOVEMBER 19, 2025 (Session 4 - Password Reset Implementation)
+
+### Forgot Password / Password Reset Feature
+**Files Created**:
+- `frontend/src/pages/ForgotPasswordPage.tsx` (NEW)
+- `frontend/src/pages/ResetPasswordPage.tsx` (NEW)
+
+**Files Updated**:
+- `frontend/src/services/professionalService.ts` (Added 2 methods)
+- `frontend/src/App.tsx` (Added 2 routes)
+- `frontend/src/pages/LoginPage.tsx` (Updated link)
+
+**Changes**:
+- ✅ **ForgotPasswordPage.tsx**:
+  - Email input form with validation
+  - "Send Reset Link" button with loading state
+  - Toast notifications (success/error)
+  - Success message with countdown redirect to login
+  - Matches LoginPage design aesthetic (Framer Motion, Tailwind)
+  - Calls: `POST /api/v1/professionals/password-reset-request/`
+
+- ✅ **ResetPasswordPage.tsx**:
+  - Extracts token from URL query param (`?token=...`)
+  - Password input with live validation display
+  - Confirm password with matching validation
+  - Password requirements checklist:
+    - ✓ Minimum 8 characters
+    - ✓ At least one uppercase letter (A-Z)
+    - ✓ At least one number (0-9)
+  - Visual feedback for validation status (green checks/gray unchecked)
+  - "Reset Password" button (disabled until all requirements met)
+  - Loading state with spinner animation
+  - Error handling for expired/invalid tokens
+  - Calls: `POST /api/v1/professionals/password-reset-confirm/`
+  - Redirects to login on success
+
+- ✅ **professionalService.ts**:
+  - `requestPasswordReset(email)`: POST to `/professionals/password-reset-request/`
+  - `confirmPasswordReset(data)`: POST to `/professionals/password-reset-confirm/`
+
+- ✅ **App.tsx**:
+  - Route: `/forgot-password` → ForgotPasswordPage
+  - Route: `/reset-password` → ResetPasswordPage
+  - Imports both new components
+
+- ✅ **LoginPage.tsx**:
+  - Changed "Esqueceu sua senha?" link from `href="#"` to `href="/forgot-password"`
+
+**Backend Integration**:
+- Uses existing backend endpoints (already fully tested):
+  - ✅ `POST /api/v1/professionals/password-reset-request/` (14 tests passing)
+  - ✅ `POST /api/v1/professionals/password-reset-confirm/` (14 tests passing)
+  - ✅ PasswordResetToken model with 24-hour expiration
+  - ✅ Email sending configured with Resend API
+  - ✅ Password validation (8+ chars, uppercase, number)
+
+**Testing**:
+- ✅ Frontend build: 0 TypeScript errors
+- ✅ Backend tests: 179/179 passing
+- ✅ Password reset backend: 14 tests passing
+- ✅ Email delivery: Configured with Resend API
+
+**Design Notes**:
+- Consistent with existing UI pattern (LoginPage style)
+- Framer Motion animations for page entry
+- Staggered item animations for form elements
+- Tailwind CSS styling matching app theme
+- Material Symbols icons (lock_reset, lock, mark_email_read, check_circle, error)
+- Toast notifications for user feedback
+- Responsive design (mobile-first, max-w-md centered)
+
+---
+
+## 🔧 CRITICAL FIXES - NOVEMBER 19, 2025 (Session 3 - Test Environment Configuration)
+
+### OpenAI API Key Removed from Local Development Environment
+**File**: `backend/.env`
+**Issue**: Tests were making 429+ requests to OpenAI API during test execution
+- Caused by real API key in `.env` file (was set to empty value)
+- ModerationService was attempting to call OpenAI for content moderation in tests
+- Test execution time: ~83 seconds (mostly API calls)
+
+**Fix Applied**:
+- Set `OPENAI_API_KEY=` (empty string) in local development environment
+- Added comment: "Leave empty in local development to disable moderation and avoid API rate limits"
+- Set only in production environment variables for actual content moderation
+- ModerationService.enabled properly checks for API key presence
+
+**Results**:
+- ✅ Test execution time: 83s → 6.59s (92% faster)
+- ✅ Removed "HTTP Request: POST https://api.openai.com/v1/moderations" logs
+- ✅ Eliminated "429 Too Many Requests" errors
+- ✅ All 179 tests passing cleanly without external API calls
+- ✅ ModerationService.enabled properly checks for API key presence
+
+**Verification Commands**:
+```bash
+# Single test - no OpenAI calls detected:
+pytest test_professional_serializer.py -v 2>&1 | Select-String "openai|429|HTTP Request"
+# Result: 0 matches
+
+# Full suite:
+python -m pytest tests/ -q
+# Result: 179 passed, 1 warning in 6.59s
+```
+
+---
+
+## 🎨 FEATURES - NOVEMBER 19, 2025 (Session 2)
+
+### Default Profile Image for Users Without Photos
+**Files**: 
+- `frontend/src/lib/imageDefaults.ts` (NEW)
+- `frontend/src/pages/ProfessionalDetailPage.tsx`
+- `frontend/src/pages/DashboardPage.tsx`
+- `frontend/src/components/ProfessionalModal.tsx`
+- `frontend/src/components/ProfessionalCard.tsx`
+
+**Changes**:
+- ✅ Created new utility module `imageDefaults.ts` for centralized image management
+  - `getDefaultProfileImageUrl()`: Returns path to `defaultNoImage.png`
+  - `getProfileImageUrl(photoUrl)`: Returns photo URL or default image
+  - Single source of truth for default image logic
+- ✅ Replaced all external placeholder URLs:
+  - Old: `'https://via.placeholder.com/224'` (external dependency)
+  - Old: `'https://lh3.googleusercontent.com/...'` (Google hosted, external)
+  - Old: Emoji fallback `👤` (not professional)
+  - New: Local asset `defaultNoImage.png` (bundled with app, no external requests)
+- ✅ Applied to all UI locations:
+  - `ProfessionalDetailPage`: Profile header image
+  - `DashboardPage`: Sidebar avatar + profile editing section
+  - `ProfessionalModal`: Modal header image
+  - `ProfessionalCard`: Card grid images
+- ✅ Benefits:
+  - Consistent branding across all pages
+  - No external dependencies for images
+  - Professional appearance
+  - Better performance (local asset vs external URL)
+  - Self-contained deployment (no broken external links)
+
+**Testing**: 
+- ✅ Frontend build: 0 TypeScript errors (2.07s)
+- ✅ Backend tests: 179/179 passing
+- ✅ Image included in dist bundle (1,106.65 kB)
+
+---
+
+## 🐛 BUGFIXES - NOVEMBER 19, 2025 (Session 1)
 
 ### 1️⃣ Registration Form - Price Tooltip & Terms Checkbox
 **File**: `frontend/src/pages/RegisterProfessionalPage.tsx`

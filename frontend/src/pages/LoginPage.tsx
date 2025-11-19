@@ -169,7 +169,7 @@ function LoginPage() {
         </form>
 
         <div className="mt-4 text-center text-sm">
-          <a href="#" className="text-gray-500 hover:text-primary transition-colors">
+          <a href="/forgot-password" className="text-gray-500 hover:text-primary transition-colors">
             Esqueceu sua senha?
           </a>
         </div>

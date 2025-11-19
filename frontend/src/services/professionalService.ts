@@ -171,6 +171,28 @@ export const professionalService = {
   async deleteProfessional(id: number): Promise<void> {
     await api.delete(`/professionals/${id}/`)
   },
+
+  /**
+   * Request password reset - sends email with reset link
+   */
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>('/professionals/password-reset-request/', {
+      email,
+    })
+    return response.data
+  },
+
+  /**
+   * Confirm password reset - validates token and sets new password
+   */
+  async confirmPasswordReset(data: {
+    token: string
+    password: string
+    password_confirm: string
+  }): Promise<{ message: string }> {
+    const response = await api.post<{ message: string }>('/professionals/password-reset-confirm/', data)
+    return response.data
+  },
 }
 
 export default professionalService

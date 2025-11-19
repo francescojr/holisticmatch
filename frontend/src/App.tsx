@@ -10,6 +10,8 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import RegisterProfessionalPage from './pages/RegisterProfessionalPage'
 import EmailVerificationPage from './pages/EmailVerificationPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import ProfessionalDetailPage from './pages/ProfessionalDetailPage'
 import DashboardPage from './pages/DashboardPage'
 import { ToastContainer } from './components/toast'
@@ -33,6 +35,8 @@ function AppContent() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterProfessionalPage />} />
           <Route path="/verify-email" element={<EmailVerificationPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/professionals/:id" element={<ProfessionalDetailPage />} />
           <Route
             path="/dashboard"

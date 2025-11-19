@@ -5,6 +5,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { modalVariants } from '../lib/animations'
 import type { Professional } from '../types/Professional'
+import { getProfileImageUrl } from '../lib/imageDefaults'
 
 interface ProfessionalModalProps {
   professional: Professional | null
@@ -70,17 +71,11 @@ export default function ProfessionalModal({ professional, isOpen, onClose }: Pro
 
               {/* Header with Photo */}
               <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-primary/20 to-green-100">
-                {professional.photo_url ? (
-                  <img
-                    src={professional.photo_url}
-                    alt={professional.name}
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center">
-                    <span className="text-9xl text-gray-400">👤</span>
-                  </div>
-                )}
+                <img
+                  src={getProfileImageUrl(professional.photo_url)}
+                  alt={professional.name}
+                  className="h-full w-full object-cover"
+                />
               </div>
 
               {/* Content */}

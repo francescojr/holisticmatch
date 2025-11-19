@@ -5,6 +5,7 @@
 import { motion } from 'framer-motion'
 import { itemVariants, contentVariants } from '../lib/animations'
 import type { ProfessionalSummary } from '../types/Professional'
+import { getProfileImageUrl } from '../lib/imageDefaults'
 
 interface ProfessionalCardProps {
   professional: ProfessionalSummary
@@ -28,17 +29,11 @@ export default function ProfessionalCard({ professional, onClick }: Professional
     >
       {/* Profile Image */}
       <div className="relative h-64 w-full overflow-hidden bg-gray-200">
-        {professional.photo_url ? (
-          <img
-            src={professional.photo_url}
-            alt={professional.name}
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/20 to-green-100">
-            <span className="text-6xl text-gray-400">👤</span>
-          </div>
-        )}
+        <img
+          src={getProfileImageUrl(professional.photo_url)}
+          alt={professional.name}
+          className="h-full w-full object-cover"
+        />
         
         {/* Online Sessions Badge */}
         {(professional.attendance_type === 'online' || professional.attendance_type === 'ambos') && (

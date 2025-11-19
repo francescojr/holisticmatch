@@ -19,6 +19,7 @@ import ConfirmDialog from '../components/ConfirmDialog'
 import { useDeleteProfessional } from '../hooks/useDeleteProfessional'
 import type { Professional } from '../types/Professional'
 import { SERVICE_TYPES } from '../types/Professional'
+import { getProfileImageUrl } from '../lib/imageDefaults'
 
 const BRAZILIAN_STATES = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
@@ -435,9 +436,7 @@ function DashboardPage() {
                     <div
                         className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-28 border-4 border-white dark:border-slate-700 shadow-md"
                       style={{
-                        backgroundImage: professional?.photo_url
-                          ? `url("${professional.photo_url}")`
-                          : 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCmmERGYXMdWyDRvCoMoGT8wsCudBrbcqSIyW7aVAFFhZmAjIf7cawAN9cz4qtkbkp5hWVpNEfsDFb0ox5R6LDbAMG9jC04rW3Y1fUJT32nzxtKcorXCNwRBGJWp8JXy8lIPNURFkIcK-FzlxDiUi3xW3VwYLx48oD6NdIbab5otxoTAGRhgy8oGvbM_IZ0hy_gmrHZt7fGoORiSyiMOKfNegkWqEqtE_VJimkFugFQG7AwPgs4Wl7AHWmmy43ZKp0rFaoOMyDq5w")'
+                        backgroundImage: `url("${getProfileImageUrl(professional?.photo_url)}")`
                       }}
                     ></div>
                     <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
@@ -654,9 +653,7 @@ function DashboardPage() {
                               style={{
                                 backgroundImage: photoPreview
                                   ? `url("${photoPreview}")`
-                                  : professional?.photo_url
-                                    ? `url("${professional.photo_url}")`
-                                    : 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCmmERGYXMdWyDRvCoMoGT8wsCudBrbcqSIyW7aVAFFhZmAjIf7cawAN9cz4qtkbkp5hWVpNEfsDFb0ox5R6LDbAMG9jC04rW3Y1fUJT32nzxtKcorXCNwRBGJWp8JXy8lIPNURFkIcK-FzlxDiUi3xW3VwYLx48oD6NdIbab5otxoTAGRhgy8oGvbM_IZ0hy_gmrHZt7fGoORiSyiMOKfNegkWqEqtE_VJimkFugFQG7AwPgs4Wl7AHWmmy43ZKp0rFaoOMyDq5w")'
+                                  : `url("${getProfileImageUrl(professional?.photo_url)}")`
                               }}
                             ></div>
                             {isEditing && !isUploadingPhoto && (

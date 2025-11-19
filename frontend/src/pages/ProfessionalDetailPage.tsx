@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { useEffect } from 'react'
 import { pageVariants, itemVariants } from '../lib/animations'
 import { useProfessional } from '../hooks/useProfessionals'
+import { getProfileImageUrl } from '../lib/imageDefaults'
 
 function ProfessionalDetailPage() {
   const navigate = useNavigate()
@@ -84,7 +85,7 @@ function ProfessionalDetailPage() {
             {/* Avatar */}
             <div className="flex items-end gap-6 mb-6 -mt-16">
               <img
-                src={professional.photo_url || 'https://via.placeholder.com/224'}
+                src={getProfileImageUrl(professional.photo_url)}
                 alt={professional.name}
                 className="w-56 h-56 rounded-lg border-4 border-white shadow-lg object-cover"
               />
