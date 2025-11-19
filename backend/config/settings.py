@@ -80,7 +80,6 @@ INSTALLED_APPS = [
     'professionals',
     'authentication',
     'storage',
-    'django_ratelimit',
 ]
 
 MIDDLEWARE = [
@@ -213,6 +212,13 @@ SIMPLE_JWT = {
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,
     'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
+# Cache Settings (for django-ratelimit and general caching)
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',  # Dummy cache for production without Redis
+    }
 }
 
 # CORS Settings

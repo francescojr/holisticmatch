@@ -19,6 +19,13 @@
             padding: 0;
             background: #fafafa;
         }
+        .topbar {
+            background-color: #2c3e50 !important;
+            border-bottom: 3px solid #27ae60 !important;
+        }
+        .topbar-wrapper {
+            max-width: none !important;
+        }
     </style>
 </head>
 <body>
@@ -28,8 +35,16 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.min.js"></script>
     <script>
         window.onload = function() {
+            // Determine spec URL based on where the HTML is served
+            let specUrl = "openapi.json";
+            
+            // If served online (not localhost), fetch from GitHub raw content
+            if (!window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+                specUrl = "https://raw.githubusercontent.com/francescojr/holisticmatch/main/openapi.json";
+            }
+            
             window.ui = SwaggerUIBundle({
-                url: "openapi.yaml",
+                url: specUrl,
                 dom_id: '#swagger-ui',
                 deepLinking: true,
                 presets: [
@@ -42,6 +57,14 @@
                 layout: "StandaloneLayout",
                 defaultModelsExpandDepth: 1,
                 defaultModelExpandDepth: 1,
+                // Add custom request interceptor to handle CORS
+                requestInterceptor: (request) => {
+                    // Ensure requests to EC2 are made with proper headers
+                    if (request.url.includes('44.197.112.222')) {
+                        request.headers['Access-Control-Allow-Origin'] = '*';
+                    }
+                    return request;
+                }
             })
         }
     </script>

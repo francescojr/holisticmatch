@@ -1,9 +1,79 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 19, 2025 (Password Reset Fixes + Content Moderation in Updates)
+**Last Updated**: November 20, 2025 (EC2 Migration + Swagger Documentation Online)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
-**Status**: ✅ **PRODUCTION READY** (all tests passing, password reset + moderation complete)
+**Status**: ✅ **PRODUCTION READY** (EC2 infrastructure running, Swagger online, all tests passing)
+
+---
+
+## ✅ SWAGGER DOCUMENTATION ONLINE - NOVEMBER 20, 2025 (Session 6 - Part 2)
+
+### API Documentation Now Available Online & Integrated with EC2
+
+**Changes**:
+- ✅ Updated `openapi.json` server URL: `http://44.197.112.222/api/v1` (EC2 production)
+- ✅ Updated `openapi.yaml` server URL: `http://44.197.112.222/api/v1` (EC2 production)
+- ✅ Enhanced `swagger-ui.html` with auto-detection:
+  - Detects localhost vs production environment
+  - Automatically pulls spec from GitHub raw content for online access
+  - Fallback to local openapi.json for local development
+- ✅ Added Django routes for documentation:
+  - `/docs/` - Swagger UI (root)
+  - `/api/v1/docs/` - Swagger UI (API namespace)
+  - `/openapi.json` - OpenAPI spec (JSON)
+  - `/api/v1/openapi.json` - OpenAPI spec (API namespace)
+
+**Live Endpoints** (After EC2 deployment):
+- Documentation: `http://44.197.112.222/docs/`
+- API Spec: `http://44.197.112.222/openapi.json`
+- Online access: Swagger UI fetches from GitHub main branch when deployed online
+
+**Features**:
+- ✅ Full OpenAPI 3.0.0 specification
+- ✅ All 22 professionals listed with filters
+- ✅ Complete authentication flow documented
+- ✅ Email verification flow documented
+- ✅ Profile update and photo upload documented
+- ✅ Try-it-out feature for all endpoints (with CORS handling)
+- ✅ Professional styling with HolisticMatch branding
+
+---
+
+## ✅ EC2 MIGRATION COMPLETE - NOVEMBER 20, 2025 (Session 6 - Part 1)
+
+### Infrastructure Migration: Elastic Beanstalk → AWS EC2 Free Tier
+**Savings**: $261.72/year ($21.81/mo → $0 Free Tier)
+
+**Completed**:
+- ✅ EC2 t2.micro (44.197.112.222) Ubuntu 22.04 LTS provisioned
+- ✅ Django 4.2.7 deployed with Gunicorn (2 workers) + Nginx reverse proxy
+- ✅ Supabase PostgreSQL connected via PgBouncer pooling (port 6543)
+- ✅ GitHub Actions updated: deploy-backend.yml now uses appleboy/ssh-action for EC2 deployment
+- ✅ SSH key authentication configured (ED25519 key, ~/.ssh/github_deploy)
+- ✅ Sudoers configured for passwordless systemctl commands
+- ✅ Vercel frontend (React 18) successfully redirected to EC2 with CORS validation
+- ✅ All 22 professionals accessible via http://44.197.112.222/api/v1/professionals/
+- ✅ Swagger UI configured for online documentation
+- ✅ Security audit completed: no sensitive files in git, .gitignore properly configured
+- ✅ Documentation moved to __claudio/ folder (keeping only essential production files)
+
+**Technical Details**:
+- Django WSGI: config.wsgi:application
+- Python: 3.11.14 in isolated venv at /home/django/holisticmatch/backend/venv/
+- Nginx: 1.24.0 reverse proxy, Unix socket communication with Gunicorn
+- Database: Pooled connection via PgBouncer, 0 pending migrations
+- Static files: 160 files collected and served
+- Documentation: Swagger UI at /docs/ with OpenAPI spec from GitHub
+- Deployment: Manual via git push → GitHub Actions → SSH deployment
+
+**Next Steps**:
+1. Deploy to EC2 (git push)
+2. Add GitHub secrets: EC2_HOST, EC2_USER, EC2_SSH_KEY
+3. Test deployment with git push
+4. Monitor 24-48h for stability
+5. Access Swagger at http://44.197.112.222/docs/
+6. Terminate Elastic Beanstalk environment (post-validation)
 
 ---
 

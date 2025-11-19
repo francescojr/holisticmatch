@@ -1,4 +1,4 @@
-name: Deploy Backend to AWS Elastic Beanstalk
+name: Deploy Backend to AWS EC2
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to AWS EB
+    name: Deploy to AWS EC2
     runs-on: ubuntu-latest
     
     defaults:
@@ -42,42 +42,69 @@ jobs:
         run: |
           pytest tests/ -v --tb=short
       
-      - name: Create deployment package
-        run: |
-          zip -r ../backend.zip . -x ".git*" ".env*" ".pytest_cache/*" "htmlcov/*" "db.sqlite3" "venv/*" "__pycache__/*"
-          ls -lh ../backend.zip
-      
-      - name: Deploy to Elastic Beanstalk
-        uses: einaregilsson/beanstalk-deploy@v21
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          application_name: holisticmatch
-          environment_name: holisticmatch-env
-          region: us-east-2
-          version_label: ${{ github.sha }}
-          deployment_package: backend.zip
-          existing_bucket_name: elasticbeanstalk-us-east-2-016804998023
-          wait_for_environment_recovery: 120
-      
-      - name: Set Environment Variables in Elastic Beanstalk
-        run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws configure set region us-east-2
-          aws elasticbeanstalk update-environment \
-            --application-name holisticmatch \
-            --environment-name holisticmatch-env \
-            --option-settings \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=OPENAI_API_KEY,Value="${{ secrets.OPENAI_API_KEY }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=RESEND_API_KEY,Value="${{ secrets.RESEND_API_KEY }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=SECRET_KEY,Value="${{ secrets.DJANGO_SECRET_KEY }}" \
-              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DATABASE_URL,Value="${{ secrets.DATABASE_URL }}"
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          timeout: 300s
+          command_timeout: 300s
+          script: |
+            set -e
+            
+            echo "========================================="
+            echo "Starting backend deployment at $(date)"
+            echo "========================================="
+            
+            cd /home/django/holisticmatch
+            
+            echo "→ Pulling latest code from GitHub..."
+            git fetch origin main
+            git reset --hard origin/main
+            
+            echo "→ Activating virtual environment..."
+            source backend/venv/bin/activate
+            
+            echo "→ Installing dependencies..."
+            cd backend
+            pip install -r requirements.txt --quiet
+            
+            echo "→ Running database migrations..."
+            python manage.py migrate --noinput
+            
+            echo "→ Collecting static files..."
+            python manage.py collectstatic --noinput --clear
+            
+            echo "→ Restarting Gunicorn..."
+            sudo systemctl restart gunicorn
+            
+            sleep 3
+            
+            if sudo systemctl is-active --quiet gunicorn; then
+              echo "✓ Gunicorn is active and running"
+            else
+              echo "✗ Gunicorn failed to start"
+              sudo systemctl status gunicorn
+              exit 1
+            fi
+            
+            echo "→ Running API health check..."
+            curl -f http://localhost/api/v1/professionals/ > /dev/null 2>&1
+            if [ $? -eq 0 ]; then
+              echo "✓ API health check passed"
+            else
+              echo "⚠ API health check failed (non-blocking)"
+            fi
+            
+            echo "========================================="
+            echo "Backend deployment completed at $(date)"
+            echo "========================================="
       
       - name: Notify Success
         if: success()
-        run: echo "Backend deployed successfully to AWS EB!"
+        run: echo "✅ Backend deployed successfully to AWS EC2!"
       
       - name: Notify Failure
         if: failure()
-        run: echo "Backend deployment failed!!"
+        run: echo "❌ Backend deployment to EC2 failed!!"

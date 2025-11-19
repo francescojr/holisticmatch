@@ -15,8 +15,8 @@
   },
   "servers": [
     {
-      "url": "https://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/api/v1",
-      "description": "Production server"
+      "url": "http://44.197.112.222/api/v1",
+      "description": "Production server (AWS EC2)"
     },
     {
       "url": "http://localhost:8000/api/v1",
