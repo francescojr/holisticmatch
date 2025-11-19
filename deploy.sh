@@ -7,6 +7,9 @@ echo "========================================="
 
 cd /home/django/holisticmatch
 
+# Fix git ownership issue
+git config --global --add safe.directory /home/django/holisticmatch
+
 echo "→ Pulling latest code from GitHub..."
 git fetch origin main
 git reset --hard origin/main
@@ -25,14 +28,14 @@ echo "→ Collecting static files..."
 python manage.py collectstatic --noinput --clear
 
 echo "→ Restarting Gunicorn..."
-sudo systemctl restart gunicorn
+systemctl restart gunicorn
 sleep 3
 
-if sudo systemctl is-active --quiet gunicorn; then
+if systemctl is-active --quiet gunicorn; then
   echo "✓ Gunicorn is active and running"
 else
   echo "✗ Gunicorn failed to start"
-  sudo systemctl status gunicorn
+  systemctl status gunicorn
   exit 1
 fi
 
