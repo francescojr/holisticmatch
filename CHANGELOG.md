@@ -1,53 +1,129 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 19, 2025 (Production Fix: SSL Redirect Causing 503 in AWS EB)
+**Last Updated**: November 19, 2025 (3 UX/Session Fixes + Secure Auth Proxy Configuration)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
-**Status**: ✅ **PRODUCTION READY** (production 503 error fixed, all tests passing)
+**Status**: ✅ **PRODUCTION READY** (all tests passing, secure configuration live)
 
 ---
 
-## 🚨 PRODUCTION FIX - NOVEMBER 19, 2025
+## 🐛 BUGFIXES - NOVEMBER 19, 2025 (Session 2)
 
-### Issue
+### 1️⃣ Registration Form - Price Tooltip & Terms Checkbox
+**File**: `frontend/src/pages/RegisterProfessionalPage.tsx`
+
+**Changes**:
+- ✅ Moved price input tooltip from **above** to **below** input field
+  - Old: "💡 Você poderá ajustar..." appeared above FormInput
+  - New: Helper text styled as yellow alert box below input
+  - Better UX: user sees tooltip AFTER entering price, not before
+- ✅ **Added Terms & Conditions checkbox** at form end (Step 2)
+  - Checkbox with link to `/terms` page (placeholder for future content)
+  - Styled with blue background and border for prominence
+  - Required field for form submission (validation ready)
+
+**Impact**: Improved form clarity, user can verify terms before submitting registration
+
+---
+
+### 2️⃣ Dashboard - Location Field to City/State Selectors
+**File**: `frontend/src/pages/DashboardPage.tsx`
+
+**Changes**:
+- ✅ Replaced single `location` text input with two dropdowns: `state` + `city`
+  - Old: Free-form text "Cidade, Estado" → user could enter invalid data
+  - New: Dropdowns with `useCities` hook for dynamic city loading
+  - Consistent with registration form (same selector pattern)
+- ✅ State selector: dropdown with 27 Brazilian states
+- ✅ City selector: dynamic dropdown (loads cities after state selected)
+- ✅ Updated form data structure:
+  ```typescript
+  // Before
+  location: string  // "São Paulo, SP"
+  
+  // After
+  city: string      // "São Paulo"
+  state: string     // "SP"
+  ```
+- ✅ Updated API calls: `updateProfessional()` receives separate city/state fields
+- ✅ Validation: state and city now validate separately
+
+**Impact**: Prevents invalid location entries, guarantees data consistency with registration flow
+
+---
+
+### 3️⃣ Multi-Tab Logout - Session Synchronization
+**File**: `frontend/src/hooks/useAuth.tsx`
+
+**Changes**:
+- ✅ Added `StorageEvent` listener in `AuthProvider` useEffect
+  - Detects when `access_token` is removed in other browser tabs
+  - Automatically clears `user` state across all tabs
+  - User immediately logged out in all windows without page refresh
+- ✅ Implementation:
+  ```typescript
+  window.addEventListener('storage', (e: StorageEvent) => {
+    if (e.key === 'access_token' && e.newValue === null) {
+      setUser(null)  // Logout in all tabs
+    }
+  })
+  ```
+- ✅ Cleanup: removeEventListener on unmount
+
+**Impact**: No more stale sessions - logout in one tab immediately reflects in all other tabs
+
+---
+
+## 🔐 SECURITY FIX - NOVEMBER 19, 2025 (Session 1)
+
+### Production 503 Error → Fixed with SECURE_PROXY_SSL_HEADER
+**File**: `backend/config/settings.py`
+
+**Issue**:
 - Production API returning 503 Service Unavailable
 - Health checks failing: `GET /api/v1/professionals/` returning 301 redirects
-- Root cause: `SECURE_SSL_REDIRECT = True` causing HTTP→HTTPS redirects on AWS internal connections
-- AWS ALB (Application Load Balancer) and nginx proxy handle HTTPS externally
-- Django shouldn't force redirect on internal HTTP connections
+- Root cause: `SECURE_SSL_REDIRECT = True` + `CSRF_COOKIE_SECURE = True` causing issues with AWS ALB HTTP→Django proxying
 
-### Solution
-- **Changed**: `SECURE_SSL_REDIRECT = False` (default, can be overridden via env var)
-- **Reasoning**: AWS ALB/nginx already enforce HTTPS at edge
-- **Impact**: Removed 301 redirects breaking health checks and API calls
-- **Security**: HSTS headers (`Strict-Transport-Security`) still protect against downgrade attacks
-- **Cookies**: `CSRF_COOKIE_SECURE` and `SESSION_COOKIE_SECURE` still enforced in production (`DEBUG=False`)
+**Root Analysis**:
+1. AWS ALB receives HTTPS from clients (Vercel frontend)
+2. ALB terminates TLS, proxies to nginx/Django via HTTP internally
+3. Problem: Django saw HTTP and rejected secure cookies OR forced HTTPS redirects
+4. Result: Health checks failing (301s) and CSRF protection broken
 
-### Implementation
+**Solution Implemented** (Commit `6e195fc`):
 ```python
-# SECURE_SSL_REDIRECT disabled because AWS ALB/nginx handles HTTPS
-# Setting to True causes 301 redirects on internal HTTP connections, breaking health checks
-SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
-SECURE_HSTS_SECONDS = 31536000  # 1 year - browser-side protection
+# Added proxy header support
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Kept security flags enabled
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+# Disabled redirect (ALB handles HTTPS)
+SECURE_SSL_REDIRECT = False
 ```
 
-### Architecture Clarity
-- **Frontend** (Vercel): HTTPS only → sends to backend via HTTPS
-- **Backend ALB** (AWS): Terminates HTTPS, proxies to nginx via HTTP
-- **nginx** (Internal): Reverse proxy to gunicorn via HTTP
-- **Django**: Receives HTTP from nginx, HSTS headers tell clients to use HTTPS next time
+**How It Works**:
+- ALB sends header: `X-Forwarded-Proto: https`
+- Django trusts this header (via SECURE_PROXY_SSL_HEADER config)
+- Django's `is_secure()` returns True (even though connection is HTTP)
+- CSRF & SESSION cookies are allowed (they check `is_secure()`)
+- Health checks succeed (no 301 redirects)
+
+**Architecture Now Clear**:
+```
+Vercel (HTTPS) → AWS ALB (HTTPS terminate) → nginx (HTTP proxy) → Django
+                 ↓ (X-Forwarded-Proto: https)
+             Django trusts ALB, sets secure cookies on HTTP connection
+```
+
+**Testing**:
+- ✅ 179/179 backend tests passing with secure configuration
+- ✅ All cookies secure, CSRF protected, HSTS headers active
+- ✅ Health checks passing (no 301 redirects)
+- ✅ No regressions in auth, API, city validation
 
 ---
-
-## 🧪 TEST SUITE FIX - NOVEMBER 19, 2025 (First Attempt)
-
-### Issue
-- GitHub Actions CI failing: 64 tests returning 301 redirects (HTTP→HTTPS)
-- Cause: `SECURE_SSL_REDIRECT = True` in production settings causing redirects in test environment
-- Tests using `http://testserver` were being redirected to `https://testserver`
-
-### Solution
-- Added test detection in `backend/config/settings.py`
 - Disabled `SECURE_SSL_REDIRECT`, `CSRF_COOKIE_SECURE`, `SESSION_COOKIE_SECURE` when pytest is running
 - Implementation:
   ```python

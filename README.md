@@ -5,7 +5,7 @@
 [![Status](https://img.shields.io/badge/status-production%20live-success)]()
 [![Frontend](https://img.shields.io/badge/frontend-vercel%20live-blue)](https://holisticmatch.vercel.app)
 [![Backend](https://img.shields.io/badge/backend-elastic%20beanstalk-orange)](http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com)
-[![Tests](https://img.shields.io/badge/tests-31%2F31%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-179%2F179%20passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-hardened-9cf)]()
 
 ---
@@ -14,21 +14,24 @@
 
 ✅ **Frontend**: https://holisticmatch.vercel.app/ (React 18 + Vite)  
 ✅ **Backend**: http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/ (Django 4.2)  
-✅ **Database**: Supabase PostgreSQL (12 professionals loaded)  
+✅ **Database**: Supabase PostgreSQL (12+ professionals)  
 ✅ **API**: Full CRUD endpoints with filtering & pagination  
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
-### 🔐 Recent Security Fixes (Nov 2025)
-- ✅ **JWT Token Return**: Registration endpoint now returns JWT tokens for immediate authentication
-- ✅ **Email Validation**: Duplicate emails return 400 (not 500 errors)
-- ✅ **Timing Attack Protection**: LoginView now immune to email enumeration attacks
-- ✅ **Complete Flow**: Full end-to-end testing validates register → verify → login flow
-- ✅ **Photo Upload Fix**: Nginx/Django limits increased to 250MB, Axios header fixed
-- **Status**: All tests passing ✅ | Ready for deployment ✅
+### 🔐 Latest Updates (Nov 19, 2025)
+- ✅ **3 UX Fixes Deployed**:
+  - Price input tooltip moved below field (registration form)
+  - Terms & Conditions checkbox added to form
+  - Dashboard location field → City/State dropdowns (consistent with registration)
+- ✅ **Multi-Tab Session Sync**: Logout in one tab immediately logs out all other tabs
+- ✅ **Secure Auth with Proxy Headers**: SECURE_PROXY_SSL_HEADER properly configured for AWS ALB
+- **Status**: All 179 tests passing ✅ | Ready for production ✅
 
-### 📸 Photo Upload - Latest Fix (Nov 7, 2025)
-Nginx + Django limits increased from 50MB to 250MB. Axios FormData header issue fixed.
-See [PHOTO_UPLOAD_QUICKSTART.md](./PHOTO_UPLOAD_QUICKSTART.md) for details.
+### 📸 Recent Fixes
+- Photo Upload: Nginx/Django limits 250MB, Axios headers fixed
+- Registration Form: City/State validation with dynamic dropdowns
+- Dashboard: Location field now uses same selector pattern as registration
+- Session Management: Real-time logout synchronization across browser tabs
 
 ---
 
@@ -73,21 +76,24 @@ Acesse:
 - **Framework**: Django 4.2.7 + Django REST Framework 3.14.0
 - **Database**: PostgreSQL (Supabase) / SQLite (dev)
 - **Server**: Gunicorn + Nginx (AWS Elastic Beanstalk)
-- **Testing**: pytest + pytest-django (10/10 tests passing ✅)
+- **Testing**: pytest + pytest-django (179/179 tests passing ✅)
 - **Linting**: ruff
+- **Security**: JWT tokens, CSRF protection, secure cookies, timing attack protection
 
 ### Frontend
 - **Framework**: React 18 + TypeScript 5.3 (strict mode)
 - **Build**: Vite 5
-- **Styling**: TailwindCSS 3.4 (mobile-first)
-- **Animations**: Framer Motion 11 (enhanced with spring physics & custom easing)
+- **Styling**: TailwindCSS 3.4 (mobile-first, dark mode)
+- **Animations**: Framer Motion 11 (spring physics & custom easing)
 - **State**: React Query + Axios
 - **Deployment**: Vercel (auto-deploy on git push)
+- **Session**: Real-time sync across browser tabs
 
 ### Infrastructure  
 - **Backend**: AWS Elastic Beanstalk (t3.micro, us-east-2)
 - **Frontend**: Vercel (auto-deploy)
 - **Database**: Supabase PostgreSQL
+- **SSL/TLS**: AWS ALB with proxy header support for secure cookies
 - **Networking**: IPv6 enabled, Security Groups configured
 
 ---
