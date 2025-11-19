@@ -686,6 +686,15 @@ function RegisterProfessionalPage() {
                     required
                   />
 
+                  {step2Data.pricePerSession > 0 && (
+                    <p className="text-sm text-accent-yellow bg-yellow-50 rounded-lg p-3 flex items-start gap-2">
+                      <span className="material-symbols-outlined text-sm flex-shrink-0 mt-0.5">
+                        lightbulb
+                      </span>
+                      <span>Você poderá ajustar preços específicos por serviço no seu dashboard profissional</span>
+                    </p>
+                  )}
+
                   {/* Attendance Type Selection */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -706,11 +715,26 @@ function RegisterProfessionalPage() {
                     </select>
                   </div>
 
-                  {step2Data.pricePerSession > 0 && (
-                    <p className="text-sm text-gray-600">
-                      💡 Você poderá ajustar preços específicos por serviço no seu dashboard profissional
-                    </p>
-                  )}
+                  {/* Terms and Conditions Checkbox */}
+                  <div className="flex items-start gap-3 mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <input
+                      type="checkbox"
+                      id="acceptTerms"
+                      className="w-5 h-5 text-primary rounded cursor-pointer mt-0.5"
+                    />
+                    <label htmlFor="acceptTerms" className="text-sm text-gray-700 flex-1 cursor-pointer leading-relaxed">
+                      Aceito os{' '}
+                      <a
+                        href="/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline font-medium"
+                      >
+                        Termos e Condições
+                      </a>
+                      {' '}do HolisticMatch *
+                    </label>
+                  </div>
                 </div>
               </div>
 

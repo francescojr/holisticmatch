@@ -9,14 +9,22 @@ import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { useFormValidation } from '../hooks/useFormValidation'
 import { useConfirm } from '../hooks/useConfirm'
+import { useCities } from '../hooks/useCities'
 import { professionalService } from '../services/professionalService'
 import { DashboardSkeleton } from '../components/LoadingSkeleton'
 import FormInput from '../components/forms/FormInput'
+import FormSelect from '../components/forms/FormSelect'
 import FormTextarea from '../components/forms/FormTextarea'
 import ConfirmDialog from '../components/ConfirmDialog'
 import { useDeleteProfessional } from '../hooks/useDeleteProfessional'
 import type { Professional } from '../types/Professional'
 import { SERVICE_TYPES } from '../types/Professional'
+
+const BRAZILIAN_STATES = [
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
+  'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
+  'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
+]
 
 function DashboardPage() {
   const { user } = useAuth()
@@ -38,7 +46,8 @@ function DashboardPage() {
   const [formData, setFormData] = useState({
     fullName: '',
     professionalTitle: '',
-    location: '',
+    city: '',
+    state: '',
     email: '',
     phone: '',
     bio: '',
@@ -48,6 +57,9 @@ function DashboardPage() {
 
   const [originalData, setOriginalData] = useState(formData)
   const [originalPhotoUrl, setOriginalPhotoUrl] = useState<string | null>(null)
+
+  // Load cities based on selected state
+  const { citiesRaw, loading: citiesLoading } = useCities(formData.state)
 
   // Form validation
   const { errors, validate, validateAll, clearErrors } = useFormValidation()
@@ -73,7 +85,8 @@ function DashboardPage() {
         setFormData({
           fullName: data.name,
           professionalTitle: data.services?.[0] || 'Profissional',
-          location: `${data.city}, ${data.state}`,
+          city: data.city || '',
+          state: data.state || '',
           email: data.email,
           phone: data.phone || data.whatsapp || '',
           bio: data.bio,
@@ -83,7 +96,8 @@ function DashboardPage() {
         setOriginalData({
           fullName: data.name,
           professionalTitle: data.services?.[0] || 'Profissional',
-          location: `${data.city}, ${data.state}`,
+          city: data.city || '',
+          state: data.state || '',
           email: data.email,
           phone: data.phone || data.whatsapp || '',
           bio: data.bio,
@@ -190,8 +204,11 @@ function DashboardPage() {
       case 'bio':
         rules = { required: true, minLength: 10, maxLength: 500 }
         break
-      case 'location':
-        rules = { required: true, minLength: 3, maxLength: 100 }
+      case 'city':
+        rules = { required: true, minLength: 2, maxLength: 100 }
+        break
+      case 'state':
+        rules = { required: true }
         break
     }
     validate(field, value, rules)
@@ -216,7 +233,8 @@ function DashboardPage() {
     if (formData.email !== originalData.email) changes.email = formData.email
     if (formData.phone !== originalData.phone) changes.phone = formData.phone
     if (formData.bio !== originalData.bio) changes.bio = formData.bio
-    if (formData.location !== originalData.location) changes.location = formData.location
+    if (formData.city !== originalData.city) changes.city = formData.city
+    if (formData.state !== originalData.state) changes.state = formData.state
     if (formData.attendanceType !== originalData.attendanceType) changes.attendanceType = formData.attendanceType
 
     // Check if services changed
@@ -263,7 +281,8 @@ function DashboardPage() {
       email: formData.email,
       phone: formData.phone,
       bio: formData.bio,
-      location: formData.location
+      city: formData.city,
+      state: formData.state
     }
 
     const fieldRules = {
@@ -271,7 +290,8 @@ function DashboardPage() {
       email: { required: true, email: true },
       phone: { required: true, phone: true },
       bio: { required: true, minLength: 10, maxLength: 500 },
-      location: { required: true, minLength: 3, maxLength: 100 }
+      city: { required: true, minLength: 2, maxLength: 100 },
+      state: { required: true }
     }
 
     const validation = validateAll(fieldsToValidate, fieldRules)
@@ -306,9 +326,6 @@ function DashboardPage() {
         return
       }
 
-      // Parse location if it changed
-      const [city, state] = formData.location.split(',').map(s => s.trim())
-
       // Prepare update data with only changed fields
       const updateData: any = {}
 
@@ -316,10 +333,8 @@ function DashboardPage() {
       if (changes.email) updateData.email = changes.email
       if (changes.phone) updateData.phone = changes.phone
       if (changes.bio) updateData.bio = changes.bio
-      if (changes.location) {
-        updateData.city = city || ''
-        updateData.state = state || ''
-      }
+      if (changes.city) updateData.city = changes.city
+      if (changes.state) updateData.state = changes.state
       if (changes.attendanceType) updateData.attendance_type = changes.attendanceType
       if (changes.services) {
         updateData.services = changes.services
@@ -555,15 +570,21 @@ function DashboardPage() {
                           required
                           placeholder="(11) 99999-9999"
                         />
-                        <FormInput
-                          label="Localização"
-                          type="text"
-                          value={formData.location}
-                          onChange={(value) => handleFieldChange('location', value)}
-                          error={errors.location}
+                        <FormSelect
+                          label="Estado"
+                          value={formData.state}
+                          onChange={(value) => handleFieldChange('state', value)}
+                          options={BRAZILIAN_STATES}
                           disabled={!isEditing || isSaving}
                           required
-                          placeholder="Cidade, Estado"
+                        />
+                        <FormSelect
+                          label="Cidade"
+                          value={formData.city}
+                          onChange={(value) => handleFieldChange('city', value)}
+                          options={citiesRaw}
+                          disabled={!isEditing || isSaving || citiesLoading}
+                          required
                         />
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

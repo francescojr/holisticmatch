@@ -60,6 +60,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     checkAuth()
+
+    // Listen for logout in other tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      // When logout happens, localStorage.removeItem() is called
+      // We detect this when access_token is removed
+      if (e.key === 'access_token' && e.newValue === null) {
+        // Another tab or window logged out
+        setUser(null)
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
   }, [])
 
   const login = async (credentials: LoginRequest) => {
