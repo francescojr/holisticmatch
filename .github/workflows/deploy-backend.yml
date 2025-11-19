@@ -6,6 +6,9 @@ on:
     paths:
       - 'backend/**'
       - '.github/workflows/deploy-backend.yml'
+      - 'openapi.json'
+      - 'openapi.yaml'
+      - 'swagger-ui.html'
   workflow_dispatch:
 
 jobs:
