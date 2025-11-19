@@ -1,13 +1,45 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 19, 2025 (Test Suite Fixed: SSL Redirect Configuration for Testing)
+**Last Updated**: November 19, 2025 (Production Fix: SSL Redirect Causing 503 in AWS EB)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
-**Status**: ✅ **PRODUCTION READY** (all critical bugs fixed, comprehensive city selection, content moderation, security hardening complete, test suite passing)
+**Status**: ✅ **PRODUCTION READY** (production 503 error fixed, all tests passing)
 
 ---
 
-## 🧪 TEST SUITE FIX - NOVEMBER 19, 2025
+## 🚨 PRODUCTION FIX - NOVEMBER 19, 2025
+
+### Issue
+- Production API returning 503 Service Unavailable
+- Health checks failing: `GET /api/v1/professionals/` returning 301 redirects
+- Root cause: `SECURE_SSL_REDIRECT = True` causing HTTP→HTTPS redirects on AWS internal connections
+- AWS ALB (Application Load Balancer) and nginx proxy handle HTTPS externally
+- Django shouldn't force redirect on internal HTTP connections
+
+### Solution
+- **Changed**: `SECURE_SSL_REDIRECT = False` (default, can be overridden via env var)
+- **Reasoning**: AWS ALB/nginx already enforce HTTPS at edge
+- **Impact**: Removed 301 redirects breaking health checks and API calls
+- **Security**: HSTS headers (`Strict-Transport-Security`) still protect against downgrade attacks
+- **Cookies**: `CSRF_COOKIE_SECURE` and `SESSION_COOKIE_SECURE` still enforced in production (`DEBUG=False`)
+
+### Implementation
+```python
+# SECURE_SSL_REDIRECT disabled because AWS ALB/nginx handles HTTPS
+# Setting to True causes 301 redirects on internal HTTP connections, breaking health checks
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=False, cast=bool)
+SECURE_HSTS_SECONDS = 31536000  # 1 year - browser-side protection
+```
+
+### Architecture Clarity
+- **Frontend** (Vercel): HTTPS only → sends to backend via HTTPS
+- **Backend ALB** (AWS): Terminates HTTPS, proxies to nginx via HTTP
+- **nginx** (Internal): Reverse proxy to gunicorn via HTTP
+- **Django**: Receives HTTP from nginx, HSTS headers tell clients to use HTTPS next time
+
+---
+
+## 🧪 TEST SUITE FIX - NOVEMBER 19, 2025 (First Attempt)
 
 ### Issue
 - GitHub Actions CI failing: 64 tests returning 301 redirects (HTTP→HTTPS)
