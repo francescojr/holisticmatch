@@ -224,7 +224,7 @@ CACHES = {
 # CORS Settings
 CORS_ALLOWED_ORIGINS = config(
     'CORS_ALLOWED_ORIGINS',
-    default='http://localhost:5173,http://127.0.0.1:5173'
+    default='http://localhost:5173,http://127.0.0.1:5173,https://holisticmatch.vercel.app,http://44.197.112.222'
 ).split(',')
 
 CORS_ALLOW_CREDENTIALS = True

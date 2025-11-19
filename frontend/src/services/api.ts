@@ -18,9 +18,9 @@ export const registerErrorHandler = (callback: (error: { title: string; message:
   errorHandlerCallback = callback
 }
 
-// Always use /api which Vercel will proxy to EC2 backend
-// Vercel's rewrites in vercel.json handle the proxying
-const API_BASE_URL = '/api'
+// Use direct EC2 URL with CORS enabled
+// EC2 backend has CORS_ALLOWED_ORIGINS configured for holisticmatch.vercel.app
+const API_BASE_URL = 'http://44.197.112.222/api'
 
 // Create axios instance
 export const api = axios.create({
