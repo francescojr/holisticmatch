@@ -55,16 +55,25 @@ jobs:
             echo "❌ WARNING: SSH Key seems too short (< 1000 chars)"
           fi
       
+      - name: Test Network Connectivity to EC2
+        run: |
+          echo "Testing connectivity to ${{ secrets.EC2_HOST }}..."
+          ping -c 5 ${{ secrets.EC2_HOST }} || echo "Ping failed (may be filtered)"
+          nc -zv -w 5 ${{ secrets.EC2_HOST }} 22 || echo "Port 22 not reachable"
+          echo "Testing DNS resolution..."
+          nslookup ${{ secrets.EC2_HOST }} || echo "DNS resolution failed"
+      
       - name: Setup SSH Key
         run: |
           mkdir -p ~/.ssh
           echo '${{ secrets.EC2_SSH_KEY }}' > ~/.ssh/deploy_key.pem
           chmod 600 ~/.ssh/deploy_key.pem
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "SSH key created"
       
       - name: Test SSH Connection with Native SSH
         run: |
-          ssh -i ~/.ssh/deploy_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo 'SSH Connection successful!'; whoami; pwd"
+          echo "Attempting SSH connection to ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}..."
+          ssh -vvv -i ~/.ssh/deploy_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo 'SSH Connection successful!'; whoami; pwd" || echo "SSH connection failed"
       
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
