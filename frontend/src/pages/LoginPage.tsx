@@ -21,11 +21,8 @@ function LoginPage() {
 
   // Check if user just verified email
   useEffect(() => {
-    console.log('[LoginPage] 📍 useEffect mounted - checking for verified email')
     const verifiedEmail = localStorage.getItem('just_verified_email') || localStorage.getItem('verification_email')
-    console.log('[LoginPage] 📧 Verified email from localStorage:', verifiedEmail ? `✅ ${verifiedEmail}` : '❌ not found')
     if (verifiedEmail) {
-      console.log('[LoginPage] ✅ Auto-filling email field from verification')
       setJustVerifiedEmail(verifiedEmail)
       setEmail(verifiedEmail)
       toast.success('Email verificado!', {
@@ -36,77 +33,55 @@ function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('[LoginPage] 🚀🚀🚀 LOGIN ATTEMPT STARTING - SAVE THIS LOG! 🚀🚀🚀')
-    console.log('[LoginPage] 📧 Email:', email)
+
     
     setError('')
     setLoading(true)
 
     try {
       // Check what's in localStorage BEFORE login
-      console.log('[LoginPage] � Pre-login localStorage check:')
       const preAccessToken = localStorage.getItem('access_token')
       const preRefreshToken = localStorage.getItem('refresh_token')
       console.log('[LoginPage]   - access_token before: ' + (preAccessToken ? '✅ exists' : '❌ empty'))
       console.log('[LoginPage]   - refresh_token before: ' + (preRefreshToken ? '✅ exists' : '❌ empty'))
-      
-      console.log('[LoginPage] �🔐 Calling login from auth context...')
-      console.log('[LoginPage] 📡 Endpoint: /auth/login/')
+
       
       // Call login from auth context (which calls authService.login)
       await login({ email, password })
       
-      console.log('[LoginPage] ✅ Login successful!')
-      
       // Check what's in localStorage AFTER login
-      console.log('[LoginPage] 🔍 Post-login localStorage check:')
       const postAccessToken = localStorage.getItem('access_token')
       const postRefreshToken = localStorage.getItem('refresh_token')
-      const accessMsg = postAccessToken ? `✅ EXISTS (${postAccessToken.substring(0, 30)}...)` : '❌ MISSING!!!'
-      const refreshMsg = postRefreshToken ? `✅ EXISTS (${postRefreshToken.substring(0, 30)}...)` : '❌ MISSING!!!'
-      console.log('[LoginPage]   - access_token after:', accessMsg)
-      console.log('[LoginPage]   - refresh_token after:', refreshMsg)
       
       // Verify tokens changed
       if (postAccessToken && postAccessToken !== preAccessToken) {
-        console.log('[LoginPage] ✅ Access token was updated')
       } else if (!postAccessToken) {
-        console.error('[LoginPage] ❌ CRITICAL: access_token NOT saved to localStorage after login!')
       }
-      
-      console.log('[LoginPage] 🧹 Clearing verification flags...')
       // Clear verified email flags
       localStorage.removeItem('just_verified_email')
       localStorage.removeItem('verification_email')
-      
-      console.log('[LoginPage] 🎉 Ready to navigate to dashboard...')
-      console.log('[LoginPage] 🔄 Navigating to dashboard...')
+
       // Navigate to dashboard on successful login
       navigate('/dashboard')
     } catch (err: any) {
-      console.error('[LoginPage] ❌ Login error!')
-      console.error('[LoginPage] Status:', err.response?.status)
-      console.error('[LoginPage] Data:', err.response?.data)
-      console.error('[LoginPage] Message:', err.message)
+
+
+
       
       // Handle specific error messages from backend
       const errorMessage = err.response?.data?.detail || err.message || 'Erro ao fazer login'
-      console.warn('[LoginPage] Error message:', errorMessage)
       
       // Check if error is due to unverified email (403)
       if (err.response?.status === 403 && errorMessage.toLowerCase().includes('email')) {
-        console.warn('[LoginPage] Email not verified')
         setError('Por favor, verifique seu email antes de fazer login')
         toast.info('Email não verificado', {
           message: 'Procure pela mensagem de verificação em seu email ou solicite um novo código'
         })
         // Optionally redirect to verify page
         setTimeout(() => {
-          console.log('[LoginPage] 🔄 Redirecting to verify-email...')
           navigate('/verify-email', { replace: false })
         }, 3000)
       } else {
-        console.warn('[LoginPage] Setting error state:', errorMessage)
         setError(errorMessage)
       }
     } finally {

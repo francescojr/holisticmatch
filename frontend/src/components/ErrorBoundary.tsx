@@ -50,8 +50,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
     // Log error for debugging (development only)
     if (import.meta.env.DEV) {
-      console.error('Error Boundary caught:', error)
-      console.error('Error Info:', errorInfo)
+
     }
 
     // In production, could send to error tracking service (Sentry, etc)

@@ -20,7 +20,6 @@ export default function Header() {
       // Redirect to home
       navigate('/')
     } catch (error) {
-      console.error('Logout error:', error)
       toast.error('Erro ao desconectar', {
         message: 'Tente novamente'
       })

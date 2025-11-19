@@ -37,6 +37,7 @@ jobs:
           DEBUG: False
           DATABASE_URL: sqlite:///test.db
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           EMAIL_BACKEND: resend.django.EmailBackend
         run: |
           pytest tests/ -v --tb=short
@@ -58,6 +59,20 @@ jobs:
           deployment_package: backend.zip
           existing_bucket_name: elasticbeanstalk-us-east-2-016804998023
           wait_for_environment_recovery: 120
+      
+      - name: Set Environment Variables in Elastic Beanstalk
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region us-east-2
+          aws elasticbeanstalk update-environment \
+            --application-name holisticmatch \
+            --environment-name holisticmatch-env \
+            --option-settings \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=OPENAI_API_KEY,Value="${{ secrets.OPENAI_API_KEY }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=RESEND_API_KEY,Value="${{ secrets.RESEND_API_KEY }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=SECRET_KEY,Value="${{ secrets.DJANGO_SECRET_KEY }}" \
+              Namespace=aws:elasticbeanstalk:application:environment,OptionName=DATABASE_URL,Value="${{ secrets.DATABASE_URL }}"
       
       - name: Notify Success
         if: success()

@@ -70,7 +70,6 @@ export const useCities = (state: string | null | undefined): UseCitiesReturn => 
       const errorMessage = err.response?.data?.error || 'Erro ao carregar cidades'
       setError(errorMessage)
       setCitiesRaw([])
-      console.error('Error fetching cities:', err)
     } finally {
       setLoading(false)
     }

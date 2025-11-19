@@ -18,6 +18,7 @@ from .validators import (
     validate_profile_photo,
 )
 from .constants import SERVICE_TYPES
+from .moderation import get_moderation_service
 import logging
 
 logger = logging.getLogger('professionals')
@@ -125,7 +126,7 @@ class ProfessionalSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(e.message)
     
     def validate(self, data):
-        """Cross-field validation"""
+        """Cross-field validation with content moderation"""
         # Validate that whatsapp and phone are different if both provided
         whatsapp = data.get('whatsapp')
         phone = data.get('phone')
@@ -150,16 +151,18 @@ class ProfessionalSerializer(serializers.ModelSerializer):
                     'state': str(e.message)
                 })
         
-        # Email is required in the model, so no need to validate contact methods
-        # The email field will be validated by Django's EmailField
+        # Content moderation: Check for inappropriate content
+        moderation_service = get_moderation_service()
+        is_safe, moderation_results = moderation_service.moderate_professional_data(data)
         
-        # Validate city and state consistency
-        city = data.get('city')
-        state = data.get('state')
-        if city and state:
-            # Could add more sophisticated validation here if needed
-            # For now, just ensure both are provided together
-            pass
+        if not is_safe:
+            flagged_fields = [f for f, r in moderation_results.items() if not r.get('safe')]
+            
+            error_messages = {
+                f: 'Conteúdo impróprio detectado. Por favor, revise o texto.'
+                for f in flagged_fields
+            }
+            raise serializers.ValidationError(error_messages)
         
         return data
 
@@ -262,7 +265,6 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         # Map full_name to name if full_name provided
         if 'full_name' in data and data['full_name']:
             data['name'] = data.pop('full_name')
-            logger.debug(f'Mapped full_name to name: {data["name"]}')
         elif 'full_name' in data:
             # Remove empty full_name
             data.pop('full_name')
@@ -271,10 +273,9 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         if 'services' in data and isinstance(data['services'], str):
             try:
                 data['services'] = json.loads(data['services'])
-                logger.debug(f'Parsed services from JSON string: {data["services"]}')
             except (json.JSONDecodeError, ValueError) as e:
-                logger.error(f'Failed to parse services JSON: {str(e)}')
                 # Don't modify - let validator handle the error
+                pass
         
         # Call parent to process
         return super().to_internal_value(data)
@@ -341,7 +342,7 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         return value
     
     def validate(self, data):
-        """Cross-field validation including city-state pair"""
+        """Cross-field validation including city-state pair and content moderation"""
         # Validate city and state pair
         city = data.get('city')
         state = data.get('state')
@@ -355,6 +356,19 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
                     'city': str(e.message),
                     'state': str(e.message)
                 })
+        
+        # Content moderation: Check for inappropriate content
+        moderation_service = get_moderation_service()
+        is_safe, moderation_results = moderation_service.moderate_professional_data(data)
+        
+        if not is_safe:
+            flagged_fields = [f for f, r in moderation_results.items() if not r.get('safe')]
+            
+            error_messages = {
+                f: 'Conteúdo impróprio detectado. Por favor, revise o texto.'
+                for f in flagged_fields
+            }
+            raise serializers.ValidationError(error_messages)
         
         return data
     
@@ -370,8 +384,6 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         email = validated_data['email']
         
-        logger.info(f'🔄 Starting professional registration for email: {email}')
-        
         try:
             # Create user account (initially inactive until email verified)
             user = User.objects.create_user(
@@ -380,36 +392,18 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
                 password=password,
                 is_active=False  # User starts inactive until email verification
             )
-            logger.info(f'✅ User created: {email} (is_active=False)')
             
             # Create professional profile
             professional = Professional.objects.create(
                 user=user,
                 **validated_data
             )
-            logger.info(f'✅ Professional profile created for {email}')
             
             # Create email verification token
             email_token = EmailVerificationToken.create_token(user)
-            logger.info(f'✅ Email verification token created: {email_token.token[:20]}...')
             
             # Send verification email with token-based verification flow
             try:
-                # Log email configuration
-                logger.info(f'📧 Email Backend: {settings.EMAIL_BACKEND}')
-                logger.info(f'📧 From Email: {settings.DEFAULT_FROM_EMAIL}')
-                logger.info(f'📧 Recipient: {email}')
-                logger.info(f'� Verification Token: {email_token.token[:20]}...')
-                
-                # Log Resend API key status
-                if hasattr(settings, 'RESEND_API_KEY'):
-                    key_status = '✅ CONFIGURED' if settings.RESEND_API_KEY else '❌ NOT SET'
-                    logger.info(f'🔑 RESEND_API_KEY: {key_status}')
-                else:
-                    logger.warning(f'⚠️ RESEND_API_KEY not in settings')
-                
-                logger.info(f'📤 Attempting to send verification email...')
-                
                 # Token-based verification: send token as plain text with HTML styling
                 verification_token = email_token.token
                 email_body = f"""<html>
@@ -493,18 +487,13 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
                 # Attach HTML version for Resend tracking (required for open/click tracking)
                 email_message.attach_alternative(email_body, "text/html")
                 email_message.send(fail_silently=False)
-                logger.info(f'✅ Verification email sent successfully to {email}')
-            except Exception as e:
-                logger.error(f'❌ Failed to send verification email to {email}', exc_info=True)
-                logger.error(f'Error type: {type(e).__name__}')
-                logger.error(f'Error message: {str(e)}')
+            except Exception:
                 # Continue - user can request email resend later
+                pass
             
             return professional
             
         except Exception as e:
-            logger.error(f'❌ Error in professional creation: {str(e)}', exc_info=True)
-            logger.error(f'Error type: {type(e).__name__}')
             raise
 
 
@@ -520,25 +509,18 @@ class EmailVerificationSerializer(serializers.Serializer):
         import logging
         logger = logging.getLogger(__name__)
         
-        logger.info(f'[EmailVerificationSerializer.validate_token] 🔍 Validating token: {value[:20]}...')
         
         try:
             email_token = EmailVerificationToken.objects.get(token=value)
-            logger.info(f'[EmailVerificationSerializer.validate_token] ✅ Token found')
-            logger.info(f'[EmailVerificationSerializer.validate_token] 📊 is_verified: {email_token.is_verified}')
-            logger.info(f'[EmailVerificationSerializer.validate_token] 📊 is_expired(): {email_token.is_expired()}')
             
             # Only check expiry - that's the only hard blocker
             if email_token.is_expired():
-                logger.warning(f'[EmailVerificationSerializer.validate_token] ⏰ Token expired')
-                raise serializers.ValidationError('Token expirado')
+                    raise serializers.ValidationError('Token expirado')
             
             # Token exists and is not expired - that's all we need here
             # Whether it was already verified is handled in models.verify_token()
-            logger.info(f'[EmailVerificationSerializer.validate_token] ✅ Token is valid (not expired)')
             return value
         except EmailVerificationToken.DoesNotExist:
-            logger.error(f'[EmailVerificationSerializer.validate_token] ❌ Token not found')
             raise serializers.ValidationError('Token inválido')
 
 
@@ -641,8 +623,8 @@ Equipe HolisticMatch
                 [user.email],
                 fail_silently=False,
             )
-        except Exception as e:
-            print(f"Erro ao enviar email: {e}")
+        except Exception:
+            pass
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):

@@ -82,7 +82,6 @@ function EmailVerificationPage() {
         navigate('/login')
       }, 3000)
     } catch (error: any) {
-      console.error('Email verification error:', error)
       const errorMsg = 
         error.response?.data?.message ||
         error.response?.data?.error ||
@@ -133,7 +132,6 @@ function EmailVerificationPage() {
       setState('input')
       setErrorMessage('')
     } catch (error: any) {
-      console.error('Resend email error:', error)
       const message = 
         error.response?.data?.message ||
         error.response?.data?.email?.join(', ') ||

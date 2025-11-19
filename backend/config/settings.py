@@ -17,6 +17,41 @@ DEBUG = config('DEBUG', default=True, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,testserver').split(',')
 
+# ============================================================================
+# SECURITY SETTINGS - PRODUCTION HARDENING
+# ============================================================================
+# HTTPS & SSL Configuration
+SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=not DEBUG, cast=bool)
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# Cookie Security
+CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=not DEBUG, cast=bool)
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SAMESITE = 'Strict'
+SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=not DEBUG, cast=bool)
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'Strict'
+
+# Security Headers
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = 'DENY'
+
+# Content Security Policy
+SECURE_CONTENT_SECURITY_POLICY = {
+    'default-src': ("'self'",),
+    'script-src': ("'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "*.jsdelivr.net"),
+    'style-src': ("'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "*.jsdelivr.net"),
+    'img-src': ("'self'", "data:", "https:", "*.amazonaws.com", "*.s3.amazonaws.com"),
+    'font-src': ("'self'", "data:", "https:", "*.googleapis.com", "*.gstatic.com"),
+    'connect-src': ("'self'", "https:", "api.openai.com", "api.resend.com"),
+    'frame-ancestors': ("'none'",),
+    'base-uri': ("'self'",),
+    'form-action': ("'self'",),
+}
+
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -39,6 +74,7 @@ INSTALLED_APPS = [
     'professionals',
     'authentication',
     'storage',
+    'django_ratelimit',
 ]
 
 MIDDLEWARE = [
@@ -267,7 +303,6 @@ if IS_PYTEST_TEST:
 # ============================================================================
 
 # Prepare logging handlers based on environment
-import os
 logs_dir = BASE_DIR / 'logs'
 
 # Only configure file handler in non-test environments
@@ -327,3 +362,6 @@ LOGGING = {
         },
     },
 }
+
+# OpenAI API Configuration (for content moderation)
+OPENAI_API_KEY = config('OPENAI_API_KEY', default=None)

@@ -63,7 +63,6 @@ export function useDeleteProfessional(): UseDeleteProfessionalReturn {
         navigate('/')
       }, 1500)
     } catch (error: any) {
-      console.error('Delete error:', error)
       toast.error('Erro ao deletar perfil', {
         message: error.response?.data?.detail || 'Tente novamente.'
       })

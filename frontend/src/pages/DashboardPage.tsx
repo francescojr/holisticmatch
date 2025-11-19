@@ -3,7 +3,6 @@
  * Edit profile, services, pricing
  */
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { pageVariants, itemVariants } from '../lib/animations'
 import { useAuth } from '../hooks/useAuth'
@@ -20,8 +19,7 @@ import type { Professional } from '../types/Professional'
 import { SERVICE_TYPES } from '../types/Professional'
 
 function DashboardPage() {
-  const { user, logout } = useAuth()
-  const navigate = useNavigate()
+  const { user } = useAuth()
   const { toast } = useToast()
   const { confirmState } = useConfirm()
   const deleteProfessional = useDeleteProfessional()
@@ -35,7 +33,6 @@ function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null)
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [formData, setFormData] = useState({
@@ -95,7 +92,6 @@ function DashboardPage() {
         })
 
       } catch (err: any) {
-        console.error('Error loading professional data:', err)
 
         if (err.response?.status === 401) {
           setError('Sessão expirada. Faça login novamente.')
@@ -175,26 +171,6 @@ function DashboardPage() {
     }
   }
 
-  const handleLogout = async () => {
-    setIsLoggingOut(true)
-    try {
-      await logout()
-      toast.success('Desconectado com sucesso', {
-        message: 'Até logo!'
-      })
-      // Redirect to home after short delay
-      setTimeout(() => {
-        navigate('/')
-      }, 1500)
-    } catch (error) {
-      console.error('Logout error:', error)
-      setIsLoggingOut(false)
-      toast.error('Erro ao desconectar', {
-        message: 'Tente novamente'
-      })
-    }
-  }
-
   // Handle form field changes with validation
   const handleFieldChange = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value })
@@ -269,7 +245,6 @@ function DashboardPage() {
 
       return false
     } catch (err) {
-      console.error('Error checking for conflicts:', err)
       return false
     }
   }
@@ -369,7 +344,6 @@ function DashboardPage() {
       })
 
     } catch (err: any) {
-      console.error('Error updating professional:', err)
 
       if (err.response?.status === 400) {
         toast.error('Dados inválidos', {
@@ -471,17 +445,6 @@ function DashboardPage() {
                   >
                     <span className="material-symbols-outlined text-[#111814] dark:text-white" style={{ fontVariationSettings: "'FILL' 1" }}>person</span>
                     <p className="text-[#111814] dark:text-white text-sm font-medium leading-normal">Editar Perfil</p>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('settings')}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-lg ${
-                      activeTab === 'settings'
-                        ? 'bg-[#f0f4f2] dark:bg-primary/20'
-                        : 'hover:bg-[#f0f4f2] dark:hover:bg-primary/20'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[#111814] dark:text-white">settings</span>
-                    <p className="text-[#111814] dark:text-white text-sm font-medium leading-normal">Account Settings</p>
                   </button>
                 </div>
               </div>
@@ -742,52 +705,6 @@ function DashboardPage() {
                     {/* Services Card - REMOVED (integrated into Profile card above) */}
                     {/* REMOVED - Services integrated into Profile card */}
                   </>
-                )}
-
-                {activeTab === 'settings' && (
-                  <motion.div
-                    variants={itemVariants}
-                    className="bg-white dark:bg-slate-800 rounded-xl border border-[#dbe6e0] dark:border-slate-700 p-8"
-                  >
-                    <h1 className="text-[#111814] dark:text-white text-2xl font-bold leading-tight tracking-[-0.015em] mb-6">Account Settings</h1>
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between p-4 rounded-lg bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800">
-                        <div>
-                          <h3 className="text-red-800 dark:text-red-200 text-lg font-semibold">Delete Account</h3>
-                          <p className="text-red-600 dark:text-red-400 text-sm">Permanently delete your account and all associated data</p>
-                        </div>
-                        <button
-                          onClick={() => deleteProfessional.openDeleteConfirm(user?.professional_id || 0, formData.fullName)}
-                          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
-                        >
-                          Delete Account
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between p-4 rounded-lg bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-800">
-                        <div>
-                          <h3 className="text-orange-800 dark:text-orange-200 text-lg font-semibold">Logout</h3>
-                          <p className="text-orange-600 dark:text-orange-400 text-sm">Sign out from your account on this device</p>
-                        </div>
-                        <button
-                          onClick={handleLogout}
-                          disabled={isLoggingOut}
-                          className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                        >
-                          {isLoggingOut && (
-                            <motion.span
-                              className="material-symbols-outlined text-sm"
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            >
-                              refresh
-                            </motion.span>
-                          )}
-                          {isLoggingOut ? 'Saindo...' : 'Logout'}
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
                 )}
               </div>
             </main>

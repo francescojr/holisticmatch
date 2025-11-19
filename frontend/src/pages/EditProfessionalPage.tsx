@@ -114,7 +114,6 @@ function EditProfessionalPage() {
           })
         }
       } catch (error) {
-        console.error('Erro ao carregar perfil:', error)
         toast.error('Erro ao carregar perfil', {
           message: 'Não foi possível carregar seus dados. Tente novamente.'
         })
@@ -236,7 +235,6 @@ function EditProfessionalPage() {
         }, 1500)
       }
     } catch (error: any) {
-      console.error('Update error:', error)
       toast.error('Erro ao atualizar perfil', {
         message: error.response?.data?.detail || 'Tente novamente.'
       })
