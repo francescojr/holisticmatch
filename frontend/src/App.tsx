@@ -19,7 +19,7 @@ import { ToastContainer } from './components/toast'
 function AppContent() {
   const { toasts, toast, dismiss } = useToast()
 
-  // Register global error handler :)
+  // Register global error handler 
   useEffect(() => {
     registerErrorHandler((error) => {
       toast[error.type](error.title, { message: error.message })

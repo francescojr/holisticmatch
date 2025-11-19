@@ -16,7 +16,7 @@ class TestRegistrationWithoutPhoto:
         """Test successful registration without photo"""
         client = APIClient()
         
-        # Clean up any existing test user
+        # Clean up any existing test user :)
         User.objects.filter(email='test_reg_nophoto@example.com').delete()
         
         # Prepare registration data WITHOUT photo
