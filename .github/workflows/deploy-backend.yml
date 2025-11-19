@@ -45,59 +45,18 @@ jobs:
         run: |
           pytest tests/ -v --tb=short
       
-      - name: Debug - Check SSH Key Format
+      - name: Trigger deployment via webhook
         run: |
-          echo "EC2_HOST: ${{ secrets.EC2_HOST }}"
-          echo "EC2_USER: ${{ secrets.EC2_USER }}"
-          KEY_LENGTH=$(echo '${{ secrets.EC2_SSH_KEY }}' | wc -c)
-          echo "SSH Key length: $KEY_LENGTH"
-          if [ $KEY_LENGTH -lt 1000 ]; then
-            echo "❌ WARNING: SSH Key seems too short (< 1000 chars)"
-          fi
-      
-      - name: Test Network Connectivity to EC2
-        run: |
-          echo "Testing connectivity to ${{ secrets.EC2_HOST }}..."
-          ping -c 5 ${{ secrets.EC2_HOST }} || echo "Ping failed (may be filtered)"
-          nc -zv -w 5 ${{ secrets.EC2_HOST }} 22 || echo "Port 22 not reachable"
-          echo "Testing DNS resolution..."
-          nslookup ${{ secrets.EC2_HOST }} || echo "DNS resolution failed"
-      
-      - name: Setup SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo '${{ secrets.EC2_SSH_KEY }}' > ~/.ssh/deploy_key.pem
-          chmod 600 ~/.ssh/deploy_key.pem
-          echo "SSH key created"
-      
-      - name: Test SSH Connection with Native SSH
-        run: |
-          echo "Attempting SSH connection to ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}..."
-          ssh -vvv -i ~/.ssh/deploy_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "echo 'SSH Connection successful!'; whoami; pwd" || echo "SSH connection failed"
-      
-      - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          timeout: 60s
-          command_timeout: 60s
-          script: |
-            set -e
-            
-            echo "========================================="
-            echo "Starting backend deployment at $(date)"
-            echo "========================================="
-            
-            cd /home/django/holisticmatch
-            
-            echo "→ Pulling latest code from GitHub..."
-            git fetch origin main
-            git reset --hard origin/main
-            
-            echo "→ Activating virtual environment..."
-            source backend/venv/bin/activate
+          echo "🚀 Triggering deployment via webhook..."
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -d '{"ref":"refs/heads/main"}' \
+            http://${{ secrets.EC2_HOST }}:8000/deploy
+          
+          echo "✅ Webhook triggered successfully!"
+          echo "🔄 Deployment script running on EC2 in background..."
+          sleep 3
+          echo "Check EC2 instance for deployment progress"
             
             echo "→ Installing dependencies..."
             cd backend
@@ -123,21 +82,10 @@ jobs:
             fi
             
             echo "→ Running API health check..."
-            curl -f http://localhost/api/v1/professionals/ > /dev/null 2>&1
-            if [ $? -eq 0 ]; then
-              echo "✓ API health check passed"
-            else
-              echo "⚠ API health check failed (non-blocking)"
-            fi
-            
-            echo "========================================="
-            echo "Backend deployment completed at $(date)"
-            echo "========================================="
-      
       - name: Notify Success
         if: success()
-        run: echo "✅ Backend deployed successfully to AWS EC2!"
+        run: echo "✅ Backend deployment triggered successfully!"
       
       - name: Notify Failure
         if: failure()
-        run: echo "❌ Backend deployment to EC2 failed!!"
+        run: echo "❌ Webhook trigger failed!!"
