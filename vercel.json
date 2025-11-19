@@ -4,8 +4,8 @@
   "installCommand": "cd frontend && npm ci",
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "http://44.197.112.222:80/api/:path*"
+      "source": "/api/v1/:path*",
+      "destination": "http://44.197.112.222/api/v1/:path*"
     }
   ]
 }

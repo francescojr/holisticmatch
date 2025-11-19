@@ -1,9 +1,50 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 20, 2025 (EC2 Migration + Swagger Documentation Online)
+**Last Updated**: November 19, 2025 (GitHub Actions + Webhook Deployment)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
-**Status**: ✅ **PRODUCTION READY** (EC2 infrastructure running, Swagger online, all tests passing)
+**Status**: 🔧 **IN PROGRESS** - CI/CD Pipeline (Webhook deployment working, API proxy issue under investigation)
+
+---
+
+## 🔧 CI/CD DEPLOYMENT PIPELINE - NOVEMBER 19, 2025
+
+### GitHub Actions + Webhook-based Deployment (Replaced SSH)
+
+**Problem Solved**:
+- GitHub Actions SSH to EC2 was timing out at AWS network level (inbound blocks GitHub IPs)
+- Solution: Webhook-based deployment instead of SSH
+
+**Current Architecture**:
+```
+GitHub Push (main)
+  ↓
+GitHub Actions: Tests (179 passing ✅)
+  ↓
+Webhook Trigger: POST /webhook/deploy to EC2:80
+  ↓
+Nginx: Reverse proxy /webhook/deploy → localhost:9000
+  ↓
+Python Webhook Listener: Spawns /home/django/deploy.sh
+  ↓
+Deploy Script: git pull → pip install → migrate → restart gunicorn
+```
+
+**Implemented**:
+- ✅ `.github/workflows/deploy-backend.yml` - Runs 179 tests + webhook trigger
+- ✅ `/tmp/webhook_receiver.py` (systemd webhook.service) - Listens on localhost:9000
+- ✅ `/home/django/deploy.sh` - Full deployment script (git/pip/migrations/restart)
+- ✅ Nginx reverse proxy - Exposes webhook on port 80
+- ✅ Gunicorn + static files - Tested and working
+
+**Status**:
+- ✅ Backend tests: 179 passing
+- ✅ Webhook listener: Active and responding
+- ✅ Deploy script: Tested, successful deployments logged
+- ✅ GitHub Actions: Workflow executing, triggering deployments
+- 🔴 **ISSUE**: Frontend → EC2 API proxy not working (investigating Vercel rewrites)
+
+**Next Action**: Investigate Vercel rewrite configuration and API connectivity before making further changes.
 
 ---
 
