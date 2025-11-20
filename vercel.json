@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/v1/:path*",
-      "destination": "http://44.197.112.222/api/v1/:path*"
+      "destination": "https://hollisticmatch.online/api/v1/:path*"
     }
   ]
 }
