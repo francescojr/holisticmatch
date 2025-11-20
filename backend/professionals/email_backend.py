@@ -65,7 +65,9 @@ class ResendEmailBackend(BaseEmailBackend):
             return False
         
         try:
-            from resend import Emails
+            # Initialize Resend with API key
+            import resend
+            resend.api_key = self.api_key
             
             # Prepare recipients - convert to list if needed
             recipients = message.to
@@ -110,7 +112,7 @@ class ResendEmailBackend(BaseEmailBackend):
             logger.info("📧 Email params keys: %s", list(email_params.keys()))
             
             # Call Resend API with proper params
-            response = Emails.send(email_params)
+            response = resend.Emails.send(email_params)
             
             logger.info("✅ Email sent successfully! Response ID: %s", response.get('id'))
             return True
