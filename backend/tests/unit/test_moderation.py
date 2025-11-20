@@ -17,12 +17,14 @@ class TestModerationService:
         assert service is not None
 
     def test_moderate_text_disabled_when_no_api_key(self):
-        """Test that moderation is gracefully disabled when API key is missing"""
+        """Test that moderation falls back to regex when API key is missing"""
         with patch('professionals.moderation.settings.OPENAI_API_KEY', None):
             service = ModerationService()
             is_safe, results = service.moderate_text("some text")
+            # When OpenAI is not available, should fall back to regex (always available)
             assert is_safe is True
-            assert results.get('disabled') is True
+            assert results.get('source') == 'regex'
+            assert results.get('service_chain') == ['openai', 'regex']
 
     def test_moderate_text_empty_input(self):
         """Test that empty text is considered safe"""
