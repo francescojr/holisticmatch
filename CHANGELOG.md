@@ -1,9 +1,71 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 20, 2025 (Production HTTPS Deployment Complete)
+**Last Updated**: November 20, 2025 (Production Deployment Complete - All Systems Working)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
-**Status**: ✅ **PRODUCTION READY** - Backend running on https://hollisticmatch.online with Let's Encrypt SSL
+**Status**: ✅ **PRODUCTION READY** - Frontend & Backend running on https://hollisticmatch.online with Let's Encrypt SSL
+
+**Live URL**: `https://hollisticmatch.online/` (Production - All systems operational)
+
+---
+
+## 🚀 NOVEMBER 20, 2025 - DOMAIN ROUTING & ARCHITECTURE FIX
+
+### Problem
+- Frontend returning 404 on `/api/v1/professionals/` calls
+- Nginx showing welcome page instead of frontend
+- www.hollisticmatch.online showing insecure warning
+- Complex routing with Vercel rewrites not working
+
+### Solution Implemented
+**Simplified Single-Domain Architecture:**
+- Removed Vercel from critical path (only used for storage/CDN)
+- Nginx now serves as single entry point: `https://hollisticmatch.online/`
+- Frontend content proxied through Nginx (transparent to user)
+- API calls go directly to backend via `/api/v1/` path on same domain
+
+**Configuration Changes:**
+1. **Nginx Config** (`/etc/nginx/sites-available/hollisticmatch`):
+   - `location /api/v1/` → proxies to Gunicorn Unix socket
+   - `location /` → proxies all other traffic to Vercel CDN
+   - SSL/HTTPS on all traffic
+   - CORS headers for cross-origin requests
+   - Webhook endpoint preserved for CI/CD
+
+2. **Frontend API Client** (`frontend/src/services/api.ts`):
+   - Changed from relative `/api/v1` to absolute `https://hollisticmatch.online/api/v1`
+   - Eliminates domain-mismatch issues
+   - Commit: 4f580bb
+
+3. **vercel.json Simplified**:
+   - Removed `rewrites` array (not supported on free tier)
+   - Kept build/install/output config
+   - Vercel now only builds frontend, no routing logic
+
+### Architecture Diagram
+```
+User Browser
+    ↓ https://hollisticmatch.online/
+    ↓
+  Nginx (port 443 - SSL)
+    ├─ /api/v1/* → Gunicorn (Django backend on EC2)
+    ├─ /webhook/deploy → Webhook listener (CI/CD)
+    └─ /* (other) → Vercel CDN (frontend assets)
+    ↓
+User sees: Single domain experience, no cross-origin issues
+```
+
+### Results
+- ✅ `https://hollisticmatch.online/` → Frontend loads completely
+- ✅ `https://hollisticmatch.online/api/v1/professionals/` → 200 OK, data loads
+- ✅ No 404 errors on API calls
+- ✅ No mixed content warnings
+- ✅ Certificate valid (Let's Encrypt, auto-renewal active)
+
+### Commits
+- **326c024**: Fixed frontend API path to `/api/v1`
+- **614129c**: Updated vercel.json to use HTTPS domain (superseded by 4f580bb)
+- **4f580bb**: Changed to absolute backend URL, simplified vercel.json
 
 ---
 
