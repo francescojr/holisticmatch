@@ -74,27 +74,27 @@ class ImageModerationService:
                 }
 
             # Call AWS Rekognition to detect explicit content
-            response = self.client.detect_explicit_content(
+            response = self.client.detect_moderation_labels(
                 Image={'Bytes': image_bytes}
             )
 
             # Parse results
-            explicit_content = response.get('ExplicitContent', [])
+            moderation_labels = response.get('ModerationLabels', [])
             
-            # Check for explicit content flags
+            # Check for moderation flags
             is_flagged = False
             flagged_labels = []
             confidence_scores = {}
 
-            for item in explicit_content:
-                label = item.get('Name', '')
-                confidence = item.get('Confidence', 0)
-                confidence_scores[label] = confidence
+            for label in moderation_labels:
+                name = label.get('Name', '')
+                confidence = label.get('Confidence', 0)
+                confidence_scores[name] = confidence
 
                 # Flag if confidence is high (>60%)
                 if confidence > 60:
                     is_flagged = True
-                    flagged_labels.append(label)
+                    flagged_labels.append(name)
 
             # Also run label detection to check for violence/weapons
             labels_response = self.client.detect_labels(
@@ -136,7 +136,13 @@ class ImageModerationService:
                 'error': f'Erro ao processar imagem: {str(e)[:100]}',
                 'invalid_parameter': True
             }
-        except Exception as e:
+        except AttributeError as e:
+            # Method doesn't exist or wrong parameter
+            logger.warning(f"Rekognition API error: {str(e)}")
+            return True, {
+                'error': 'Não foi possível validar imagem via Rekognition',
+                'api_error': True
+            }
             # On error, allow image to proceed (fail-open)
             logger.error(f"Image moderation error: {str(e)}")
             return True, {
