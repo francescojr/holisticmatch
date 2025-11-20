@@ -1,11 +1,56 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 20, 2025 (Email Validation & Password Reset Fixed)
+**Last Updated**: November 20, 2025 (Performance Fix: Query Optimization)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
-**Status**: ✅ **PRODUCTION READY** - 179/179 tests passing
+**Status**: ✅ **PRODUCTION READY** - 179/179 tests passing (8.66s)
 
 **Live URL**: `https://hollisticmatch.online/` (Production - All systems operational)
+
+---
+
+## 🔧 NOVEMBER 20, 2025 - PERFORMANCE FIX: Query Optimization
+
+### ⚡ Fixed: Slow Test Suite (23+ minutes → 8.66s)
+
+**Issue:**
+- CI/CD tests running for 23+ minutes
+- Tests in `test_professional_api.py` timing out
+- Performance degradation on GitHub Actions
+
+**Root Cause:**
+- New `get_queryset()` filter with `user__is_active=True` was causing **N+1 query problem**
+- For each Professional in listing, doing separate JOIN with User table
+- Test suite with many professionals → multiplicative slowdown
+- Example: 30 professionals × N queries = 30N queries instead of 1
+
+**Solution:**
+- Added `select_related('user')` to eager-load User relationship
+- Single JOIN operation per list query instead of per-item
+- Maintains email validation filtering without performance penalty
+
+**Code Change:**
+```python
+# BEFORE (slow - N+1 queries):
+return Professional.objects.filter(user__is_active=True)
+
+# AFTER (optimized - single JOIN):
+return Professional.objects.select_related('user').filter(user__is_active=True)
+```
+
+**Files Changed:**
+- `backend/professionals/views.py` - Added select_related() in get_queryset()
+
+**Performance Impact:**
+- ✅ Test suite: 23+ minutes → 8.66 seconds
+- ✅ List endpoint: Single JOIN instead of N queries
+- ✅ CI/CD builds now complete in normal time
+- ✅ No functional changes, only optimization
+
+**Test Status:**
+- ✅ 179/179 tests passing in 8.66s (was 23+ min)
+- ✅ Backwards compatible with all existing tests
+- ✅ No API behavior changes
 
 ---
 

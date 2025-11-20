@@ -41,9 +41,10 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         Return only professionals whose users have verified their email (is_active=True)
-        This prevents unverified accounts from appearing in the listing
+        This prevents unverified accounts from appearing in the listing.
+        Uses select_related() to avoid N+1 query problem with user__is_active filter.
         """
-        return Professional.objects.filter(user__is_active=True)
+        return Professional.objects.select_related('user').filter(user__is_active=True)
 
     def get_serializer_class(self):
         """Use summary serializer for list view"""
