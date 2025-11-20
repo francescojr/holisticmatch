@@ -718,6 +718,37 @@ function DashboardPage() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Danger Zone */}
+                      <div className="mt-10 pt-6 border-t-2 border-red-200">
+                        <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6">
+                          <h3 className="text-lg font-bold text-red-700 mb-2 flex items-center gap-2">
+                            <span className="material-symbols-outlined">warning</span>
+                            Zona de Perigo
+                          </h3>
+                          <p className="text-sm text-red-600 mb-4">
+                            Ações irreversíveis. Tenha cuidado!
+                          </p>
+                          
+                          {/* Delete Account Button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (professional) {
+                                deleteProfessional.openDeleteConfirm(professional.id, professional.name)
+                              }
+                            }}
+                            disabled={!professional || isSaving || deleteProfessional.isDeleting}
+                            className="w-full px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+                          >
+                            <span className="material-symbols-outlined">delete</span>
+                            {deleteProfessional.isDeleting ? 'Deletando conta...' : 'Deletar Minha Conta'}
+                          </button>
+                          <p className="text-xs text-red-600 mt-3">
+                            ⚠️ Esta ação não pode ser desfeita. Sua conta e todos os dados serão removidos permanentemente.
+                          </p>
+                        </div>
+                      </div>
                     </motion.div>
 
                     {/* Services Card - REMOVED (integrated into Profile card above) */}

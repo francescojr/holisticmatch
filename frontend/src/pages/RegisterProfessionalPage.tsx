@@ -714,7 +714,11 @@ function RegisterProfessionalPage() {
                   </div>
 
                   {/* Terms and Conditions Checkbox */}
-                  <div className="flex items-start gap-3 mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className={`flex items-start gap-3 mt-6 p-4 rounded-lg border-2 transition-all ${
+                    step2Data.acceptTerms
+                      ? 'bg-green-50 border-green-200'
+                      : 'bg-yellow-50 border-yellow-300'
+                  }`}>
                     <input
                       type="checkbox"
                       id="acceptTerms"
@@ -726,18 +730,26 @@ function RegisterProfessionalPage() {
                       className="w-5 h-5 text-primary rounded cursor-pointer mt-0.5"
                       required
                     />
-                    <label htmlFor="acceptTerms" className="text-sm text-gray-700 flex-1 cursor-pointer leading-relaxed">
-                      Aceito os{' '}
-                      <a
-                        href="/terms"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline font-medium"
-                      >
-                        Termos e Condições
-                      </a>
-                      {' '}do HolisticMatch *
-                    </label>
+                    <div className="flex-1">
+                      <label htmlFor="acceptTerms" className="text-sm text-gray-700 block cursor-pointer leading-relaxed font-medium">
+                        Aceito os{' '}
+                        <a
+                          href="/terms"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline"
+                        >
+                          Termos e Condições
+                        </a>
+                        {' '}do HolisticMatch *
+                      </label>
+                      {!step2Data.acceptTerms && (
+                        <p className="text-xs text-yellow-700 mt-1 flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm">info</span>
+                          Obrigatório para completar o cadastro
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -756,13 +768,21 @@ function RegisterProfessionalPage() {
 
                 <motion.button
                   type="button"
-                  onClick={handleStep2Submit}
-                  disabled={loading}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    if (!step2Data.acceptTerms) {
+                      toast.error('Aceite os Termos e Condições', {
+                        message: 'Você precisa aceitar os termos para continuar'
+                      })
+                      return
+                    }
+                    handleStep2Submit(new Event('submit') as any)
+                  }}
+                  disabled={loading || !step2Data.acceptTerms}
+                  whileHover={!step2Data.acceptTerms ? {} : { scale: 1.02 }}
+                  whileTap={!step2Data.acceptTerms ? {} : { scale: 0.98 }}
                   className={`
                     flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-200
-                    ${loading
+                    ${loading || !step2Data.acceptTerms
                       ? 'bg-gray-400 cursor-not-allowed'
                       : 'bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl'
                     }
@@ -772,6 +792,11 @@ function RegisterProfessionalPage() {
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       Cadastrando...
+                    </div>
+                  ) : !step2Data.acceptTerms ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="material-symbols-outlined text-sm">info</span>
+                      Aceite os termos para continuar
                     </div>
                   ) : (
                     'Finalizar Cadastro'
