@@ -1,6 +1,6 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 20, 2025 (Bug Fixes: Account Deletion & Termos Page)
+**Last Updated**: November 20, 2025 (Content Moderation Strengthened)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
 **Status**: ✅ **PRODUCTION READY** - 179/179 tests passing
@@ -9,7 +9,45 @@
 
 ---
 
-## 📋 NOVEMBER 20, 2025 - BUG FIXES: Email Reuse & Terms Page
+## 📋 NOVEMBER 20, 2025 - MODERATION STRENGTHENED: More Aggressive Regex
+
+### 🔒 Improved: Content Moderation Regex Patterns
+
+**Issue:** 
+- Single words like "caralho", "buceta" were passing through regex fallback
+- Regex patterns were too weak
+- Only catching phrase patterns like "vou te matar"
+
+**Solution:**
+- Expanded PROHIBITED_PATTERNS with comprehensive word list
+- Now blocks: caralho, buceta, porra, merda, fodido, foder, fuder, sexo, pornô, porno, etc
+- Organized by categories:
+  - Threats and violence (10+ keywords)
+  - Sexual content (15+ keywords)
+  - Harassment and hate speech (8+ keywords)
+  - Drug/substance mentions (6+ keywords)
+  - Slurs and offensive language (9+ keywords)
+
+**Test Results:**
+- ✅ caralho → BLOCKED
+- ✅ buceta → BLOCKED
+- ✅ porra → BLOCKED
+- ✅ merda → BLOCKED
+- ✅ sexo → BLOCKED
+- ✅ filho da puta → BLOCKED
+- ✅ terapeuta → ALLOWED
+- ✅ reiki → ALLOWED
+
+**File Changed:**
+- `backend/professionals/moderation.py` - Enhanced PROHIBITED_PATTERNS (9 regex rules)
+
+**Test Status:**
+- ✅ 179/179 tests passing
+- ✅ 8/8 moderation tests passing
+
+---
+
+## 📋 NOVEMBER 20, 2025 - BUG FIXES: Account Deletion & Termos Page
 
 ### 🔧 Fixed: Email Already Registered After Account Deletion
 

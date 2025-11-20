@@ -13,10 +13,26 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 # Fallback keyword patterns for final safety net
+# Regex patterns organized by category - more comprehensive
 PROHIBITED_PATTERNS = [
-    r'\b(matar|morte|morrer|suicida|puta|desgraçado)\b',
-    r'\b(sexo|pornô|xingamento)\b',
-    r'(vou te|vou lhe|vou o|vou a)(.*?)(matar|bater|estuprar|explodir)',
+    # Threats and violence
+    r'\b(matar|morte|morrer|suicida|puta|desgraçado|buceta|caralho|porra|merda|fodido|foder|fuder)\b',
+    r'\b(vou te|vou lhe|vou matar|vou bater|vou estuprar|vou explodir)\b',
+    r'\b(ameaça|ameaço|vou|matei|mataria|bateria|estuprei|xingo)\b',
+    
+    # Sexual content
+    r'\b(sexo|pornô|porno|pornografia|buceta|pinto|peito|anal|oral|trepar|transar)\b',
+    r'\b(nudes|nude|cam|camgirl|sexting|vibrador|dildo)\b',
+    
+    # Harassment and hate
+    r'\b(xingamento|xingo|xingue|chamego|racista|racismo|homofobia|lgbtfobia)\b',
+    r'\b(filho da puta|desgraçado|miserável|idiota|imbecil|retardado|débil)\b',
+    
+    # Drug/substance abuse mentions
+    r'\b(cocaína|crack|heroína|maconha|droga|drogas|traficante|trafico)\b',
+    
+    # Slurs and offensive language (Portuguese)
+    r'\b(preto|negão|macaco|judeu|turco|gordo|gorda|aleijado|retardado|deficiente)\b',
 ]
 
 
