@@ -18,9 +18,9 @@ export const registerErrorHandler = (callback: (error: { title: string; message:
   errorHandlerCallback = callback
 }
 
-// Use relative /api/v1 path - Vercel rewrites to backend HTTPS
-// See vercel.json for rewrite configuration
-const API_BASE_URL = '/api/v1'
+// Use absolute URL to backend domain
+// Nginx serves frontend from hollisticmatch.online and proxies /api/v1 to backend
+const API_BASE_URL = 'https://hollisticmatch.online/api/v1'
 
 // Create axios instance
 export const api = axios.create({
