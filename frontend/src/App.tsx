@@ -18,6 +18,8 @@ import DashboardPage from './pages/DashboardPage'
 import TermsAndConditionsPage from './pages/TermsAndConditionsPage'
 import { ToastContainer } from './components/toast'
 
+// DEPLOYMENT: 2025-11-20 - Email validation & password reset fixes
+
 function AppContent() {
   const { toasts, toast, dismiss } = useToast()
   

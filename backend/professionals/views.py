@@ -1,6 +1,8 @@
 """
 Views for the professionals app.
 Implements API endpoints for professional profiles.
+
+DEPLOYMENT: 2025-11-20 - Email validation & password reset fixes
 """
 from django.contrib.auth.models import User
 from rest_framework import viewsets, status
