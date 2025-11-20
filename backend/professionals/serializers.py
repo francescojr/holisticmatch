@@ -19,6 +19,7 @@ from .validators import (
 )
 from .constants import SERVICE_TYPES
 from .moderation import get_moderation_service
+from .image_moderation import get_image_moderation_service
 import logging
 
 logger = logging.getLogger('professionals')
@@ -97,6 +98,26 @@ class ProfessionalSerializer(serializers.ModelSerializer):
             return value
         except DjangoValidationError as e:
             raise serializers.ValidationError(e.message)
+    
+    def validate_photo(self, value):
+        """Validate professional photo for inappropriate content"""
+        if not value:
+            return value
+        
+        try:
+            validate_profile_photo(value)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(e.message)
+        
+        # Image moderation: check for explicit/violent content
+        image_moderation = get_image_moderation_service()
+        is_safe, moderation_result = image_moderation.moderate_professional_photo(value)
+        
+        if not is_safe:
+            error_msg = moderation_result.get('message', 'Foto contém conteúdo impróprio')
+            raise serializers.ValidationError(error_msg)
+        
+        return value
     
     def validate_whatsapp(self, value):
         """Validate whatsapp number using custom validator"""
