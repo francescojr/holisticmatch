@@ -1,9 +1,15 @@
 # HolisticMatch Professional API - Complete Documentation
 
 **API Version**: v1.0.0  
-**Base URL**: `/api/v1/`  
+**Base URL**: `https://hollisticmatch.online/api/v1/`  
 **Status**: ✅ Production Ready  
-**Last Updated**: 2025-11-07
+**Last Updated**: 2025-11-20
+
+**Production Infrastructure**:
+- Backend: EC2 t2.micro with Django 4.2 + DRF
+- Database: PostgreSQL/SQLite
+- SSL: Let's Encrypt (auto-renewal)
+- Email: Resend transactional emails via `noreply@hollisticmatch.online`
 
 ---
 
@@ -112,7 +118,8 @@ photo: <image_file>
 **Important**: 
 - ⚠️ Tokens are returned but user is still inactive (`is_active=False`)
 - 📧 Email verification is **REQUIRED** before login
-- 📬 Verification email sent automatically
+- 📬 Verification email sent automatically from `noreply@hollisticmatch.online` (powered by Resend)
+- 📊 Email delivery tracking available in Resend Dashboard
 
 ---
 

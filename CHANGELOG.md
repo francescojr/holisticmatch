@@ -7,6 +7,67 @@
 
 ---
 
+## 📧 EMAIL CONFIGURATION - NOVEMBER 20, 2025
+
+### Resend Transactional Emails with Custom Domain
+
+**Production Email**: `noreply@hollisticmatch.online`
+
+**Configuration Complete**:
+- ✅ Domain `hollisticmatch.online` verified in Resend
+- ✅ DNS records configured and verified:
+  - DKIM (TXT record `resend._domainkey`)
+  - SPF (TXT record `send`)
+  - DMARC (TXT record `_dmarc`)
+- ✅ Custom email backend: `professionals.email_backend.ResendEmailBackend`
+- ✅ Production `.env` updated: `DEFAULT_FROM_EMAIL=noreply@hollisticmatch.online`
+- ✅ Can send to any email address (no whitelist restriction)
+
+**Features**:
+- HTML email templates with branding
+- Open/click tracking enabled in Resend
+- Delivery monitoring via Resend Dashboard
+- Automatic bounce/spam handling
+
+**Use Cases**:
+1. **Email Verification**: Registration sends 6-digit code
+2. **Password Reset**: Secure token link via email
+3. **Resend Verification**: Manual trigger for unverified users
+
+**Backend Implementation**:
+```python
+# backend/config/settings.py
+EMAIL_BACKEND = 'professionals.email_backend.ResendEmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@hollisticmatch.online'
+RESEND_API_KEY = os.getenv('RESEND_API_KEY')
+
+# backend/professionals/email_backend.py
+class ResendEmailBackend(BaseEmailBackend):
+    # Custom integration with Resend API
+    # Supports HTML emails, tracking, proper error handling
+```
+
+**Testing**:
+```bash
+# Via API
+POST /api/v1/professionals/register/
+POST /api/v1/professionals/resend-verification/
+POST /api/v1/professionals/reset-password/
+
+# Monitor in Resend Dashboard
+https://resend.com/emails
+```
+
+**Environment Variables**:
+```bash
+# Production (.env)
+RESEND_API_KEY=re_***
+DEFAULT_FROM_EMAIL=noreply@hollisticmatch.online
+FRONTEND_URL=https://holisticmatch.vercel.app
+```
+
+---
+
 ## ✅ PRODUCTION DEPLOYMENT COMPLETE - NOVEMBER 20, 2025
 
 ### Domain & SSL Successfully Deployed
