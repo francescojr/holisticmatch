@@ -6,8 +6,8 @@
     "version": "1.0.0",
     "contact": {
       "name": "HolisticMatch Team",
-      "email": "support@holisticmatch.com",
-      "url": "https://holisticmatch.com"
+      "email": "noreply@hollisticmatch.online",
+      "url": "https://hollisticmatch.online"
     },
     "license": {
       "name": "MIT"
@@ -15,8 +15,8 @@
   },
   "servers": [
     {
-      "url": "http://44.197.112.222/api/v1",
-      "description": "Production server (AWS EC2)"
+      "url": "https://hollisticmatch.online/api/v1",
+      "description": "Production server (AWS EC2 with SSL)"
     },
     {
       "url": "http://localhost:8000/api/v1",
