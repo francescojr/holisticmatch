@@ -60,6 +60,30 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
         """
         serializer.save(user=self.request.user)
 
+    def destroy(self, request, *args, **kwargs):
+        """
+        DELETE /api/professionals/{id}/
+        Delete professional account AND associated user account
+        This ensures email can be reused after account deletion
+        """
+        try:
+            professional = self.get_object()
+            user = professional.user
+            
+            # Delete the professional profile and user together
+            professional.delete()
+            user.delete()
+            
+            return Response(
+                {'message': 'Conta deletada com sucesso'},
+                status=status.HTTP_204_NO_CONTENT
+            )
+        except Professional.DoesNotExist:
+            return Response(
+                {'error': 'Profissional não encontrado'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
     @action(detail=False, methods=['get'])
     def service_types(self, request):
         """

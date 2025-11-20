@@ -1,11 +1,54 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 20, 2025 (Terms & Conditions Page + Test Fix)
+**Last Updated**: November 20, 2025 (Bug Fixes: Account Deletion & Termos Page)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
 **Status**: ✅ **PRODUCTION READY** - 179/179 tests passing
 
 **Live URL**: `https://hollisticmatch.online/` (Production - All systems operational)
+
+---
+
+## 📋 NOVEMBER 20, 2025 - BUG FIXES: Email Reuse & Terms Page
+
+### 🔧 Fixed: Email Already Registered After Account Deletion
+
+**Issue:** 
+- User deletes account via Dashboard
+- Tries to register with same email
+- Gets error: "Este email já está registrado"
+- Problem: `Professional` was deleted but `User` Django object remained
+
+**Root Cause:**
+- `destroy()` default behavior in ModelViewSet only deleted Professional model
+- Associated Django User record wasn't deleted
+- Email uniqueness constraint on User model prevented reuse
+
+**Fix:**
+- Added custom `destroy()` method in `ProfessionalViewSet`
+- Now deletes both Professional AND User when account is deleted
+- Email becomes available immediately for reuse
+- Returns 204 No Content on success
+
+**File Changed:**
+- `backend/professionals/views.py` - Added destroy method (lines 37-54)
+
+**Test Status:**
+- ✅ 179/179 tests passing
+- ✅ Account deletion flow verified
+
+### 📄 Terms & Conditions Page - Status
+
+**Issue:** Terms page returns 404
+**Reason:** Vercel hasn't rebuilt after code push yet
+**Solution:** Will be available after next Vercel deployment
+**Status:** ⏳ Waiting for Vercel rebuild
+
+**What's Done:**
+- ✅ Frontend page created (`TermsAndConditionsPage.tsx`)
+- ✅ Route added (`/terms`)
+- ✅ Link from Register page works
+- ⏳ Needs Vercel rebuild to deploy
 
 ---
 
