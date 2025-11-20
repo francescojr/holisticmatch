@@ -39,13 +39,14 @@ function ResetPasswordPage() {
 
   // Check token format on mount
   useEffect(() => {
-    if (!token) {
+    if (!token || token.length === 0) {
       setTokenValid(false)
       setError('Token inválido ou não fornecido. Solicite um novo link de redefinição de senha.')
       toast.error('Token inválido', {
         message: 'Por favor, solicite um novo link de redefinição'
       })
     }
+    // Token format is valid if it's a non-empty string (the server will validate on submission)
   }, [token, toast])
 
   const handleSubmit = async (e: React.FormEvent) => {

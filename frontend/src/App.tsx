@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { useEffect } from 'react'
 import { AuthProvider } from './hooks/useAuth'
+import { usePendingEmailVerification } from './hooks/usePendingEmailVerification'
 import { ProtectedRoute } from './components'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { useToast } from './hooks/useToast'
@@ -19,6 +20,9 @@ import { ToastContainer } from './components/toast'
 
 function AppContent() {
   const { toasts, toast, dismiss } = useToast()
+  
+  // Enforce pending email verification
+  usePendingEmailVerification()
 
   // Register global error handler 
   useEffect(() => {

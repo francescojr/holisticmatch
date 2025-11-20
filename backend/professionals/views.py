@@ -36,6 +36,13 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_class = ProfessionalFilter
 
+    def get_queryset(self):
+        """
+        Return only professionals whose users have verified their email (is_active=True)
+        This prevents unverified accounts from appearing in the listing
+        """
+        return Professional.objects.filter(user__is_active=True)
+
     def get_serializer_class(self):
         """Use summary serializer for list view"""
         if self.action == 'list':
@@ -426,15 +433,28 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
             "detail": "Se este email estiver cadastrado, você receberá um link de reset"
         }
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        
         serializer = PasswordResetRequestSerializer(data=request.data)
         
         if serializer.is_valid():
-            serializer.save()
+            try:
+                serializer.save()
+                logger.info(f"✅ Password reset requested for email: {request.data.get('email')}")
+            except Exception as e:
+                logger.error(f"❌ Error in password_reset.save(): {str(e)}", exc_info=True)
+                return Response(
+                    {'detail': 'Erro ao processar solicitação. Por favor, tente novamente.'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
             return Response(
                 {'detail': 'Se este email estiver cadastrado, você receberá um link de reset de senha'},
                 status=status.HTTP_200_OK
             )
         
+        logger.error(f"Validation errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])

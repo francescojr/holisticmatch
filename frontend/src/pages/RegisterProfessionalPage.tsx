@@ -384,6 +384,9 @@ function RegisterProfessionalPage() {
         message: 'Um link de verificação foi enviado para ' + step1Data.email
       })
 
+      // Store flag indicating user MUST verify email before proceeding
+      sessionStorage.setItem('pendingEmailVerification', step1Data.email)
+
       // Redirect to email verification page with email as query parameter
       setTimeout(() => {
         navigate(`/verify-email?email=${encodeURIComponent(step1Data.email)}`)

@@ -176,7 +176,7 @@ export const professionalService = {
    * Request password reset - sends email with reset link
    */
   async requestPasswordReset(email: string): Promise<{ message: string }> {
-    const response = await api.post<{ message: string }>('/professionals/password-reset-request/', {
+    const response = await api.post<{ message: string }>('/professionals/password-reset/', {
       email,
     })
     return response.data

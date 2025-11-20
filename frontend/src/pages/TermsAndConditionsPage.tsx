@@ -122,19 +122,14 @@ O HolisticMatch atua estritamente como uma plataforma de divulgação de profiss
               <motion.section
                 key={section.id}
                 variants={itemVariants}
-                className="prose dark:prose-invert max-w-none"
+                className="space-y-3"
               >
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                <h2 className="text-2xl font-bold text-primary-600 dark:text-primary-400 mb-4 leading-tight">
                   {section.title}
                 </h2>
-                <div className="space-y-4">
-                  {section.content.split('\n\n').map((paragraph, idx) => (
-                    <p
-                      key={idx}
-                      className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line"
-                    >
-                      {paragraph}
-                    </p>
+                <div className="space-y-4 text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {section.content.split('\n\n').map((paragraph: string, idx: number) => (
+                    <p key={idx}>{paragraph}</p>
                   ))}
                 </div>
               </motion.section>

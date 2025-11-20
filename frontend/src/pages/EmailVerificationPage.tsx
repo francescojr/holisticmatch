@@ -68,6 +68,9 @@ function EmailVerificationPage() {
       setEmail(result.email)
       setState('success')
       
+      // Clear pending verification flag
+      sessionStorage.removeItem('pendingEmailVerification')
+      
       // Store email in localStorage for login redirect
       const verifiedEmail = result.email || email
       localStorage.setItem('verification_email', verifiedEmail)

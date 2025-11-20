@@ -154,8 +154,10 @@ def validate_state_code(value):
 
 def validate_name(value):
     """
-    Validate professional name.
+    Validate professional name - including content moderation.
     """
+    from .moderation import ModerationService  # Import here to avoid circular imports
+    
     if not value or not value.strip():
         raise ValidationError('Nome é obrigatório')
 
@@ -168,12 +170,25 @@ def validate_name(value):
     # Check for reasonable characters (letters, spaces, accents)
     if not re.match(r'^[a-zA-ZÀ-ÿ\s\'-]+$', value):
         raise ValidationError('Nome deve conter apenas letras, espaços e acentos')
+    
+    # ✅ MODERATE THE NAME
+    moderation_service = ModerationService()
+    is_safe, result = moderation_service.moderate_text(value)
+    
+    if not is_safe:
+        source = result.get('source', 'unknown')
+        raise ValidationError(
+            f'Nome contém conteúdo impróprio (detectado por {source}). '
+            f'Por favor, use um nome profissional apropriado.'
+        )
 
 
 def validate_bio(value):
     """
-    Validate professional bio.
+    Validate professional bio - including content moderation.
     """
+    from .moderation import ModerationService  # Import here to avoid circular imports
+    
     if not value or not value.strip():
         raise ValidationError('Bio é obrigatória')
 
@@ -184,3 +199,14 @@ def validate_bio(value):
 
     if len(value) > 2000:
         raise ValidationError('Bio deve ter no máximo 2000 caracteres')
+    
+    # ✅ MODERATE THE BIO CONTENT
+    moderation_service = ModerationService()
+    is_safe, result = moderation_service.moderate_text(value)
+    
+    if not is_safe:
+        source = result.get('source', 'unknown')
+        raise ValidationError(
+            f'Bio contém conteúdo impróprio (detectado por {source}). '
+            f'Por favor, revise e remova linguagem ofensiva ou inadequada.'
+        )

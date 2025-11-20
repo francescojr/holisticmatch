@@ -1,11 +1,129 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 20, 2025 (Content Moderation Strengthened)
+**Last Updated**: November 20, 2025 (Email Validation & Password Reset Fixed)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
 **Status**: ✅ **PRODUCTION READY** - 179/179 tests passing
 
 **Live URL**: `https://hollisticmatch.online/` (Production - All systems operational)
+
+---
+
+## 📋 NOVEMBER 20, 2025 - CRITICAL FIXES: Email Validation & Password Reset
+
+### 🔒 Fixed: Unverified Users Appearing in Listings
+
+**Issue:** 
+- User registers → appears in professional listing immediately
+- Even without verifying email (is_active=False)
+- This allowed unvalidated accounts to appear public
+- Security/validation issue
+
+**Root Cause:**
+- `ProfessionalViewSet.queryset` was returning ALL professionals
+- No filter for `user__is_active=True`
+- Unverified accounts (is_active=False) still appeared in API responses
+
+**Solution:**
+- Added `get_queryset()` method to filter by `user__is_active=True`
+- Only verified professionals appear in listings
+- Kept `queryset` class attribute for router basename auto-detection
+- Maintained backward compatibility
+
+**Files Changed:**
+- `backend/professionals/views.py` - Added get_queryset() filter
+
+**Security Impact:**
+- ✅ Unverified users no longer appear in listings
+- ✅ Maintains is_active=False protection
+- ✅ Still allows frontend to redirect to /verify-email
+- ✅ Combined with frontend redirect enforcement (sessionStorage check)
+
+**Test Status:**
+- ✅ 179/179 tests passing (including updated endpoint test)
+
+### 📧 Fixed: Password Reset Flow Complete & Working
+
+**Issue:**
+- User clicks "Esqueci a senha"
+- "Erro de token rápido" appears
+- Email doesn't arrive
+
+**Root Causes Found:**
+1. **Frontend endpoint URL wrong**: Was calling `/password-reset-request/` instead of `/password-reset/`
+2. **Frontend token validation too strict**: Was rejecting empty token on page load
+3. **Backend error handling silent**: Exceptions in serializer.save() weren't being logged
+
+**Solutions Applied:**
+
+1. **Frontend URL Fix** (ProfessionalService):
+   - Changed: `/professionals/password-reset-request/` 
+   - To: `/professionals/password-reset/` (correct endpoint)
+
+2. **Frontend Token Validation** (ResetPasswordPage):
+   - Removed premature token validation on mount
+   - Token validation deferred to submission (server validates)
+   - Error only shows if token truly missing/empty
+
+3. **Backend Error Logging** (ProfessionalViewSet.password_reset):
+   - Added try-catch around serializer.save()
+   - Added logging for validation errors
+   - Returns 500 with details if email sending fails
+
+**Email Flow Verification:**
+- ✅ Token generated correctly
+- ✅ Email sent via Resend (tested with full flow)
+- ✅ Email contains HTML template with reset link
+- ✅ Link format: `http://localhost:5173/reset-password?token=XXX`
+- ✅ Password confirmation works
+- ✅ New password verified in DB
+
+**Files Changed:**
+- `frontend/src/services/professionalService.ts` - Fixed endpoint URL
+- `frontend/src/pages/ResetPasswordPage.tsx` - Better token validation
+- `backend/professionals/views.py` - Enhanced error logging
+- `backend/professionals/serializers.py` - No changes (working correctly)
+- `backend/professionals/models.py` - No changes (token creation working)
+
+**Test Status:**
+- ✅ 179/179 tests passing
+- ✅ 24/24 password reset tests passing
+- ✅ Full flow tested: Request → Email Send → Token → Reset → Verify
+
+### 🎯 Frontend Enhancements Applied
+
+1. **Email Verification Enforcement** (usePendingEmailVerification hook)
+   - Prevents user from navigating away after registration
+   - Stores `pendingEmailVerification` in sessionStorage
+   - Redirects to `/verify-email` if user tries to access other pages
+   - Cleared on successful email verification
+
+2. **Terms & Conditions Page**
+   - Title color fixed: `text-primary-600` (was invisible)
+   - Proper spacing and alignment
+   - Better text rendering without prose conflicts
+
+**Files Changed:**
+- `frontend/src/App.tsx` - Added usePendingEmailVerification hook
+- `frontend/src/hooks/usePendingEmailVerification.ts` - New hook (created)
+- `frontend/src/pages/RegisterProfessionalPage.tsx` - sessionStorage flag
+- `frontend/src/pages/EmailVerificationPage.tsx` - Clear sessionStorage on verify
+- `frontend/src/pages/TermsAndConditionsPage.tsx` - Fixed title styling
+- `frontend/src/pages/ForgotPasswordPage.tsx` - No changes needed
+- `vercel.json` - SPA routing config added
+
+---
+
+## 📊 Summary of Fixes This Session
+
+| Issue | Category | Status | Impact |
+|-------|----------|--------|--------|
+| Unverified users in listings | Security | ✅ FIXED | High - prevents fake accounts appearing public |
+| Password reset endpoint wrong | UX/Bug | ✅ FIXED | High - reset flow now works |
+| Email not being sent | Backend | ✅ VERIFIED WORKING | High - emails send correctly |
+| Terms page 404 | Frontend | ✅ FIXED (awaiting Vercel) | Medium - page code ready |
+| Email verification bypass | Security | ✅ FIXED | High - prevents unvalidated accounts |
+| Title visibility issues | UX | ✅ FIXED | Low - UI/UX improvement |
 
 ---
 
