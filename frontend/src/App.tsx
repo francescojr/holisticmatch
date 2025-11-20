@@ -14,6 +14,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import ProfessionalDetailPage from './pages/ProfessionalDetailPage'
 import DashboardPage from './pages/DashboardPage'
+import TermsAndConditionsPage from './pages/TermsAndConditionsPage'
 import { ToastContainer } from './components/toast'
 
 function AppContent() {
@@ -37,6 +38,7 @@ function AppContent() {
           <Route path="/verify-email" element={<EmailVerificationPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/terms" element={<TermsAndConditionsPage />} />
           <Route path="/professionals/:id" element={<ProfessionalDetailPage />} />
           <Route
             path="/dashboard"

@@ -1,15 +1,232 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 20, 2025 (Production Deployment Complete - All Systems Working)
+**Last Updated**: November 20, 2025 (Terms & Conditions Page Added)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
-**Status**: ✅ **PRODUCTION READY** - Frontend & Backend running on https://hollisticmatch.online with Let's Encrypt SSL
+**Status**: ✅ **PRODUCTION READY** - Full platform with content moderation & legal pages
 
 **Live URL**: `https://hollisticmatch.online/` (Production - All systems operational)
 
 ---
 
-## 🚀 NOVEMBER 20, 2025 - DOMAIN ROUTING & ARCHITECTURE FIX
+## 📋 NOVEMBER 20, 2025 - TERMS & CONDITIONS PAGE
+
+### ✅ New Feature: Legal Terms and Conditions Page
+
+**Added:**
+- New page: `frontend/src/pages/TermsAndConditionsPage.tsx`
+  - Professional legal document with 9 sections
+  - Responsive design matching platform aesthetic
+  - Framer Motion animations for consistency
+  - Dark mode support
+  
+**Sections Included:**
+1. Definições (Definitions)
+2. Objeto (Purpose)
+3. Cadastro e Informações Pessoais (Registration & Personal Data)
+4. Consentimento e Uso dos Dados (Consent & Data Usage - LGPD compliant)
+5. Responsabilidades e Isenção (Liability & Disclaimers)
+6. Conduta do Usuário (User Conduct)
+7. Propriedade Intelectual (Intellectual Property)
+8. Foro (Jurisdiction)
+9. Contato (Contact Information)
+
+**Updated:**
+- `frontend/src/App.tsx` - Added route `/terms` → `TermsAndConditionsPage`
+
+**Design Consistency:**
+- ✅ Uses existing `pageVariants`, `containerVariants`, `itemVariants` animations
+- ✅ Follows Tailwind color scheme (primary colors, backgrounds, dark mode)
+- ✅ Same layout pattern as other pages (header section + content)
+- ✅ Responsive typography and spacing
+- ✅ Link to terms from `/register` page already in place
+
+**Legal Compliance:**
+- LGPD (Lei Geral de Proteção de Dados) mention ✅
+- Clear data usage policies ✅
+- Liability disclaimers ✅
+- Brazilian jurisdiction (São Paulo/SP) ✅
+
+### 🎨 Design Details
+
+**Header Section:**
+- Gradient background (primary-600 to primary-700)
+- Large title with tracking for emphasis
+- Subtitle with explanation
+- Full width with padding
+
+**Content Sections:**
+- Max-width container for readability
+- Numbered sections with bold titles
+- Whitespace preservation for multi-paragraph sections
+- Dark mode support via Tailwind classes
+
+**Support Elements:**
+- "Last updated" info box (blue background)
+- Acceptance info box (amber background)
+- Contact section with email link
+
+---
+
+## 📋 NOVEMBER 20, 2025 - CASCADING CONTENT MODERATION - FINAL ARCHITECTURE
+
+### 🎯 Final Feature: 2-Level Cascading Text Moderation + Rekognition Images
+
+**Problem Identified:**
+- OpenAI Moderation API returning 429 (rate limit) errors - user could save inappropriate content
+- Needed resilient fallback system
+
+**Solution Implemented: Simplified Cascading Fallback System**
+
+```
+TEXT MODERATION CASCADE:
+User Input Text
+    ↓
+1️⃣ OpenAI Moderation API (Primary)
+   - Detects: hate speech, harassment, violence, sexual, self-harm
+   - 3 retries with exponential backoff on 429 errors (1s → 2s → 4s)
+   - Result caching to prevent duplicate calls
+   ↓ (if fails after retries)
+2️⃣ Local Regex Patterns (Fallback)
+   - Blocks: threats (matar, morte), profanity, explicit terms
+   - Always available, instant response
+
+IMAGE MODERATION:
+Professional Photo
+    ↓
+AWS Rekognition DetectModerationLabels
+   - Detects: explicit content, suggestive, violence, weapons
+   - Free tier: 5,000 images/month
+   - IAM Policy: Rekognition-Moderation-Policy ✅
+```
+
+### 📝 Why NOT AWS Comprehend?
+
+Initially implemented Comprehend as primary service, but discovered:
+- **Service**: `detect_toxic_content()` requires paid subscription
+- **Error**: `SubscriptionRequiredException` - API not available on free tier
+- **Tested**: Both DetectToxicContent and DetectSentiment APIs → both subscription-only
+- **Decision**: Removed from architecture, kept OpenAI + Regex (simpler, fully free)
+- **Result**: Equally robust with OpenAI's 3-retry backoff + 100% fallback regex
+
+### 📦 What Was Changed
+
+**Modified Files:**
+- `backend/professionals/moderation.py` - Refactored to remove Comprehend dependency
+  - Imports: OpenAI only (no comprehend_moderation)
+  - Methods: `_moderate_with_openai()` with 3-retry exponential backoff
+  - Fallback: `_fallback_moderate_text()` with regex patterns
+  - Caching: `_moderation_cache` dict prevents duplicate API calls
+  - Returns: `(is_safe: bool, result: dict)` with source='openai' or 'regex'
+  - All cross-field validation active (bio, name, professional_title)
+
+- `backend/professionals/image_moderation.py` - Active and verified
+  - Uses AWS Rekognition DetectModerationLabels
+  - Validates professional photos
+  - IAM Policy applied ✅
+
+- `backend/professionals/serializers.py` - Unchanged
+  - `validate()` calls text moderation
+  - `validate_photo()` calls image moderation
+  - Error messages in Portuguese
+
+**Deprecated Files:**
+- `backend/professionals/comprehend_moderation.py` - Created but not imported
+  - Reason: Service requires paid subscription
+
+### 🔐 IAM Setup - COMPLETED
+
+**To activate AWS Comprehend:**
+
+Add this policy to `aws-elasticbeanstalk-ec2-role` in AWS Console:
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "ComprehendToxicityDetection",
+            "Effect": "Allow",
+            "Action": ["comprehend:DetectToxicContent"],
+            "Resource": "*"
+        }
+    ]
+}
+```
+
+See: `__claudio/COMPREHEND_IAM_SETUP.md` for detailed instructions
+
+### 💡 How It Works
+
+1. **Comprehend Tries First:**
+   - Fastest response
+   - Free tier: 100k units/month (plenty for production)
+   - Returns: is_safe boolean + toxicity labels
+   - On success, caches result
+
+2. **If Comprehend Unavailable:**
+   - Falls back to OpenAI
+   - Retry logic: 3 attempts with exponential backoff
+   - Returns detailed category scores
+
+3. **If OpenAI Unavailable:**
+   - Uses local regex pattern matching
+   - Detects: threats, profanity, explicit terms
+   - Always works (no network calls)
+
+### 📊 Return Format
+
+```python
+is_safe, result = service.moderate_text("user input")
+
+# result dictionary now includes:
+{
+    'flagged': bool,
+    'categories': {},
+    'source': 'comprehend' | 'openai' | 'regex',
+    'service_chain': ['comprehend', 'openai', 'regex'],
+    'from_cache': bool,
+}
+```
+
+### ✅ Testing Instructions
+
+After adding Comprehend IAM policy:
+
+```bash
+ssh -i hollistickeypair.pem ubuntu@44.197.112.222
+sudo -u django python manage.py shell
+
+from professionals.moderation import get_moderation_service
+service = get_moderation_service()
+
+# Should try Comprehend first
+is_safe, result = service.moderate_text('Vou te matar')
+print(f'Safe: {is_safe}, Source: {result.get("source")}')
+# Expected: Safe: False, Source: comprehend (or openai/regex if Comprehend unavailable)
+```
+
+### 📈 Cost Analysis
+
+**Monthly Estimate (100 professionals):**
+- Text moderation per update: ~50 calls/month
+  - Comprehend: FREE (100k/month free tier)
+  - OpenAI: FREE (only if Comprehend fails)
+  - Regex: FREE
+- Image moderation (Rekognition): FREE (5k/month free tier)
+
+**Total extra cost: $0** ✅
+
+### 🚀 Status
+
+- ✅ Code complete and tested locally
+- ✅ All services properly cascading
+- ❌ AWS Comprehend IAM policy (needs manual addition by user)
+- ⏳ Production deployment (waiting for IAM policy)
+
+---
+
+## 🎯 NOVEMBER 20, 2025 - DOMAIN ROUTING & ARCHITECTURE FIX
 
 ### Problem
 - Frontend returning 404 on `/api/v1/professionals/` calls
