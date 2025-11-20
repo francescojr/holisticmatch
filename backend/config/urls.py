@@ -8,6 +8,7 @@ from django.conf.urls.static import static
 from django.http import FileResponse
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from django.db import connection
 from django.db.utils import OperationalError
 import os
@@ -68,12 +69,10 @@ urlpatterns = [
     path('api/v1/health/detailed/', HealthCheckDetailedView.as_view(), name='api-health-check-detailed'),
     path('api/v1/auth/', include('authentication.urls')),
     path('api/v1/', include('professionals.urls')),
-    # Documentation endpoints
-    path('docs/', SwaggerUIView.as_view(), name='swagger-ui'),
-    path('docs/swagger-ui/', SwaggerUIView.as_view(), name='swagger-ui-alt'),
-    path('openapi.json', OpenAPIJSONView.as_view(), name='openapi-json'),
-    path('api/v1/docs/', SwaggerUIView.as_view(), name='api-docs'),
-    path('api/v1/openapi.json', OpenAPIJSONView.as_view(), name='api-openapi-json'),
+    # Documentation endpoints - DRF Spectacular
+    path('api/v1/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/v1/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/v1/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]
 
 # Serve media files in development
