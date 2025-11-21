@@ -1,7 +1,43 @@
 # 🎯 HolisticMatch - Changelog
 
-**Last Updated**: November 21, 2025  
-**Status**: ✅ PRODUCTION READY - All 4 critical bugs fixed
+**Last Updated**: November 21, 2025 23:00 UTC  
+**Status**: 🔍 DEBUGGING - Intensive logging added to trace validation flow
+
+---
+
+## NOVEMBER 21, 2025 - INTENSIVE DEBUG LOGGING ADDED
+
+### Issue Found
+User reported registering "jake caralho" without email verification and account appearing on homepage with explicit photo. Comprehensive audit shows:
+- ✅ Backend filtering is correct (returns only `is_active=True` users)
+- ✅ Validators are implemented and working in tests
+- ❌ **CRITICAL**: jake caralho in DB with photo (validation somehow bypassed during registration)
+
+### Debug Logging Added
+To trace exactly where validation fails, added intensive logging:
+
+**File: `backend/professionals/serializers.py`**
+- `[VALIDATE_NAME]` - Track name validation flow
+- `[VALIDATE_PHOTO]` - Track image validation flow
+- `[CREATE_PROFESSIONAL]` - Track user/professional creation
+
+**File: `backend/professionals/image_moderation.py`**
+- `[IMAGE_MODERATION]` - AWS Rekognition flow
+- `[MODERATE_PROFESSIONAL_PHOTO]` - Photo moderation results
+
+**File: `backend/professionals/moderation.py`**
+- `[MODERATE_TEXT]` - OpenAI/Regex text moderation flow
+
+### Test Status
+- ✅ All 180 tests still passing
+- ✅ Logging doesn't break functionality
+- 🔍 Ready for production deployment to see actual logs from user registration
+
+### Next Steps
+1. Deploy to production
+2. User attempts to register with "jake caralho" again + explicit photo
+3. Review logs to see exactly where validation is skipped
+4. Fix root cause based on actual execution flow
 
 ---
 

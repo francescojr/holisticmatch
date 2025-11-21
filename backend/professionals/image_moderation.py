@@ -50,22 +50,29 @@ class ImageModerationService:
             # AWS Rekognition not configured
             # In production: this is a configuration error
             # For now: allow image but log warning
-            logger.warning("AWS Rekognition not enabled - image moderation skipped. Configure AWS_ACCESS_KEY_ID for production.")
+            logger.warning("[IMAGE_MODERATION] AWS Rekognition not enabled - image moderation skipped")
             return True, {'disabled': True, 'message': 'AWS Rekognition not configured - skipping moderation'}
 
+        logger.debug(f"[IMAGE_MODERATION] Starting moderation, image_file type: {type(image_file)}")
+
         if not image_file:
+            logger.debug("[IMAGE_MODERATION] No image file provided")
             return True, {'empty': True}
 
         try:
             # Read image bytes
             if hasattr(image_file, 'read'):
+                logger.debug("[IMAGE_MODERATION] Image is file-like object, reading bytes")
                 image_bytes = image_file.read()
                 # Reset file pointer if needed
                 if hasattr(image_file, 'seek'):
                     image_file.seek(0)
             else:
+                logger.debug("[IMAGE_MODERATION] Image is file path, opening file")
                 with open(image_file, 'rb') as f:
                     image_bytes = f.read()
+
+            logger.debug(f"[IMAGE_MODERATION] Read {len(image_bytes)} bytes from image")
 
             # Basic validation: check if it's a valid image
             try:
@@ -176,7 +183,10 @@ class ImageModerationService:
         Returns:
             Tuple of (is_safe: bool, results: dict)
         """
-        return self.moderate_image(photo_file)
+        logger.debug(f"[MODERATE_PROFESSIONAL_PHOTO] Called with photo_file: {type(photo_file)}")
+        is_safe, results = self.moderate_image(photo_file)
+        logger.info(f"[MODERATE_PROFESSIONAL_PHOTO] Result: is_safe={is_safe}, message={results.get('message')}")
+        return is_safe, results
 
 
 # Singleton instance

@@ -69,26 +69,35 @@ class ModerationService:
         Returns:
             Tuple of (is_safe: bool, results: dict with 'source' field)
         """
+        logger.debug(f"[MODERATE_TEXT] Called with text: {type(text).__name__}")
+        
         if not text or not isinstance(text, str):
+            logger.debug("[MODERATE_TEXT] Text is empty or not string")
             return True, {'empty': True}
+
+        logger.debug(f"[MODERATE_TEXT] Text content: '{text[:50]}...'")
 
         # Check cache first
         if text in self._moderation_cache:
             result = self._moderation_cache[text]
             result[1]['from_cache'] = True
+            logger.debug(f"[MODERATE_TEXT] Found in cache: is_safe={result[0]}")
             return result
 
         # LEVEL 1: Try OpenAI Moderation
+        logger.debug("[MODERATE_TEXT] Attempting OpenAI moderation")
         is_safe, openai_result = self._moderate_with_openai(text)
         if is_safe is not None:
+            logger.info(f"[MODERATE_TEXT] OpenAI result: is_safe={is_safe}, flagged={openai_result.get('flagged')}")
             cache_result = (is_safe, {**openai_result, 'service_chain': ['openai']})
             self._moderation_cache[text] = cache_result
             return cache_result
         
-        logger.debug('OpenAI unavailable, using regex fallback')
+        logger.warning('[MODERATE_TEXT] OpenAI unavailable, using regex fallback')
 
         # LEVEL 2: Use local regex fallback
         is_safe, fallback_result = self._fallback_moderate_text(text)
+        logger.info(f"[MODERATE_TEXT] Regex result: is_safe={is_safe}, flagged={fallback_result.get('flagged')}")
         cache_result = (is_safe, {**fallback_result, 'service_chain': ['openai', 'regex']})
         self._moderation_cache[text] = cache_result
         return cache_result

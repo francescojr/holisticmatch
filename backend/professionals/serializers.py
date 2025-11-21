@@ -322,11 +322,18 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
     
     def validate_name(self, value):
         """Validate professional name"""
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"[VALIDATE_NAME] Called with value: '{value}'")
+        
         try:
             validate_name(value)
+            logger.debug(f"[VALIDATE_NAME] Name passed validation")
             return value
         except DjangoValidationError as e:
-            raise serializers.ValidationError(str(e) if hasattr(e, 'message') and e.message else e.messages[0] if e.messages else str(e))
+            error_msg = str(e) if hasattr(e, 'message') and e.message else e.messages[0] if e.messages else str(e)
+            logger.warning(f"[VALIDATE_NAME] Name validation failed: {error_msg}")
+            raise serializers.ValidationError(error_msg)
     
     def validate_bio(self, value):
         """Validate bio"""
@@ -342,23 +349,36 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         This method is called AFTER ImageField parsing
         Checks for: valid image format, file size, and explicit content
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"[VALIDATE_PHOTO] Called with value: {value}")
+        
         if not value:
+            logger.debug("[VALIDATE_PHOTO] No value provided, returning early")
             return value
         
         # Basic photo validation (size, format)
         try:
             validate_profile_photo(value)
+            logger.debug("[VALIDATE_PHOTO] Basic validation passed")
         except DjangoValidationError as e:
+            logger.error(f"[VALIDATE_PHOTO] Basic validation failed: {e}")
             raise serializers.ValidationError(str(e))
         
         # Image moderation: check for explicit/violent content
+        logger.debug("[VALIDATE_PHOTO] Starting image moderation check")
         image_moderation = get_image_moderation_service()
+        logger.debug(f"[VALIDATE_PHOTO] Moderation service enabled: {image_moderation.service_enabled}")
+        
         is_safe, moderation_result = image_moderation.moderate_professional_photo(value)
+        logger.info(f"[VALIDATE_PHOTO] Moderation result: is_safe={is_safe}, message={moderation_result.get('message')}")
         
         if not is_safe:
             error_msg = moderation_result.get('message', 'Foto contém conteúdo impróprio')
+            logger.warning(f"[VALIDATE_PHOTO] Rejecting photo: {error_msg}")
             raise serializers.ValidationError(error_msg)
         
+        logger.debug("[VALIDATE_PHOTO] Photo passed validation")
         return value
     
     def validate_services(self, value):
@@ -422,9 +442,13 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         import logging
         
         logger = logging.getLogger(__name__)
+        logger.info(f"[CREATE_PROFESSIONAL] Creating professional with validated_data keys: {list(validated_data.keys())}")
+        logger.debug(f"[CREATE_PROFESSIONAL] Name: {validated_data.get('name')}")
+        logger.debug(f"[CREATE_PROFESSIONAL] Has photo: {bool(validated_data.get('photo'))}")
         
         password = validated_data.pop('password')
         email = validated_data['email']
+        logger.info(f"[CREATE_PROFESSIONAL] Creating user with email: {email}, is_active will be False")
         
         try:
             # Create user account (initially inactive until email verified)
@@ -434,12 +458,14 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
                 password=password,
                 is_active=False  # User starts inactive until email verification
             )
+            logger.info(f"[CREATE_PROFESSIONAL] User created: ID={user.id}, is_active={user.is_active}")
             
             # Create professional profile :)
             professional = Professional.objects.create(
                 user=user,
                 **validated_data
             )
+            logger.info(f"[CREATE_PROFESSIONAL] Professional created: ID={professional.id}, name={professional.name}")
             
             # Create email verification token
             email_token = EmailVerificationToken.create_token(user)
