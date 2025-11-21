@@ -1,11 +1,50 @@
 # 🎯 PROJECT STATUS & MEMORY (AI Assistant Reference)
 
-**Last Updated**: November 20, 2025 (Performance Fix: Moderation Cache & OpenAI Disable)
+**Last Updated**: November 20, 2025 (Critical Moderation Fix: UPDATE Bypass)
 **Project**: HolisticMatch - Marketplace Holístico
 **Owner**: @francescojr
-**Status**: ✅ **PRODUCTION READY** - 179/179 tests passing (6.72s)
+**Status**: ✅ **PRODUCTION READY** - 180/180 tests passing (7.07s)
 
 **Live URL**: `https://hollisticmatch.online/` (Production - All systems operational)
+
+---
+
+## 🔧 NOVEMBER 20, 2025 - CRITICAL FIX: Moderation Validators Not Applied to UPDATE/PATCH
+
+### 🔒 Fixed: Users Could Bypass Moderation by Editing Profile
+
+**Issue:**
+- User could register with valid name
+- Then UPDATE/PATCH their profile with offensive words
+- "Cararlho" was being accepted on UPDATE when it should be blocked
+- Root cause: Validators in serializer were silently failing
+
+**Root Cause Found:**
+- Serializer `validate_*` methods had bug: `e.message` (incorrect attribute)
+- Django's `ValidationError` doesn't have `.message` attribute
+- Should be `str(e)` or `e.messages[0]`
+- When error happened, exception was **silently swallowed**
+- UPDATE endpoint returned error but **message was lost** → Frontend didn't show it
+- Validation silently failed, data saved anyway
+
+**Solution Applied:**
+- Fixed all `validate_*` methods in `ProfessionalSerializer` (8 validators)
+- Each now properly extracts error message from Django's ValidationError
+- Added test: `test_moderation_update.py` - verifies moderation works on UPDATE
+
+**Files Changed:**
+- `backend/professionals/serializers.py` - Fixed all validator error handling
+- `backend/tests/test_moderation_update.py` - Added test for UPDATE moderation
+
+**Test Results:**
+- ✅ 180/180 tests passing (was 179)
+- ✅ New test: `test_update_with_offensive_name` PASSES
+- ✅ Performance: 7.07s (fast)
+- ✅ UPDATE endpoint now properly blocks offensive words
+
+**Security Impact:**
+- ✅ Users CANNOT bypass moderation by editing profile
+- ✅ Offensive words blocked on both CREATE and UPDATE
 
 ---
 

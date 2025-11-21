@@ -15,24 +15,27 @@ logger = logging.getLogger(__name__)
 # Fallback keyword patterns for final safety net
 # Regex patterns organized by category - more comprehensive
 PROHIBITED_PATTERNS = [
-    # Threats and violence
-    r'\b(matar|morte|morrer|suicida|puta|desgraçado|buceta|caralho|porra|merda|fodido|foder|fuder)\b',
+    # Threats and violence (including typos/variations)
+    r'\b(matar|morte|morrer|suicida|puta|desgraçado|buceta|caralho|cararlho|caraho|crl|c\.r\.l|caraio|porra|merda|fodido|foder|fuder)\b',
     r'\b(vou te|vou lhe|vou matar|vou bater|vou estuprar|vou explodir)\b',
     r'\b(ameaça|ameaço|vou|matei|mataria|bateria|estuprei|xingo)\b',
     
     # Sexual content
-    r'\b(sexo|pornô|porno|pornografia|buceta|pinto|peito|anal|oral|trepar|transar)\b',
+    r'\b(sexo|pornô|porno|pornografia|buceta|pinto|peito|anal|oral|trepar|transar|p0rno)\b',
     r'\b(nudes|nude|cam|camgirl|sexting|vibrador|dildo)\b',
     
     # Harassment and hate
-    r'\b(xingamento|xingo|xingue|chamego|racista|racismo|homofobia|lgbtfobia)\b',
-    r'\b(filho da puta|desgraçado|miserável|idiota|imbecil|retardado|débil)\b',
+    r'\b(xingamento|xingo|xingue|chamego|racista|racismo|homofobia|lgbtfobia|lixo|porcaria)\b',
+    r'\b(filho da puta|desgraçado|miserável|idiota|imbecil|retardado|débil|fdp|f\.d\.p)\b',
     
     # Drug/substance abuse mentions
-    r'\b(cocaína|crack|heroína|maconha|droga|drogas|traficante|trafico)\b',
+    r'\b(cocaína|crack|heroína|maconha|droga|drogas|traficante|trafico|coca|h|hxc)\b',
     
     # Slurs and offensive language (Portuguese)
-    r'\b(preto|negão|macaco|judeu|turco|gordo|gorda|aleijado|retardado|deficiente)\b',
+    r'\b(preto|negão|macaco|judeu|turco|gordo|gorda|aleijado|retardado|deficiente|chines|turquinho)\b',
+    
+    # Leetspeak/number replacements
+    r'(?i)(c4r4lh0|c4ralh0|c4r4lho|k4r4lho|k@r@lho)',
 ]
 
 

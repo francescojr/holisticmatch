@@ -67,6 +67,8 @@ class ResendEmailBackend(BaseEmailBackend):
         try:
             # Initialize Resend with API key
             import resend
+            
+            # Set API key globally for this send
             resend.api_key = self.api_key
             
             # Prepare recipients - convert to list if needed
@@ -81,7 +83,6 @@ class ResendEmailBackend(BaseEmailBackend):
             logger.info("📧 Subject: %s", message.subject)
             
             # Extract HTML or text content
-            # Django stores HTML in alternatives when using EmailMessage with html_message param
             html_content = None
             text_content = message.body
             
@@ -110,14 +111,22 @@ class ResendEmailBackend(BaseEmailBackend):
                 logger.info("📧 Using text content")
             
             logger.info("📧 Email params keys: %s", list(email_params.keys()))
+            logger.info("📧 API Key is set: %s", bool(resend.api_key))
             
-            # Call Resend API with proper params
+            # Call Resend API
             response = resend.Emails.send(email_params)
             
-            logger.info("✅ Email sent successfully! Response ID: %s", response.get('id'))
+            logger.info("✅ Email sent successfully! Response: %s", response)
             return True
             
+        except ValueError as exc:
+            # Validation error from Resend
+            logger.error("❌ Validation error sending email via Resend: %s", str(exc))
+            if not self.fail_silently:
+                raise
+            return False
         except Exception as exc:
+            # Other errors
             logger.error("❌ Failed to send email via Resend: %s", str(exc), exc_info=True)
             if not self.fail_silently:
                 raise

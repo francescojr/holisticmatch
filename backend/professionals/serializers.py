@@ -73,7 +73,7 @@ class ProfessionalSerializer(serializers.ModelSerializer):
             validate_name(value)
             return value
         except DjangoValidationError as e:
-            raise serializers.ValidationError(e.message)
+            raise serializers.ValidationError(str(e) if hasattr(e, 'message') and e.message else e.messages[0] if e.messages else str(e))
     
     def validate_bio(self, value):
         """Validate professional bio using custom validator"""
@@ -81,7 +81,7 @@ class ProfessionalSerializer(serializers.ModelSerializer):
             validate_bio(value)
             return value
         except DjangoValidationError as e:
-            raise serializers.ValidationError(e.message)
+            raise serializers.ValidationError(str(e) if hasattr(e, 'message') and e.message else e.messages[0] if e.messages else str(e))
     
     def validate_services(self, value):
         """Validate services using custom validator"""
@@ -89,7 +89,7 @@ class ProfessionalSerializer(serializers.ModelSerializer):
             validate_services(value)
             return value
         except DjangoValidationError as e:
-            raise serializers.ValidationError(e.message)
+            raise serializers.ValidationError(str(e) if hasattr(e, 'message') and e.message else e.messages[0] if e.messages else str(e))
     
     def validate_price_per_session(self, value):
         """Validate price using custom validator"""
@@ -97,7 +97,7 @@ class ProfessionalSerializer(serializers.ModelSerializer):
             validate_price_per_session(value)
             return value
         except DjangoValidationError as e:
-            raise serializers.ValidationError(e.message)
+            raise serializers.ValidationError(str(e) if hasattr(e, 'message') and e.message else e.messages[0] if e.messages else str(e))
     
     def validate_photo(self, value):
         """Validate professional photo for inappropriate content"""
@@ -107,7 +107,7 @@ class ProfessionalSerializer(serializers.ModelSerializer):
         try:
             validate_profile_photo(value)
         except DjangoValidationError as e:
-            raise serializers.ValidationError(e.message)
+            raise serializers.ValidationError(str(e) if hasattr(e, 'message') and e.message else e.messages[0] if e.messages else str(e))
         
         # Image moderation: check for explicit/violent content
         image_moderation = get_image_moderation_service()
@@ -126,7 +126,7 @@ class ProfessionalSerializer(serializers.ModelSerializer):
                 validate_phone_number(value)
                 return value
             except DjangoValidationError as e:
-                raise serializers.ValidationError(f'WhatsApp: {e.message}')
+                raise serializers.ValidationError(f'WhatsApp: {str(e) if hasattr(e, "message") and e.message else e.messages[0] if e.messages else str(e)}')
         return value
     
     def validate_phone(self, value):
@@ -136,7 +136,7 @@ class ProfessionalSerializer(serializers.ModelSerializer):
                 validate_phone_number(value)
                 return value
             except DjangoValidationError as e:
-                raise serializers.ValidationError(f'Telefone: {e.message}')
+                raise serializers.ValidationError(f'Telefone: {str(e) if hasattr(e, "message") and e.message else e.messages[0] if e.messages else str(e)}')
         return value
     
     def validate_state(self, value):
@@ -144,7 +144,7 @@ class ProfessionalSerializer(serializers.ModelSerializer):
         try:
             return validate_state_code(value)
         except DjangoValidationError as e:
-            raise serializers.ValidationError(e.message)
+            raise serializers.ValidationError(str(e) if hasattr(e, 'message') and e.message else e.messages[0] if e.messages else str(e))
     
     def validate(self, data):
         """Cross-field validation with content moderation"""
