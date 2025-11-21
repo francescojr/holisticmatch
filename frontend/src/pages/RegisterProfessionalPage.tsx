@@ -87,18 +87,22 @@ function RegisterProfessionalPage() {
   }, [])
 
   const handleStep1InputChange = (field: keyof Step1FormData, value: string | File | null) => {
+    console.log(`[RegisterPage.Step1.Input] ${field} changed to:`, value)
     setStep1Data(prev => ({ ...prev, [field]: value }))
 
     // Validate field on change
     if (typeof value === 'string') {
-      validate(field, value, getValidationRules(field))
+      const isValid = validate(field, value, getValidationRules(field))
+      console.log(`[RegisterPage.Step1.Input] ${field} validation result:`, isValid)
       
       // Special validation for password confirmation
       if (field === 'passwordConfirm') {
         setStep1Data(prev => ({ ...prev, passwordConfirm: value }))
         if (value !== step1Data.password) {
+          console.log('[RegisterPage.Step1.Input] Password mismatch detected')
           setFieldError('passwordConfirm', 'As senhas não conferem')
         } else {
+          console.log('[RegisterPage.Step1.Input] Passwords match')
           setFieldError('passwordConfirm', '') // Clear error when passwords match
         }
       }
@@ -162,13 +166,16 @@ function RegisterProfessionalPage() {
     let isFormValid = true
     const failedFields: string[] = []
 
-    // Validate all text fields
+    console.log('[RegisterPage.validateStep1Form] Starting validation')
+
+    // Validate all text fields (except optional CPF field)
     Object.keys(step1Data).forEach(key => {
-      if (key !== 'photo') {
+      if (key !== 'photo' && key !== 'cpf') {
         const fieldKey = key as keyof Step1FormData
         const value = step1Data[fieldKey]
         if (typeof value === 'string') {
           const fieldValid = validate(fieldKey, value, getValidationRules(fieldKey))
+          console.log(`[RegisterPage.validateStep1Form] ${fieldKey}: "${value}" => ${fieldValid}`)
           if (!fieldValid) {
             isFormValid = false
             failedFields.push(fieldKey)
@@ -178,7 +185,7 @@ function RegisterProfessionalPage() {
     })
 
     if (failedFields.length > 0) {
-
+      console.log(`[RegisterPage.validateStep1Form] Failed fields: ${failedFields.join(', ')}`)
     }
 
     // Validate password confirmation
@@ -190,22 +197,34 @@ function RegisterProfessionalPage() {
     // Validate photo
     const photoError = validatePhoto(step1Data.photo)
     if (photoError) {
+      console.log('[RegisterPage.validateStep1Form] Photo error:', photoError)
       toast.error('Erro na foto', { message: photoError })
       isFormValid = false
+    } else {
+      console.log('[RegisterPage.validateStep1Form] Photo validation passed')
     }
 
     if (!isFormValid) {
+      console.log('[RegisterPage.validateStep1Form] Validation FAILED')
+    } else {
+      console.log('[RegisterPage.validateStep1Form] Validation PASSED')
     }
 
     return isFormValid
   }
 
   const handleStep1Submit = async (e: React.FormEvent) => {
+    console.log('[RegisterPage.Step1.Submit] ============ FORM SUBMISSION STARTED ============')
     e.preventDefault()
+    console.log('[RegisterPage.Step1.Submit] preventDefault called')
 
-
+    console.log('[RegisterPage.Step1.Submit] Form submission started')
+    console.log('[RegisterPage.Step1.Submit] Current step1Data:', step1Data)
+    console.log('[RegisterPage.Step1.Submit] Current errors:', errors)
 
     if (!validateStep1Form()) {
+      console.log('[RegisterPage.Step1] Validation failed')
+      console.log('[RegisterPage.Step1] Errors object:', errors)
       
       // Build list of missing required fields
       const missingFields: string[] = []
@@ -217,12 +236,31 @@ function RegisterProfessionalPage() {
       if (!step1Data.password) missingFields.push('Senha')
       if (!step1Data.passwordConfirm) missingFields.push('Confirmação de senha')
       
-      const errorMsg = missingFields.length > 0 
-        ? `Campos obrigatórios: ${missingFields.join(', ')}`
-        : 'Por favor, corrija os erros no formulário'
+      console.log('[RegisterPage.Step1] Missing fields:', missingFields)
+      console.log('[RegisterPage.Step1] Validation errors:', errors)
+      
+      // Prepare detailed error message
+      let errorMsg: string
+      if (missingFields.length > 0) {
+        errorMsg = `Campos obrigatórios faltando: ${missingFields.join(', ')}`
+        console.log('[RegisterPage.Step1] Missing required fields:', missingFields)
+      } else if (Object.keys(errors).length > 0) {
+        const errorFields = Object.entries(errors)
+          .map(([field, message]) => `${field}: ${message}`)
+          .join(' | ')
+        errorMsg = `Erros de validação: ${errorFields}`
+        console.log('[RegisterPage.Step1] Validation errors:', errorFields)
+      } else {
+        errorMsg = 'Por favor, corrija os erros no formulário'
+        console.log('[RegisterPage.Step1] Unknown validation error')
+      }
+      
+      console.log('[RegisterPage.Step1] Final error message:', errorMsg)
       toast.error('Validação incompleta', { message: errorMsg })
       return
     }
+    
+    console.log('[RegisterPage.Step1] Validation passed!')
     setLoading(true)
 
     try {
@@ -566,15 +604,22 @@ function RegisterProfessionalPage() {
               />
 
               {/* Senha */}
-              <FormInput
-                label="Senha"
-                type="password"
-                value={step1Data.password}
-                onChange={(value) => handleStep1InputChange('password', value)}
-                error={errors.password}
-                placeholder="Mínimo 8 caracteres"
-                required
-              />
+              <div>
+                <FormInput
+                  label="Senha"
+                  type="password"
+                  value={step1Data.password}
+                  onChange={(value) => handleStep1InputChange('password', value)}
+                  error={errors.password}
+                  placeholder="Mínimo 8 caracteres"
+                  required
+                />
+                {!errors.password && (
+                  <p className="text-xs text-subtext-light mt-2">
+                    ℹ️ Mínimo 8 caracteres, com letra maiúscula, minúscula e número
+                  </p>
+                )}
+              </div>
 
               {/* Confirmação de Senha */}
               <FormInput
