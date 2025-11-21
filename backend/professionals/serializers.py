@@ -683,7 +683,7 @@ Equipe HolisticMatch"""
 <body style="background-color: #f6f8f7;">
     <div class="container">
         <div class="header">
-            <div class="logo">🌿 HolisticMatch</div>
+            <div class="logo">HolisticMatch</div>
             <h1 class="title">Redefinir Senha</h1>
         </div>
         
@@ -701,7 +701,7 @@ Equipe HolisticMatch"""
             
             <div class="warning">
                 <p style="margin: 0; color: #92400e;">
-                    ⏱️ Este link expira em <strong>24 horas</strong>.
+                    Este link expira em <strong>24 horas</strong>.
                 </p>
             </div>
             
@@ -733,10 +733,10 @@ Equipe HolisticMatch"""
             # Enviar via Resend (configurado em settings.EMAIL_BACKEND)
             result = email_message.send(fail_silently=False)
             
-            logger.info(f"✅ Email de reset de senha enviado para {user.email} (resultado: {result})")
+            logger.info(f"Email de reset de senha enviado para {user.email} (resultado: {result})")
             
         except Exception as e:
-            logger.error(f"❌ Erro ao enviar email de reset para {user.email}: {str(e)}")
+            logger.error(f"Erro ao enviar email de reset para {user.email}: {str(e)}")
             # Log o erro mas não falha silenciosamente - permite que o usuário saiba
             # que o email pode não ter sido entregue
             raise serializers.ValidationError(

@@ -33,7 +33,6 @@ class ImageModerationService:
                 self.enabled = True
         except Exception as e:
             logger.warning(f"AWS Rekognition not configured: {str(e)}")
-            self.enabled = False
 
     def moderate_image(self, image_file) -> Tuple[bool, Dict]:
         """
@@ -140,19 +139,29 @@ class ImageModerationService:
                 'error': f'Erro ao processar imagem: {str(e)[:100]}',
                 'invalid_parameter': True
             }
-        except AttributeError as e:
-            # Method doesn't exist or wrong parameter
-            logger.warning(f"Rekognition API error: {str(e)}")
+        except Exception as e:
+            # Catch all AWS errors: AccessDeniedException, ServiceUnavailable, etc.
+            error_str = str(e)
+            
+            # Specific handling for permission errors
+            if 'AccessDenied' in error_str or 'not authorized' in error_str:
+                logger.error(f"AWS Rekognition PERMISSION DENIED: IAM user holisticmatch-s3-user needs rekognition:DetectModerationLabels permission")
+                logger.error(f"Full error: {error_str}")
+                # Fail-open: allow upload but log clearly
+                return True, {
+                    'flagged': False,
+                    'aws_permission_error': True,
+                    'message': 'Aviso: Validação de imagem via AWS indisponível no momento. Imagem aceita.'
+                }
+            else:
+                # Other AWS errors (service unavailable, throttled, etc.)
+                logger.error(f"AWS Rekognition error (not permission): {error_str[:200]}")
+            
+            # Fail-open for other AWS errors too
             return True, {
-                'error': 'Não foi possível validar imagem via Rekognition',
-                'api_error': True
-            }
-            # On error, allow image to proceed (fail-open)
-            logger.error(f"Image moderation error: {str(e)}")
-            return True, {
-                'error': str(e),
-                'api_error': True,
-                'message': 'Não foi possível validar imagem. Permitindo upload.'
+                'flagged': False,
+                'aws_error': True,
+                'message': 'Aviso: Validação indisponível. Imagem aceita.'
             }
 
     def moderate_professional_photo(self, photo_file) -> Tuple[bool, Dict]:
