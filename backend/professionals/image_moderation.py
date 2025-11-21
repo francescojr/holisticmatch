@@ -94,10 +94,12 @@ class ImageModerationService:
                 confidence = label.get('Confidence', 0)
                 confidence_scores[name] = confidence
 
-                # Flag if confidence is high (>60%)
-                if confidence > 60:
+                # Flag if ANY confidence level for explicit content
+                # CRITICAL: Explicit content (Nudity, Suggestive) at ANY confidence should be flagged
+                # AWS returns: Explicit Nudity, Suggestive, etc.
+                if confidence > 0:  # Any detection of explicit content = reject
                     is_flagged = True
-                    flagged_labels.append(name)
+                    flagged_labels.append(f"{name} ({confidence:.1f}%)")
 
             # Also run label detection to check for violence/weapons
             labels_response = self.client.detect_labels(

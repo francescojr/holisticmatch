@@ -483,7 +483,7 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
   <div class="container">
     <div class="card">
       <div class="header">
-        <div class="logo">🌿 HolisticMatch</div>
+        <div class="logo">HolisticMatch</div>
         <h1 class="title">Bem-vindo!</h1>
       </div>
       
@@ -494,7 +494,7 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         <div class="token-section">
           <div class="token-label">Seu código de verificação:</div>
           <div class="token">{verification_token}</div>
-          <div class="instruction">👉 Copie o código acima e cole na página de verificação</div>
+          <div class="instruction">Copie o código acima e cole na página de verificação</div>
         </div>
 
         <p><strong>Como verificar seu email:</strong></p>
@@ -505,7 +505,7 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         </ol>
 
         <div class="expiry">
-          ⏱️ Este código expira em <strong>24 horas</strong>. Se não receber, pode solicitar um novo na página de verificação.
+          Este código expira em <strong>24 horas</strong>. Se não receber, pode solicitar um novo na página de verificação.
         </div>
       </div>
 
