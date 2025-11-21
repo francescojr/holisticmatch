@@ -48,7 +48,11 @@ class ImageModerationService:
             - results: Dictionary containing moderation details
         """
         if not self.enabled:
-            return True, {'disabled': True, 'message': 'AWS Rekognition not configured'}
+            # AWS Rekognition not configured
+            # In production: this is a configuration error
+            # For now: allow image but log warning
+            logger.warning("AWS Rekognition not enabled - image moderation skipped. Configure AWS_ACCESS_KEY_ID for production.")
+            return True, {'disabled': True, 'message': 'AWS Rekognition not configured - skipping moderation'}
 
         if not image_file:
             return True, {'empty': True}

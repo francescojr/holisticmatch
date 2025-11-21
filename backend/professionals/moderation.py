@@ -20,8 +20,8 @@ PROHIBITED_PATTERNS = [
     r'\b(vou te|vou lhe|vou matar|vou bater|vou estuprar|vou explodir)\b',
     r'\b(ameaça|ameaço|vou|matei|mataria|bateria|estuprei|xingo)\b',
     
-    # Sexual content
-    r'\b(sexo|pornô|porno|pornografia|buceta|pinto|peito|anal|oral|trepar|transar|p0rno)\b',
+    # Sexual content (including male genitalia slang)
+    r'\b(sexo|pornô|porno|pornografia|buceta|pinto|peito|anal|oral|trepar|transar|p0rno|piroca|pir|pau|rola|teta|mama|cu|rabo|bumbum|bundao|bunda)\b',
     r'\b(nudes|nude|cam|camgirl|sexting|vibrador|dildo)\b',
     
     # Harassment and hate
@@ -35,7 +35,7 @@ PROHIBITED_PATTERNS = [
     r'\b(preto|negão|macaco|judeu|turco|gordo|gorda|aleijado|retardado|deficiente|chines|turquinho)\b',
     
     # Leetspeak/number replacements
-    r'(?i)(c4r4lh0|c4ralh0|c4r4lho|k4r4lho|k@r@lho)',
+    r'(?i)(c4r4lh0|c4ralh0|c4r4lho|k4r4lho|k@r@lho|p1r0c4|p1r0c@|p1r0k4)',
 ]
 
 

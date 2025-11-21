@@ -326,7 +326,7 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
             validate_name(value)
             return value
         except DjangoValidationError as e:
-            raise serializers.ValidationError(e.message)
+            raise serializers.ValidationError(str(e) if hasattr(e, 'message') and e.message else e.messages[0] if e.messages else str(e))
     
     def validate_bio(self, value):
         """Validate bio"""
@@ -334,21 +334,32 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
             validate_bio(value)
             return value
         except DjangoValidationError as e:
-            raise serializers.ValidationError(e.message)
+            raise serializers.ValidationError(str(e) if hasattr(e, 'message') and e.message else e.messages[0] if e.messages else str(e))
     
     def validate_photo(self, value):
         """
         Validate photo field explicitly
         This method is called AFTER ImageField parsing
+        Checks for: valid image format, file size, and explicit content
         """
-        if value:  # Only validate if provided
-            try:
-                validate_profile_photo(value)
-                return value
-            except DjangoValidationError as e:
-                raise serializers.ValidationError(str(e))
-        else:
+        if not value:
             return value
+        
+        # Basic photo validation (size, format)
+        try:
+            validate_profile_photo(value)
+        except DjangoValidationError as e:
+            raise serializers.ValidationError(str(e))
+        
+        # Image moderation: check for explicit/violent content
+        image_moderation = get_image_moderation_service()
+        is_safe, moderation_result = image_moderation.moderate_professional_photo(value)
+        
+        if not is_safe:
+            error_msg = moderation_result.get('message', 'Foto contém conteúdo impróprio')
+            raise serializers.ValidationError(error_msg)
+        
+        return value
     
     def validate_services(self, value):
         """Validate services"""
@@ -356,14 +367,14 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
             validate_services(value)
             return value
         except DjangoValidationError as e:
-            raise serializers.ValidationError(e.message)
+            raise serializers.ValidationError(str(e) if hasattr(e, 'message') and e.message else e.messages[0] if e.messages else str(e))
     
     def validate_state(self, value):
         """Validate state"""
         try:
             return validate_state_code(value)
         except DjangoValidationError as e:
-            raise serializers.ValidationError(e.message)
+            raise serializers.ValidationError(str(e) if hasattr(e, 'message') and e.message else e.messages[0] if e.messages else str(e))
     
     def validate_email(self, value):
         """Validate email is unique (not already registered)"""
@@ -382,9 +393,10 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
             try:
                 validate_city_state_pair(city, state)
             except DjangoValidationError as e:
+                error_msg = str(e) if hasattr(e, 'message') and e.message else e.messages[0] if e.messages else str(e)
                 raise serializers.ValidationError({
-                    'city': str(e.message),
-                    'state': str(e.message)
+                    'city': error_msg,
+                    'state': error_msg
                 })
         
         # Content moderation: Check for inappropriate content
