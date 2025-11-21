@@ -305,6 +305,9 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
         POST /api/professionals/{id}/upload-photo/
         Upload profile photo for a professional
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        
         try:
             # Get professional without automatic permission check
             try:
@@ -330,10 +333,12 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
                 )
 
             photo_file = request.FILES['photo']
+            logger.debug(f"[UPLOAD_PHOTO] Received file: {photo_file.name}, size: {photo_file.size}")
 
             # Validate file type
             allowed_types = ['image/jpeg', 'image/jpg', 'image/png']
             if photo_file.content_type not in allowed_types:
+                logger.warning(f"[UPLOAD_PHOTO] Invalid file type: {photo_file.content_type}")
                 return Response(
                     {'error': 'Foto deve ser JPG ou PNG'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -342,10 +347,27 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
             # Validate file size (5MB max)
             max_size = 5 * 1024 * 1024  # 5MB in bytes
             if photo_file.size > max_size:
+                logger.warning(f"[UPLOAD_PHOTO] File too large: {photo_file.size} bytes")
                 return Response(
                     {'error': 'Foto deve ter no máximo 5MB'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+
+            # CRITICAL: Validate photo content for explicit/violent content
+            logger.debug("[UPLOAD_PHOTO] Starting content moderation")
+            from .image_moderation import get_image_moderation_service
+            image_moderation = get_image_moderation_service()
+            is_safe, moderation_result = image_moderation.moderate_professional_photo(photo_file)
+            
+            if not is_safe:
+                error_message = moderation_result.get('message', 'Foto contém conteúdo impróprio')
+                logger.warning(f"[UPLOAD_PHOTO] Photo rejected: {error_message}")
+                return Response(
+                    {'error': error_message},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            logger.info(f"[UPLOAD_PHOTO] Photo passed moderation check")
 
             # Delete old photo if exists
             if professional.photo:
@@ -354,6 +376,8 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
             # Save new photo
             professional.photo = photo_file
             professional.save()
+            
+            logger.info(f"[UPLOAD_PHOTO] Photo saved successfully for professional {professional.id}")
 
             # Return success response with photo URL
             return Response({
@@ -363,8 +387,7 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             # Log the error for debugging
-            import logging
-            logger = logging.getLogger(__name__)
+            logger.error(f"[UPLOAD_PHOTO] Unexpected error: {str(e)}", exc_info=True)
             return Response(
                 {'error': f'Erro ao fazer upload: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
