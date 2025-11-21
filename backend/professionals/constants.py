@@ -2,7 +2,7 @@
 Constants for the professionals app.
 """
 
-# Service types available in the marketplace for holistic professionals  
+# Service types available in the marketplace for holistic professionals  :)
 SERVICE_TYPES = [
     'Reiki',
     'Acupuntura',
