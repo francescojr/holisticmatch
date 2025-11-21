@@ -50,6 +50,7 @@ jobs:
           DEBUG: True
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_BACKEND: resend.django.EmailBackend
+          OPENAI_API_KEY: ''
         run: |
           pytest tests/ -v --cov=. --cov-report=xml --cov-report=term
       

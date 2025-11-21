@@ -7,6 +7,22 @@ from django.core.exceptions import ValidationError
 from django.core.files.images import get_image_dimensions
 from .constants import SERVICE_TYPES
 
+# 🔥 PERFORMANCE FIX: Cache moderation checks to avoid redundant API calls
+_moderation_cache = {}
+
+def _get_cached_moderation_result(text):
+    """Get moderation result from cache or compute and cache it."""
+    # Create a cache key from the text
+    cache_key = hash(text)
+    
+    if cache_key not in _moderation_cache:
+        from .moderation import ModerationService
+        moderation_service = ModerationService()
+        is_safe, result = moderation_service.moderate_text(text)
+        _moderation_cache[cache_key] = (is_safe, result)
+    
+    return _moderation_cache[cache_key]
+
 
 def validate_city_state_pair(city, state):
     """
@@ -156,8 +172,6 @@ def validate_name(value):
     """
     Validate professional name - including content moderation.
     """
-    from .moderation import ModerationService  # Import here to avoid circular imports
-    
     if not value or not value.strip():
         raise ValidationError('Nome é obrigatório')
 
@@ -171,9 +185,8 @@ def validate_name(value):
     if not re.match(r'^[a-zA-ZÀ-ÿ\s\'-]+$', value):
         raise ValidationError('Nome deve conter apenas letras, espaços e acentos')
     
-    # ✅ MODERATE THE NAME
-    moderation_service = ModerationService()
-    is_safe, result = moderation_service.moderate_text(value)
+    # ✅ MODERATE THE NAME (cached to avoid redundant API calls)
+    is_safe, result = _get_cached_moderation_result(value)
     
     if not is_safe:
         source = result.get('source', 'unknown')
@@ -187,8 +200,6 @@ def validate_bio(value):
     """
     Validate professional bio - including content moderation.
     """
-    from .moderation import ModerationService  # Import here to avoid circular imports
-    
     if not value or not value.strip():
         raise ValidationError('Bio é obrigatória')
 
@@ -200,9 +211,8 @@ def validate_bio(value):
     if len(value) > 2000:
         raise ValidationError('Bio deve ter no máximo 2000 caracteres')
     
-    # ✅ MODERATE THE BIO CONTENT
-    moderation_service = ModerationService()
-    is_safe, result = moderation_service.moderate_text(value)
+    # ✅ MODERATE THE BIO CONTENT (cached to avoid redundant API calls)
+    is_safe, result = _get_cached_moderation_result(value)
     
     if not is_safe:
         source = result.get('source', 'unknown')

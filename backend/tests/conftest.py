@@ -2,11 +2,18 @@
 Pytest configuration and fixtures for all tests.
 OPTIMIZED: Loads cities ONCE per test session using pytest_sessionstart.
 This ensures cities persist even with pytest-django's database reset between tests.
+
+🔥 PERFORMANCE: Disables OpenAI API for tests to use fast regex fallback instead.
 """
 import pytest
 import os
 import django
 from rest_framework.test import APIClient
+
+# 🔥 CRITICAL: Disable OpenAI for tests
+# This forces moderation to use regex (1-5ms) instead of API calls (200-500ms)
+# 179 tests × 2-3 moderation calls × 300ms avg = 100+ seconds of API latency!
+os.environ['OPENAI_API_KEY'] = ''
 
 
 def pytest_configure(config):
@@ -114,4 +121,22 @@ def ensure_cities_for_django_db_tests(db):
 def api_client():
     """Provide a REST API test client"""
     return APIClient()
+
+
+@pytest.fixture(autouse=True)
+def disable_openai_for_tests(monkeypatch):
+    """
+    🔥 PERFORMANCE FIX: Disable OpenAI API during all tests.
+    
+    This forces ModerationService to use fast regex fallback instead of API calls.
+    Impact per test run:
+    - Without this: 179 tests × 2-3 moderation calls × 300ms = 100+ seconds of API latency
+    - With this: Moderation uses regex fallback (1-5ms per call) = nearly instant
+    
+    Result: ~50-60 second reduction per test run
+    """
+    from django.conf import settings
+    monkeypatch.setattr(settings, 'OPENAI_API_KEY', '')
+    monkeypatch.setenv('OPENAI_API_KEY', '')
+
 
