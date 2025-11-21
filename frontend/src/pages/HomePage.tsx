@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { containerVariants, fadeInVariants, scrollItemVariants } from '../lib/animations'
 import { useProfessionals } from '../hooks/useProfessionals'
@@ -13,7 +14,10 @@ import hero01 from '../assets/images/hero01.jpg'
 import hero02 from '../assets/images/hero02.jpg'
 
 function HomePage() {
+  console.log('[HomePage] 🏠 HomePage component rendering...');
+  
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [filters, setFilters] = useState<ProfessionalFilters>({})
   const [heroImage, setHeroImage] = useState<string>(hero01) // Default to first image
   
@@ -22,6 +26,17 @@ function HomePage() {
   
   const { data: professionalsData, isLoading, error } = useProfessionals(filters)
   const { containerRef, isContainerVisible } = useSequentialAnimation<HTMLDivElement>()
+
+  console.log('[HomePage] 📊 Current state:');
+  console.log('[HomePage] - isLoading:', isLoading);
+  console.log('[HomePage] - error:', error);
+  console.log('[HomePage] - professionalsData:', professionalsData);
+  console.log('[HomePage] - professionals count:', professionalsData?.results?.length);
+
+  // Invalidate cache on mount to ensure fresh data
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['professionals'] })
+  }, [queryClient])
 
   // Select random hero image on component mount
   useEffect(() => {
@@ -117,12 +132,20 @@ function HomePage() {
         )}
 
         {/* Professionals Grid */}
-        {professionalsData && professionalsData.results && professionalsData.results.length > 0 && (
+        {professionalsData && professionalsData.results && professionalsData.results.length > 0 && (() => {
+          console.log('[HomePage] 🎨 Rendering professionals grid:');
+          console.log('[HomePage] Total to render:', professionalsData.results.length);
+          console.log('[HomePage] IDs:', professionalsData.results.map(p => p.id));
+          console.log('[HomePage] Names:', professionalsData.results.map(p => p.name));
+          return null;
+        })() && (
           <div
             ref={containerRef}
             className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           >
-            {professionalsData.results.map((professional, index) => (
+            {professionalsData.results.map((professional, index) => {
+              console.log('[HomePage] 🔹 Rendering card for:', professional.name, '(ID:', professional.id, ')');
+              return (
               <motion.div
                 key={professional.id}
                 variants={scrollItemVariants(index)}
@@ -135,7 +158,7 @@ function HomePage() {
               >
                 <ProfessionalCard professional={professional} />
               </motion.div>
-            ))}
+            )})}
           </div>
         )}
 

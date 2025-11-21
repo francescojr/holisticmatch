@@ -324,15 +324,15 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         """Validate professional name"""
         import logging
         logger = logging.getLogger(__name__)
-        logger.debug(f"[VALIDATE_NAME] Called with value: '{value}'")
+        logger.warning(f"🔥 [VALIDATE_NAME] CALLED with value: '{value}'")
         
         try:
             validate_name(value)
-            logger.debug(f"[VALIDATE_NAME] Name passed validation")
+            logger.warning(f"✅ [VALIDATE_NAME] Name '{value}' PASSED validation")
             return value
         except DjangoValidationError as e:
             error_msg = str(e) if hasattr(e, 'message') and e.message else e.messages[0] if e.messages else str(e)
-            logger.warning(f"[VALIDATE_NAME] Name validation failed: {error_msg}")
+            logger.error(f"❌ [VALIDATE_NAME] Name '{value}' FAILED: {error_msg}")
             raise serializers.ValidationError(error_msg)
     
     def validate_bio(self, value):

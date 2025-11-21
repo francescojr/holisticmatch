@@ -20,9 +20,12 @@ export function useProfessionals(
     queryKey: ['professionals', filters],
     queryFn: async () => {
       const data = await professionalService.getProfessionals(filters)
+      console.log('[useProfessionals] API returned:', data.count, 'professionals')
+      console.log('[useProfessionals] Results:', data.results.map(p => `${p.name} (ID: ${p.id})`))
       return data
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 1 * 60 * 1000, // Reduzido para 1 minuto
+    gcTime: 0, // Não manter cache em memória após desmount
   })
 }
 
