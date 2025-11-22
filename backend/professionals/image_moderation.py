@@ -84,12 +84,15 @@ class ImageModerationService:
                 }
 
             # Call AWS Rekognition to detect explicit content
+            logger.info("[IMAGE_MODERATION] 🔴 Calling AWS Rekognition detect_moderation_labels")
             response = self.client.detect_moderation_labels(
                 Image={'Bytes': image_bytes}
             )
+            logger.info(f"[IMAGE_MODERATION] 📥 AWS Response: {response}")
 
             # Parse results
             moderation_labels = response.get('ModerationLabels', [])
+            logger.info(f"[IMAGE_MODERATION] 📊 Found {len(moderation_labels)} moderation labels")
             
             # Check for moderation flags
             is_flagged = False
@@ -100,6 +103,7 @@ class ImageModerationService:
                 name = label.get('Name', '')
                 confidence = label.get('Confidence', 0)
                 confidence_scores[name] = confidence
+                logger.info(f"[IMAGE_MODERATION] 🏷️  Label: {name} | Confidence: {confidence:.2f}%")
 
                 # Flag if ANY confidence level for explicit content
                 # CRITICAL: Explicit content (Nudity, Suggestive) at ANY confidence should be flagged
@@ -107,8 +111,10 @@ class ImageModerationService:
                 if confidence > 0:  # Any detection of explicit content = reject
                     is_flagged = True
                     flagged_labels.append(f"{name} ({confidence:.1f}%)")
+                    logger.warning(f"[IMAGE_MODERATION] ⚠️  FLAGGED: {name} at {confidence:.1f}% confidence")
 
             # Also run label detection to check for violence/weapons
+            logger.info("[IMAGE_MODERATION] 🔴 Calling AWS Rekognition detect_labels for violence check")
             labels_response = self.client.detect_labels(
                 Image={'Bytes': image_bytes},
                 MaxLabels=20,
@@ -116,17 +122,22 @@ class ImageModerationService:
             )
 
             labels = labels_response.get('Labels', [])
+            logger.info(f"[IMAGE_MODERATION] 📊 Found {len(labels)} general labels")
+            
             violent_keywords = ['weapon', 'gun', 'knife', 'blood', 'violence', 'dead']
             violence_detected = False
 
             for label in labels:
                 label_name = label.get('Name', '').lower()
+                logger.debug(f"[IMAGE_MODERATION] 🏷️  General label: {label_name}")
                 if any(keyword in label_name for keyword in violent_keywords):
                     violence_detected = True
                     flagged_labels.append(label_name)
+                    logger.warning(f"[IMAGE_MODERATION] ⚠️  VIOLENCE KEYWORD FOUND: {label_name}")
 
             # Final verdict
             is_safe = not is_flagged and not violence_detected
+            logger.info(f"[IMAGE_MODERATION] 🎯 FINAL VERDICT: is_safe={is_safe} | is_flagged={is_flagged} | violence_detected={violence_detected}")
 
             return is_safe, {
                 'flagged': not is_safe,

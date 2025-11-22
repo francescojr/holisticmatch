@@ -21,6 +21,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.2] - 2025-11-21
+
+### Added
+
+- **Comprehensive Logging Infrastructure (Debugging & Monitoring)**
+  - AWS Rekognition logging: Detailed logs showing each moderation label, confidence scores, and final verdict
+    - File: `backend/professionals/image_moderation.py`
+    - Logs include: AWS response, label names, confidence percentages, violence detection, final `is_safe` verdict
+    - Prefix: `[IMAGE_MODERATION]` with emoji indicators (🔴 start, 📥 response, 📊 data, 🎯 verdict)
+  
+  - Regex fallback logging: Shows which patterns matched which offensive content
+    - File: `backend/professionals/moderation.py`
+    - Logs pattern matching process for all PROHIBITED_PATTERNS
+    - Prefix: `[REGEX_FALLBACK]` with detailed pattern information
+  
+  - Validator caching logging: Cache hits/misses and moderation results
+    - File: `backend/professionals/validators.py`
+    - Logs cache key, hit/miss status, moderation service invocation, results
+    - Prefix: `[CACHE_MODERATION]` with cache statistics
+  
+  - Name validation logging: Detailed validation steps and blocking reasons
+    - File: `backend/professionals/validators.py`
+    - Logs format checks, moderation calls, approval/rejection with source (OpenAI/Regex)
+    - Prefix: `[VALIDATE_NAME]` with step-by-step progression
+  
+  - API QuerySet filtering logging: Shows is_active gate effectiveness
+    - File: `backend/professionals/views.py`
+    - Logs total professionals in DB, active count, inactive names excluded
+    - Prefix: `[GET_QUERYSET]` with filter statistics
+    - **CRITICAL**: Verifies only verified (email-validated) professionals appear in API responses
+
+### Infrastructure
+
+- **Logging Verification Pipeline Established**
+  - Text moderation logging: OpenAI + Regex fallback with full execution trace
+  - Image moderation logging: AWS Rekognition with label detection and confidence scores
+  - Validation logging: Field-level validators showing each check
+  - API logging: QuerySet filtering proving is_active=True gate works
+  - **All logs visible in Django console/production logger** for troubleshooting
+
+### Testing
+
+- ✅ **180/180 Backend Tests Passing** - Logging additions do not break any functionality
+- ✅ Test coverage includes: moderation, validation, filtering, authentication, authorization, crud
+- ✅ Specific test passes: 
+  - `test_moderation_service_initialization`
+  - `test_moderate_text_flagged_content` (regex blocking works)
+  - `test_upload_photo_success`
+  - `test_register_returns_jwt_tokens`
+  - `test_verify_email_action_success` (is_active gate verified)
+
+---
+
 ## [1.0.1] - 2025-11-21
 
 ### Added

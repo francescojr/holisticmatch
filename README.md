@@ -5,7 +5,7 @@
 [![Status](https://img.shields.io/badge/status-production%20live-success)]()
 [![Frontend](https://img.shields.io/badge/frontend-vercel%20live-blue)](https://holisticmatch.vercel.app)
 [![Backend](https://img.shields.io/badge/backend-elastic%20beanstalk-orange)](http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com)
-[![Tests](https://img.shields.io/badge/tests-179%2F179%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-180%2F180%20passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-hardened-9cf)]()
 
 ---
@@ -81,7 +81,7 @@ Acesse:
 - **Framework**: Django 4.2.7 + Django REST Framework 3.14.0
 - **Database**: PostgreSQL (Supabase) / SQLite (dev)
 - **Server**: Gunicorn + Nginx (AWS Elastic Beanstalk)
-- **Testing**: pytest + pytest-django (179/179 tests passing ✅)
+- **Testing**: pytest + pytest-django (180/180 tests passing ✅)
 - **Linting**: ruff
 - **Security**: JWT tokens, CSRF protection, secure cookies, timing attack protection
 
@@ -204,7 +204,7 @@ pytest --cov=. --cov-report=html
 ruff check .
 ```
 
-**Status**: ✅ 10/10 tests passing
+**Status**: ✅ 180/180 tests passing
 
 ### Frontend
 

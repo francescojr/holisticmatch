@@ -44,7 +44,24 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
         This prevents unverified accounts from appearing in the listing.
         Uses select_related() to avoid N+1 query problem with user__is_active filter.
         """
-        return Professional.objects.select_related('user').filter(user__is_active=True)
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Get ALL professionals first
+        all_professionals = Professional.objects.select_related('user').all()
+        logger.warning(f"[GET_QUERYSET] 📊 Total professionals in DB (unfiltered): {all_professionals.count()}")
+        
+        # Filter by is_active=True
+        active_professionals = all_professionals.filter(user__is_active=True)
+        logger.warning(f"[GET_QUERYSET] ✅ Active professionals (is_active=True): {active_professionals.count()}")
+        
+        # Show which professionals are active vs inactive
+        inactive = all_professionals.filter(user__is_active=False)
+        if inactive.exists():
+            inactive_names = inactive.values_list('name', flat=True)
+            logger.warning(f"[GET_QUERYSET] ❌ Inactive professionals (NOT returned): {list(inactive_names)}")
+        
+        return active_professionals
 
     def get_serializer_class(self):
         """Use summary serializer for list view"""

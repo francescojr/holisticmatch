@@ -193,19 +193,28 @@ class ModerationService:
         Fallback moderation using basic keyword filtering
         Used when AWS and OpenAI are unavailable
         """
+        logger.warning(f"[REGEX_FALLBACK] 🔴 Starting regex moderation check for text: '{text[:50]}...'")
         text_lower = text.lower()
+        matched_patterns = []
         
-        for pattern in PROHIBITED_PATTERNS:
+        for i, pattern in enumerate(PROHIBITED_PATTERNS):
             if re.search(pattern, text_lower, re.IGNORECASE):
-                logger.warning(f'Regex filter blocked: {pattern}')
+                logger.warning(f'[REGEX_FALLBACK] ⚠️  Pattern #{i+1} MATCHED: {pattern[:60]}...')
+                matched_patterns.append(pattern[:60])
+                logger.warning(f'[REGEX_FALLBACK] ❌ CONTENT BLOCKED BY REGEX: {matched_patterns}')
                 return False, {
                     'flagged': True,
                     'categories': {'prohibited_pattern': True},
+                    'matched_patterns': matched_patterns,
                     'source': 'regex',
                 }
+            else:
+                logger.debug(f'[REGEX_FALLBACK] ✅ Pattern #{i+1} did not match')
         
+        logger.info(f"[REGEX_FALLBACK] ✅ All {len(PROHIBITED_PATTERNS)} regex patterns passed")
         return True, {
             'flagged': False,
+            'patterns_checked': len(PROHIBITED_PATTERNS),
             'source': 'regex',
         }
 

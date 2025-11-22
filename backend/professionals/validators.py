@@ -12,15 +12,24 @@ _moderation_cache = {}
 
 def _get_cached_moderation_result(text):
     """Get moderation result from cache or compute and cache it."""
+    import logging
+    logger = logging.getLogger(__name__)
+    
     # Create a cache key from the text
     cache_key = hash(text)
+    logger.warning(f"[CACHE_MODERATION] 🔍 Checking cache for text: '{text[:40]}...' | cache_key={cache_key}")
     
     if cache_key not in _moderation_cache:
+        logger.warning(f"[CACHE_MODERATION] 💾 Cache MISS - calling moderation service")
         from .moderation import ModerationService
         moderation_service = ModerationService()
         is_safe, result = moderation_service.moderate_text(text)
+        logger.info(f"[CACHE_MODERATION] 📊 Moderation result: is_safe={is_safe} | source={result.get('source')}")
         _moderation_cache[cache_key] = (is_safe, result)
-    
+        logger.warning(f"[CACHE_MODERATION] 💾 Result cached: {len(_moderation_cache)} items in cache")
+    else:
+        logger.info(f"[CACHE_MODERATION] ✅ Cache HIT - using cached result")
+
     return _moderation_cache[cache_key]
 
 
@@ -172,28 +181,42 @@ def validate_name(value):
     """
     Validate professional name - including content moderation.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.warning(f"[VALIDATE_NAME] 🔴 Starting name validation for: '{value}'")
+    
     if not value or not value.strip():
+        logger.error("[VALIDATE_NAME] ❌ Name is empty")
         raise ValidationError('Nome é obrigatório')
 
     if len(value.strip()) < 3:
+        logger.error(f"[VALIDATE_NAME] ❌ Name too short: {len(value.strip())} chars (min 3)")
         raise ValidationError('Nome deve ter pelo menos 3 caracteres')
 
     if len(value) > 255:
+        logger.error(f"[VALIDATE_NAME] ❌ Name too long: {len(value)} chars (max 255)")
         raise ValidationError('Nome deve ter no máximo 255 caracteres')
 
     # Check for reasonable characters (letters, spaces, accents)
     if not re.match(r'^[a-zA-ZÀ-ÿ\s\'-]+$', value):
+        logger.error(f"[VALIDATE_NAME] ❌ Invalid characters in name: {value}")
         raise ValidationError('Nome deve conter apenas letras, espaços e acentos')
+    
+    logger.info("[VALIDATE_NAME] ✅ Basic format validation passed, calling moderation...")
     
     # ✅ MODERATE THE NAME (cached to avoid redundant API calls)
     is_safe, result = _get_cached_moderation_result(value)
     
     if not is_safe:
         source = result.get('source', 'unknown')
+        logger.error(f"[VALIDATE_NAME] ❌ BLOCKED BY {source.upper()}: Name contains inappropriate content")
         raise ValidationError(
             f'Nome contém conteúdo impróprio (detectado por {source}). '
             f'Por favor, use um nome profissional apropriado.'
         )
+    
+    logger.info(f"[VALIDATE_NAME] ✅ NAME APPROVED via {result.get('source', 'unknown')}")
 
 
 def validate_bio(value):
