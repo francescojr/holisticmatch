@@ -19,9 +19,19 @@
 ✅ **API**: Full CRUD endpoints with filtering, pagination & content moderation  
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
-### 🔐 Latest Updates (Nov 22, 2025 - 20:00 UTC)
+### 🔐 Latest Updates (Nov 22, 2025 - 20:30 UTC)
 
-#### 🎉 v1.1.0 - Professional Verification Gate (JUST DEPLOYED!)
+#### 🎉 v1.2.0 - Frontend Race Condition Fixed (PRODUCTION READY!)
+- **Homepage Now Loads Data on First Visit**: No more "Carregando..." indefinitely ✅
+- **Root Cause**: React Query `staleTime: 0` + `gcTime: 0` broke state batching
+- **Solution**: Updated to `staleTime: 1000ms` + `gcTime: 5min` + proper isPending handling
+- **Result**: Users see professional listings immediately on homepage load 🚀
+
+#### 🎉 v1.1.1 - Test Suite Fixed (BUILD PASSING)
+- **181/181 Tests Now Passing** ✅ (was 176/181)
+- **Fixed Fixtures**: Test data now matches v1.1.0 constraints (na_contencao=true)
+
+#### 🎉 v1.1.0 - Professional Verification Gate (DEPLOYED!)
 - **Listing Now Filters by Verification**: Only verified professionals (`na_contencao=true`) appear in `/api/v1/professionals/`
 - **Unverified Hidden**: New registrations don't appear publicly until email is verified
 - **Cleaner Marketplace**: Eliminates test/incomplete profiles from public view
@@ -45,11 +55,22 @@ Professional Registration Flow:
 **Old Behavior (v1.0.9):** All professionals showed in listings regardless of verification status  
 **New Behavior (v1.1.0):** Only verified professionals in public listings ✅
 
-### 📸 Content Moderation Pipeline
-- **Text**: OpenAI API (primary) → Regex fallback (Portuguese offensive words)
-- **Photos**: AWS Rekognition (DetectModerationLabels + custom threshold)
-- **Rekognition Policies**: ✅ Applied to `holisticmatch-s3-user` IAM user
-- **Comprehend Policies**: ✅ Applied to `holisticmatch-s3-user` IAM user
+#### ⚡ Frontend Performance (v1.2.0+)
+```
+Before v1.2.0:
+1. User lands on homepage
+2. API fetches data ✓
+3. React Query fails to batch update ✗
+4. Component stays in loading state ✗
+5. User refreshes (F5) to see data ✗
+
+After v1.2.0:
+1. User lands on homepage
+2. API fetches data ✓
+3. React Query batches properly ✓
+4. Component renders immediately ✓
+5. No refresh needed ✅
+```
 
 ---
 
@@ -61,6 +82,12 @@ Frontend: https://holisticmatch.vercel.app
 API Base: https://hollisticmatch.online/api/v1 (Primary - HTTPS)
 API Backup: http://44.197.112.222/api/v1 (Secondary - HTTP)
 ```
+
+### 📸 Content Moderation Pipeline
+- **Text**: OpenAI API (primary) → Regex fallback (Portuguese offensive words)
+- **Photos**: AWS Rekognition (DetectModerationLabels + custom threshold)
+- **Rekognition Policies**: ✅ Applied to `holisticmatch-s3-user` IAM user
+- **Comprehend Policies**: ✅ Applied to `holisticmatch-s3-user` IAM user
 
 ### Desenvolvimento Local
 

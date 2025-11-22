@@ -24,11 +24,11 @@ function HomePage() {
   const { scrollY } = useScroll()
   const y = useTransform(scrollY, [0, 500], [0, -150]) // Parallax effect
   
-  const { data: professionalsData, isLoading, error } = useProfessionals(filters)
+  const { data: professionalsData, isLoading, error, isPending } = useProfessionals(filters)
   const { containerRef, isContainerVisible } = useSequentialAnimation<HTMLDivElement>()
 
   console.log('[HomePage] 📊 Current state:');
-  console.log('[HomePage] - isLoading:', isLoading);
+  console.log('[HomePage] - isPending:', isPending, '| isLoading:', isLoading);
   console.log('[HomePage] - error:', error);
   console.log('[HomePage] - professionalsData:', professionalsData);
   console.log('[HomePage] - professionals count:', professionalsData?.results?.length);
@@ -113,8 +113,8 @@ function HomePage() {
           )}
         </div>
 
-        {/* Loading State */}
-        {isLoading && (
+        {/* Loading State - v1.2.0: Show when isPending (first load) or data missing */}
+        {(isPending || (isLoading && !professionalsData)) && (
           <div className="flex justify-center items-center py-20">
             <div className="flex flex-col items-center gap-4">
               <div className="h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600"></div>
@@ -123,12 +123,18 @@ function HomePage() {
           </div>
         )}
 
-        {/* Error State */}
-        {error && (
+        {/* Error State - v1.2.0: Only show if no data available */}
+        {error && !professionalsData && (
           <div className="rounded-lg bg-red-50 p-6 text-center">
             <span className="material-symbols-outlined text-5xl text-red-500 mb-2">error</span>
             <p className="text-red-700 font-semibold">Erro ao carregar profissionais</p>
-            <p className="text-red-600 text-sm mt-2">{error.message}</p>
+            <p className="text-red-600 text-sm mt-2">{error instanceof Error ? error.message : 'Erro desconhecido'}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 rounded-lg bg-red-600 px-6 py-2 font-semibold text-white transition-colors hover:bg-red-700"
+            >
+              Tentar Novamente
+            </button>
           </div>
         )}
 

@@ -19,13 +19,15 @@ export function useProfessionals(
   return useQuery({
     queryKey: ['professionals', filters],
     queryFn: async () => {
+      console.log('[useProfessionals] 🔄 Fetching professionals with filters:', filters)
       const data = await professionalService.getProfessionals(filters)
-      console.log('[useProfessionals] API returned:', data.count, 'professionals')
-      console.log('[useProfessionals] Results:', data.results.map(p => `${p.name} (ID: ${p.id}) - is_active: ${p.is_active}, na_contencao: ${p.na_contencao}`))
+      console.log('[useProfessionals] ✅ API returned:', data.count, 'professionals')
+      console.log('[useProfessionals] 📋 Results:', data.results.map(p => `${p.name} (ID: ${p.id}) - is_active: ${p.is_active}, na_contencao: ${p.na_contencao}`))
       return data
     },
-    staleTime: 0, // 🔴 ZERO CACHE - Force fresh data every time
-    gcTime: 0, // Não manter cache em memória após desmount
+    staleTime: 1000, // v1.2.0: 1 second cache - allows batching, fresh data on next interaction
+    gcTime: 5 * 60 * 1000, // v1.2.0: 5 minutes - keep cache for tab switches
+    retry: 1, // Retry once on failure
   })
 }
 
