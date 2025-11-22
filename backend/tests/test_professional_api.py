@@ -28,7 +28,7 @@ def test_user():
 
 @pytest.fixture
 def test_professional(test_user):
-    """Create a test professional"""
+    """Create a test professional (verified)"""
     return Professional.objects.create(
         user=test_user,
         name='João Silva',
@@ -41,6 +41,7 @@ def test_professional(test_user):
         whatsapp='11999999999',
         email='joao@example.com',
         phone='1133334444',
+        na_contencao=True,  # v1.1.1: Must be verified to appear in list() endpoint
     )
 
 
@@ -64,7 +65,7 @@ def other_user():
 
 @pytest.fixture
 def other_professional(other_user):
-    """Create another test professional"""
+    """Create another test professional (verified)"""
     return Professional.objects.create(
         user=other_user,
         name='Maria Santos',
@@ -77,6 +78,7 @@ def other_professional(other_user):
         whatsapp='21988888888',
         email='maria@example.com',
         phone='2122223333',
+        na_contencao=True,  # v1.1.1: Must be verified to appear in list() endpoint
     )
 
 

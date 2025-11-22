@@ -21,6 +21,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.1] - 2025-11-22
+
+### 🔧 Patch: Test Fixture Alignment with v1.1.0 Verification Gate
+
+**Status:** ✅ TEST BUILD FIXED  
+**Deploy Date:** Nov 22, 2025 17:15 UTC
+
+**Problem:**
+After v1.1.0 implemented verification filtering (`na_contencao=true`), test fixtures were creating unverified professionals (`na_contencao=false` by default). This caused 5 tests to fail because the list endpoint returned 0 results.
+
+**Root Cause Analysis:**
+- v1.1.0 View: Filters by `na_contencao=True` before returning results
+- Test Fixtures: Created professionals with `na_contencao=False` (model default)
+- Mismatch: Test data didn't match production constraints
+- Affected Tests: All 5 tests that relied on `test_professional` fixture (service, city, price, attendance filters + fields validation)
+
+**Solution:**
+Updated 2 fixtures to create verified professionals matching production behavior:
+- `test_professional`: Added `na_contencao=True`
+- `other_professional`: Added `na_contencao=True`
+
+### Changed
+
+- **backend/tests/test_professional_api.py:**
+  - `test_professional` fixture: Now creates professionals with `na_contencao=True`
+  - `other_professional` fixture: Now creates professionals with `na_contencao=True`
+  - Docstring updates: Clarified fixtures are "verified" professionals
+  - Impact: All 5 failing tests now pass (filters work correctly on verified data)
+
+### Test Results
+
+| Status | Before | After |
+|--------|--------|-------|
+| Passing | 176 | 181 |
+| Failing | 5 | 0 |
+| Total | 181 | 181 |
+
+**Failed Tests Fixed:**
+1. ✅ `test_list_returns_professional_fields` - Now returns 2 professionals
+2. ✅ `test_list_filters_by_service` - Finds João Silva (Reiki)
+3. ✅ `test_list_filters_by_city` - Finds João Silva (São Paulo)
+4. ✅ `test_list_filters_by_price_range` - Finds both professionals in range
+5. ✅ `test_list_filters_by_attendance_type` - Finds João Silva (ambos)
+
+### Technical Notes
+
+- No code changes to production views, models, or serializers
+- Only test fixtures updated to reflect v1.1.0 constraints
+- Maintains semantic versioning (PATCH = bug fix, no feature changes)
+- Validates that test suite correctly enforces production invariants
+
+---
+
 ## [1.1.0] - 2025-11-22
 
 ### ✨ Feature: Professional Verification Gate - Only Verified Professionals Appear in Listings
