@@ -138,7 +138,9 @@ function HomePage() {
             ref={containerRef}
             className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           >
-            {professionalsData.results.map((professional, index) => {
+            {professionalsData.results
+              .filter(professional => professional.is_active === true)
+              .map((professional, index) => {
               console.log('[HomePage] 🔹 Rendering card for:', professional.name, '(ID:', professional.id, ', is_active:', professional.is_active, ')');
               return (
               <motion.div

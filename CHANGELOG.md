@@ -25,6 +25,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Frontend: Missing Email Verification Filter on HomePage**
+  
+  **Problem:**
+  - Frontend was NOT filtering professionals by `is_active` status
+  - All professionals (verified and unverified) were displayed in grid
+  - Users could see professionals who hadn't verified their email yet
+  
+  **Solution:**
+  - File: `frontend/src/pages/HomePage.tsx` (Line 137)
+  - Added filter: `.filter(professional => professional.is_active === true)`
+  - Now only displays professionals with verified email (`is_active=true`)
+  - Unverified professionals (like "caralho voador", "jake caralho") now hidden
+  
 - **Test Infrastructure: SerializerMethodField Testing Approach**
   
   **Problem:**
