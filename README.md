@@ -19,19 +19,20 @@
 ✅ **API**: Full CRUD endpoints with filtering, pagination & content moderation  
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
-### 🔐 Latest Updates (Nov 22, 2025)
-- ✅ **Email Verification Gateway Field Added** 
-  - New field: `Professional.na_contencao` (BooleanField, default=False)
-  - Set to `True` when user verifies email
-  - Indexed for performance optimization
-  - Both `is_active` (User model) and `na_contencao` (Professional model) returned by API
-  - Maintains backward compatibility with existing code
+### 🔐 Latest Updates (Nov 22, 2025 - 14:30 UTC)
+- 🚨 **CRITICAL: Production Database Migration Required** 
+  - Issue: API returning `is_active: undefined, na_contencao: undefined`
+  - Cause: Code deployed but **migrations NOT applied to production database**
+  - Solution: SSH to EC2 and run: `python manage.py migrate professionals`
+  - See: `DEPLOYMENT_MANUAL.md` for step-by-step instructions
+- ✅ **New Field Added**: `na_contencao` on Professional model (v1.0.7+)
+  - Tracks email verification status independently from User.is_active
+  - Default: False on registration
+  - Set to True when email verified
+- ✅ **Frontend Updated**: Type definitions include `na_contencao` field
+- ✅ **Deployment Guide Created**: `DEPLOYMENT_MANUAL.md` with full instructions
 - ✅ **All 181 Tests Passing** - Full test suite validation
-- ✅ **Production Deployment Ready** - Manual deployment via AWS console
-- ✅ **Email Verification**: is_active=False until email verified
-- ✅ **Comprehensive Logging**: All systems have detailed execution traces
-- ✅ **Validation Enforcement**: Registration blocks offensive names/photos
-- **Status**: **181/181 tests passing** ✅ | **Ready for deployment** 🚀
+- **Status**: **Code ready** ✅ | **Production migrations pending** ⏳
 
 ### 📸 Content Moderation Pipeline
 - **Text**: OpenAI API (primary) → Regex fallback (Portuguese offensive words)
@@ -74,6 +75,37 @@ Acesse:
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://127.0.0.1:8000/api/v1/professionals/
 - **Admin Django**: http://127.0.0.1:8000/admin/
+
+---
+
+## 🚀 Production Deployment
+
+### Manual Deployment to AWS EC2
+
+**⚠️ Critical Step After Each Code Deploy:**
+```bash
+# SSH to EC2 instance
+ssh -i your-key.pem ubuntu@your-ec2-ip
+
+# Navigate to backend
+cd /path/to/holisticmatch/backend
+
+# Pull latest code
+git pull origin main
+
+# Run migrations (MUST DO THIS!)
+python manage.py migrate --verbosity=2
+
+# Restart application
+sudo systemctl restart gunicorn
+```
+
+**Why migrations are critical:**
+- Each database schema change (new fields, indexes) requires a migration
+- Without running migrations, new fields return `undefined` in API responses
+- Example: v1.0.7 added `na_contencao` field - requires `python manage.py migrate`
+
+**Full deployment guide:** See `DEPLOYMENT_MANUAL.md`
 
 ---
 
