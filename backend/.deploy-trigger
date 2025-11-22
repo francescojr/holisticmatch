@@ -1,0 +1,4 @@
+# Deploy trigger file
+# This file forces GitHub Actions to deploy backend changes
+# Last deploy: 2025-11-21
+# Reason: Force deployment of is_active field in serializer (commit 6b665e9) and viewset filter (commit b5e2dfb)

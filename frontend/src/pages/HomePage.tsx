@@ -138,14 +138,9 @@ function HomePage() {
             ref={containerRef}
             className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           >
-            {professionalsData.results
-              .filter(professional => {
-                // Backend should filter, but if is_active is undefined (old API), show all
-                // Once backend deployed, this will properly filter by is_active === true
-                return professional.is_active === undefined || professional.is_active === true
-              })
-              .map((professional, index) => {
-              console.log('[HomePage] 🔹 Rendering card for:', professional.name, '(ID:', professional.id, ', is_active:', professional.is_active, ')');
+            {professionalsData.results.map((professional, index) => {
+              // Log to verify backend filtering
+              console.log('[HomePage] 🔹 Rendering:', professional.name, 'is_active:', professional.is_active);
               return (
               <motion.div
                 key={professional.id}
@@ -153,7 +148,6 @@ function HomePage() {
                 initial="hidden"
                 animate={isContainerVisible ? "visible" : "hidden"}
                 whileHover={{ scale: 1.05 }}
-                /*whileTap={{ scale: 0.9 }}*/
                 transition={{ type: "spring", stiffness: 400, damping: 8 }}
                 onClick={() => handleCardClick(professional.id)}
               >

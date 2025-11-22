@@ -20,17 +20,18 @@
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
 ### 🔐 Latest Updates (Nov 21, 2025)
-- ✅ **Homepage Email Verification Gate - Production Fix Applied**
-  - Root Cause: React Query cache returning stale data (staleTime: 1min)
-  - Solution: Set `staleTime: 0` to force fresh API data fetch
-  - Backend: Correctly returning `is_active` field for all professionals
-  - Frontend: Now receives fresh data showing actual is_active values
-  - Result: Homepage will show ONLY verified professionals after deployment
-  - Note: Deployment required - code ready, awaiting production restart
+- 🚨 **CRITICAL: Backend Deployment Pending** 
+  - Issue: Production API missing `is_active` field (returns `undefined`)
+  - Cause: Backend changes (commits `6b665e9`, `b5e2dfb`) not deployed to AWS
+  - GitHub Actions didn't trigger (no `backend/**` path changes in last push)
+  - Current State: HomePage shows ALL 15 professionals (including 2 unverified)
+  - Expected After Deploy: Homepage shows ONLY 13 verified professionals
+  - Trigger File: Created `backend/.deploy-trigger` to force deployment
+- ✅ **Frontend Filter Removed**: Backend must handle filtering server-side
 - ✅ **Comprehensive Logging**: All systems have detailed execution traces
 - ✅ **Validation Enforcement**: Registration blocks offensive names/photos
-- ✅ **Email Verification**: is_active=False until email verified (now fully transparent)
-- **Status**: **180/180 tests passing** ✅ | **Production ready** ✅ | **Build passing** ✅
+- ✅ **Email Verification**: is_active=False until email verified
+- **Status**: **181/181 tests passing** ✅ | **Awaiting backend deploy** 🔄
 
 ### 📸 Content Moderation Pipeline
 - **Text**: OpenAI API (primary) → Regex fallback (Portuguese offensive words)

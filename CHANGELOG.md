@@ -21,6 +21,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.6] - 2025-11-21
+
+### Fixed
+
+- **Email Verification Gate: Backend Deployment Issue**
+  
+  **Issue Identified:**
+  - Backend serializer changes (commit `6b665e9`) and viewset filter (commit `b5e2dfb`) were committed but NOT deployed to AWS
+  - GitHub Actions workflow only triggers on changes to `backend/**` paths
+  - Previous commits didn't trigger deployment, causing production API to return `is_active: undefined`
+  - HomePage showed ALL professionals (verified + unverified) because frontend filter accepted `undefined`
+  
+  **Fixes Applied:**
+  1. **Removed Frontend Filter** (frontend/src/pages/HomePage.tsx)
+     - Removed client-side filtering logic that was accepting `undefined` as valid
+     - Backend MUST handle filtering - frontend just renders what API returns
+     - Added logging to verify when backend field appears
+  
+  2. **Force Backend Deployment** (backend/.deploy-trigger)
+     - Created trigger file to force GitHub Actions deployment
+     - Ensures serializer field `is_active` and viewset filter are deployed to AWS
+     - Production will return proper `is_active: true/false` after deployment
+  
+  **Backend Changes Already Committed (Awaiting Deployment):**
+  - Commit `6b665e9`: Added `is_active` SerializerMethodField to ProfessionalSummarySerializer
+  - Commit `b5e2dfb`: Implemented `get_queryset()` filter for `user__is_active=True`
+  
+  **Expected Behavior After Deployment:**
+  - API returns max 13 verified professionals (filters out 2 unverified: "Caralho voador", "jake caralho")
+  - Each professional has `is_active: true` in response
+  - HomePage renders ONLY verified professionals
+
+---
+
 ## [1.0.5] - 2025-11-21
 
 ### Fixed
