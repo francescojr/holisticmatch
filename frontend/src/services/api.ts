@@ -18,9 +18,13 @@ export const registerErrorHandler = (callback: (error: { title: string; message:
   errorHandlerCallback = callback
 }
 
-// Use absolute URL to backend domain
-// Nginx serves frontend from hollisticmatch.online and proxies /api/v1 to backend
-const API_BASE_URL = 'https://hollisticmatch.online/api/v1'
+// Determine API URL based on environment
+// In development (localhost), use local backend
+// In production, use the domain's backend via Nginx proxy
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8000/api/v1'
+    : 'https://hollisticmatch.online/api/v1')
 
 // Create axios instance
 export const api = axios.create({

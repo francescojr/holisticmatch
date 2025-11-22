@@ -40,28 +40,20 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Return only professionals whose users have verified their email (is_active=True)
+        Return ONLY professionals whose users have verified their email (is_active=True)
         This prevents unverified accounts from appearing in the listing.
         Uses select_related() to avoid N+1 query problem with user__is_active filter.
+        
+        CRITICAL: This filter MUST be in place for email verification gate to work.
+        Unverified professionals (is_active=False) should NEVER appear in listings.
         """
-        import logging
-        logger = logging.getLogger(__name__)
-        
-        # Get ALL professionals first
+        # Get ALL professionals with user relationship
         all_professionals = Professional.objects.select_related('user').all()
-        logger.warning(f"[GET_QUERYSET] 📊 Total professionals in DB (unfiltered): {all_professionals.count()}")
         
-        # Filter by is_active=True
-        active_professionals = all_professionals.filter(user__is_active=True)
-        logger.warning(f"[GET_QUERYSET] ✅ Active professionals (is_active=True): {active_professionals.count()}")
+        # **CRITICAL FILTER**: Only return professionals whose users verified email
+        active_only = all_professionals.filter(user__is_active=True)
         
-        # Show which professionals are active vs inactive
-        inactive = all_professionals.filter(user__is_active=False)
-        if inactive.exists():
-            inactive_names = inactive.values_list('name', flat=True)
-            logger.warning(f"[GET_QUERYSET] ❌ Inactive professionals (NOT returned): {list(inactive_names)}")
-        
-        return active_professionals
+        return active_only
 
     def get_serializer_class(self):
         """Use summary serializer for list view"""

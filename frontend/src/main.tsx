@@ -13,7 +13,7 @@ const queryClient = new QueryClient({
     },
   },
 })
-// DEPLOYMENT: 2025-11-20 - Email validation & password reset fix
+// DEPLOYMENT: 2025-11-20 - Email validation & password reset fix :)
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>

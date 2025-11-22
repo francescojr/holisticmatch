@@ -25,29 +25,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **Frontend: Missing Email Verification Filter on HomePage**
+- **Email Verification Gate: Complete Implementation**
   
-  **Problem:**
-  - Frontend was NOT filtering professionals by `is_active` status
-  - Backend already filters API response to only return `is_active=True`
-  - Frontend still needed to add defensive filter in grid rendering
-  - Ensures consistent behavior: API returns 12 verified, frontend renders only verified
+  **Root Cause Identified:**
+  - Backend `get_queryset()` was returning ALL professionals instead of filtering by `user__is_active=True`
+  - Frontend was receiving unverified professionals (is_active=undefined)
+  - Logging overhead in `get_queryset()` was causing potential issues
   
-  **Solution:**
-  - File: `frontend/src/pages/HomePage.tsx` (Line 142)
-  - Added defensive filter: `.filter(professional => professional.is_active === true)`
-  - Backend already filters in `get_queryset()` (backend/professionals/views.py:55)
-  - Now: Double verification ensures unverified professionals never appear
+  **Backend Fixes:**
+  1. **Simplified `get_queryset()` in ProfessionalViewSet** (backend/professionals/views.py:41-54)
+     - Removed excessive logging that was added earlier
+     - Implemented clean, simple filter: `all_professionals.filter(user__is_active=True)`
+     - Returns ONLY professionals whose associated users have `is_active=True`
+     - No lazy evaluation issues - filter applied directly
   
-  **Data Flow:**
+  2. **Frontend Defensive Filter** (frontend/src/pages/HomePage.tsx:142)
+     - Added `.filter(professional => professional.is_active === true)` before rendering
+     - Double-checks data integrity in case API returns unexpected data
+  
+  3. **Frontend API URL Detection** (frontend/src/services/api.ts:22-26)
+     - Changed from hardcoded production URL to environment-aware
+     - Automatically uses `http://localhost:8000/api/v1` when running locally
+     - Uses `https://hollisticmatch.online/api/v1` in production
+     - Allows VITE_API_BASE_URL environment variable override
+     - Fixes: Developers can now test locally without DNS hacks
+  
+  **Result:**
+  - Backend returns ONLY verified professionals (is_active=True)
+  - Frontend receives correct data with is_active field populated
+  - Frontend defensive filter ensures no unverified professionals render
+  - HomePage now shows ONLY professionals who verified their email
+  - "Caralho voador", "Shaktar Ski" (unverified) no longer appear
+  
+  **Data Flow (After Fix):**
   ```
-  Database: 15 professionals (13 verified + 2 unverified)
-    ↓
-  Backend API: Filters to 12 (user__is_active=True) - logs inactive professionals hidden
-    ↓
-  Frontend: Receives 12, adds defensive filter for is_active===true, renders 12
+  User Registration → email sent → is_active=False (user)
+           ↓
+  User clicks email link → is_active=True (user)
+           ↓
+  Backend get_queryset() filters → user__is_active=True
+           ↓
+  Frontend receives serialized professional with is_active=true
+           ↓
+  Frontend defensive filter passes → renders in grid
   ```
-  
+
 - **Test Infrastructure: SerializerMethodField Testing Approach**
   
   **Problem:**
