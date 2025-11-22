@@ -231,6 +231,10 @@ class ProfessionalSummarySerializer(serializers.ModelSerializer):
     def get_is_active(self, obj):
         """Get is_active from related user model"""
         return obj.user.is_active
+    
+    def get_na_contencao(self, obj):
+        """Get na_contencao from professional model"""
+        return obj.na_contencao
 
 
 class ProfessionalCreateSerializer(serializers.ModelSerializer):
