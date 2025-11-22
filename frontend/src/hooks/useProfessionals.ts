@@ -21,7 +21,7 @@ export function useProfessionals(
     queryFn: async () => {
       const data = await professionalService.getProfessionals(filters)
       console.log('[useProfessionals] API returned:', data.count, 'professionals')
-      console.log('[useProfessionals] Results:', data.results.map(p => `${p.name} (ID: ${p.id}) - is_active: ${p.is_active}`))
+      console.log('[useProfessionals] Results:', data.results.map(p => `${p.name} (ID: ${p.id}) - is_active: ${p.is_active}, na_contencao: ${p.na_contencao}`))
       return data
     },
     staleTime: 0, // 🔴 ZERO CACHE - Force fresh data every time

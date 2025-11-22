@@ -140,7 +140,7 @@ function HomePage() {
           >
             {professionalsData.results.map((professional, index) => {
               // Log to verify backend filtering
-              console.log('[HomePage] 🔹 Rendering:', professional.name, 'is_active:', professional.is_active);
+              console.log('[HomePage] 🔹 Rendering:', professional.name, 'is_active:', professional.is_active, 'na_contencao:', professional.na_contencao);
               return (
               <motion.div
                 key={professional.id}

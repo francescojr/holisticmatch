@@ -38,6 +38,7 @@ export interface ProfessionalSummary {
   photo_url: string | null
   neighborhood: string
   is_active: boolean
+  na_contencao: boolean  // Email verification status (v1.0.7+)
 }
 
 export interface ProfessionalListResponse {
