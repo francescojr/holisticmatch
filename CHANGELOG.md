@@ -29,14 +29,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   
   **Problem:**
   - Frontend was NOT filtering professionals by `is_active` status
-  - All professionals (verified and unverified) were displayed in grid
-  - Users could see professionals who hadn't verified their email yet
+  - Backend already filters API response to only return `is_active=True`
+  - Frontend still needed to add defensive filter in grid rendering
+  - Ensures consistent behavior: API returns 12 verified, frontend renders only verified
   
   **Solution:**
-  - File: `frontend/src/pages/HomePage.tsx` (Line 137)
-  - Added filter: `.filter(professional => professional.is_active === true)`
-  - Now only displays professionals with verified email (`is_active=true`)
-  - Unverified professionals (like "caralho voador", "jake caralho") now hidden
+  - File: `frontend/src/pages/HomePage.tsx` (Line 142)
+  - Added defensive filter: `.filter(professional => professional.is_active === true)`
+  - Backend already filters in `get_queryset()` (backend/professionals/views.py:55)
+  - Now: Double verification ensures unverified professionals never appear
+  
+  **Data Flow:**
+  ```
+  Database: 15 professionals (13 verified + 2 unverified)
+    ↓
+  Backend API: Filters to 12 (user__is_active=True) - logs inactive professionals hidden
+    ↓
+  Frontend: Receives 12, adds defensive filter for is_active===true, renders 12
+  ```
   
 - **Test Infrastructure: SerializerMethodField Testing Approach**
   
