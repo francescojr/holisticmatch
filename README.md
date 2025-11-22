@@ -20,15 +20,18 @@
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
 ### 🔐 Latest Updates (Nov 21, 2025)
-- ✅ **Homepage Rendering Fixed**: Grid cards now display correctly (return null → return true)
+- ✅ **Homepage Email Verification Gate**: Fixed is_active filtering end-to-end
+  - Backend: Added `is_active` field to `ProfessionalSummarySerializer`
+  - Frontend: Added safety filter + enhanced cache clearing
+  - Result: Only verified professionals (email validated) appear on homepage ✅
 - ✅ **Validation Enforcement - Registration**:
   - Name validation: OpenAI + Regex moderation
   - Photo validation: AWS Rekognition (94.4% nudity detection)
   - "jake caralho" → **BLOCKED** ✅
   - Explicit photos → **BLOCKED** ✅
 - ✅ **Validation Enforcement - Dashboard Edit**: All fields pass through moderation pipeline
-- ✅ **Email Verification**: is_active=False until email verified
-- ✅ **Comprehensive Audit Completed**: Professional code review, no breaking changes
+- ✅ **Email Verification**: is_active=False until email verified (now properly enforced!)
+- ✅ **Comprehensive Audit Completed**: Professional code review, all systems verified
 - **Status**: **180/180 tests passing** ✅ | **Production ready** ✅ | **Build passing** ✅
 
 ### 📸 Content Moderation Pipeline

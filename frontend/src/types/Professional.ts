@@ -37,6 +37,7 @@ export interface ProfessionalSummary {
   attendance_type: 'presencial' | 'online' | 'ambos'
   photo_url: string | null
   neighborhood: string
+  is_active: boolean
 }
 
 export interface ProfessionalListResponse {

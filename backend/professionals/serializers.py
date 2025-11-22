@@ -201,8 +201,10 @@ class ProfessionalSummarySerializer(serializers.ModelSerializer):
     """
     Lightweight serializer for list views
     Only includes essential fields for cards
+    Includes is_active status for frontend verification (double-check)
     """
     photo_url = serializers.SerializerMethodField()
+    is_active = serializers.SerializerMethodField()
     
     class Meta:
         model = Professional
@@ -215,11 +217,16 @@ class ProfessionalSummarySerializer(serializers.ModelSerializer):
             'price_per_session',
             'attendance_type',
             'photo_url',
+            'is_active',
         ]
     
     def get_photo_url(self, obj):
         """Get photo URL or None"""
         return obj.photo_url
+    
+    def get_is_active(self, obj):
+        """Get user's is_active status for frontend verification"""
+        return obj.user.is_active if obj.user else False
 
 
 class ProfessionalCreateSerializer(serializers.ModelSerializer):

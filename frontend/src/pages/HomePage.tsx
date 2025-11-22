@@ -33,8 +33,9 @@ function HomePage() {
   console.log('[HomePage] - professionalsData:', professionalsData);
   console.log('[HomePage] - professionals count:', professionalsData?.results?.length);
 
-  // Invalidate cache on mount to ensure fresh data
+  // Invalidate cache on mount to ensure fresh data + clear from memory
   useEffect(() => {
+    queryClient.removeQueries({ queryKey: ['professionals'] })
     queryClient.invalidateQueries({ queryKey: ['professionals'] })
   }, [queryClient])
 
@@ -132,20 +133,24 @@ function HomePage() {
         )}
 
         {/* Professionals Grid */}
-        {professionalsData && professionalsData.results && professionalsData.results.length > 0 && (() => {
+        {professionalsData && professionalsData.results && (() => {
+          // FALLBACK: Filter to only show is_active=true professionals (safety check in case backend doesn't)
+          const verifiedProfessionals = professionalsData.results.filter(p => p.is_active !== false);
           console.log('[HomePage] 🎨 Rendering professionals grid:');
-          console.log('[HomePage] Total to render:', professionalsData.results.length);
-          console.log('[HomePage] IDs:', professionalsData.results.map(p => p.id));
-          console.log('[HomePage] Names:', professionalsData.results.map(p => p.name));
-          return true;
-        })() && (
-          <div
-            ref={containerRef}
-            className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-          >
-            {professionalsData.results.map((professional, index) => {
-              console.log('[HomePage] 🔹 Rendering card for:', professional.name, '(ID:', professional.id, ')');
-              return (
+          console.log('[HomePage] Total from API:', professionalsData.results.length);
+          console.log('[HomePage] After is_active filter:', verifiedProfessionals.length);
+          console.log('[HomePage] IDs:', verifiedProfessionals.map(p => p.id));
+          console.log('[HomePage] Names:', verifiedProfessionals.map(p => p.name));
+          if (verifiedProfessionals.length === 0) return false;
+          
+          return (
+            <div
+              ref={containerRef}
+              className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            >
+              {verifiedProfessionals.map((professional, index) => {
+                console.log('[HomePage] 🔹 Rendering card for:', professional.name, '(ID:', professional.id, ')');
+                return (
               <motion.div
                 key={professional.id}
                 variants={scrollItemVariants(index)}
@@ -158,9 +163,11 @@ function HomePage() {
               >
                 <ProfessionalCard professional={professional} />
               </motion.div>
-            )})}
-          </div>
-        )}
+                )
+              })}
+            </div>
+          );
+        })()}
 
         {/* Empty State */}
         {professionalsData && professionalsData.results && professionalsData.results.length === 0 && (

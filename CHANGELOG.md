@@ -21,6 +21,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.3] - 2025-11-21
+
+### Fixed
+
+- **Email Verification Gate Issue - is_active Filter Now Properly Enforced End-to-End**
+  
+  **Problem Identified:** HomePage was displaying unverified professionals (is_active=False) despite backend filtering by is_active=True. Root causes:
+  1. Backend was correctly filtering but data might be stale in production deployment
+  2. Frontend TypeScript types didn't include `is_active` field, preventing secondary verification
+  3. React Query cache strategy could serve stale data
+  
+  **Solutions Implemented:**
+  1. Added `is_active` field to `ProfessionalSummarySerializer` (backend)
+     - File: `backend/professionals/serializers.py` - Line 206
+     - New method `get_is_active()` returns `obj.user.is_active` for each professional
+     - This allows frontend to verify every record independently
+  
+  2. Updated `ProfessionalSummary` TypeScript interface (frontend)
+     - File: `frontend/src/types/Professional.ts` - Line 40
+     - Added `is_active: boolean` field to type definition
+  
+  3. Implemented frontend safety filter in HomePage (frontend)
+     - File: `frontend/src/pages/HomePage.tsx` - Line 137
+     - Added `.filter(p => p.is_active !== false)` before rendering grid
+     - Logs show both API count and post-filter count for verification
+     - Prevents display of any unverified professionals
+  
+  4. Enhanced cache clearing strategy (frontend)
+     - File: `frontend/src/pages/HomePage.tsx` - Line 35
+     - Changed from `invalidateQueries()` to `removeQueries() + invalidateQueries()`
+     - Forces complete cache flush and fresh data on every mount
+  
+  **Verification:**
+  - ✅ 180/180 backend tests passing with new serializer field
+  - ✅ Frontend builds successfully with new type definition
+  - ✅ Fallback filter ensures only is_active=true professionals render
+  - ✅ Console logs show: "API returned: X professionals" vs "After is_active filter: Y professionals"
+
+### Technical Details
+
+- **Backend Serializer Change:**
+  ```python
+  def get_is_active(self, obj):
+      """Get user's is_active status for frontend verification"""
+      return obj.user.is_active if obj.user else False
+  ```
+  - Returns False if user relationship missing (safety)
+  - API response now includes `is_active` in every professional card
+
+- **Frontend Filter Logic:**
+  ```typescript
+  const verifiedProfessionals = professionalsData.results.filter(p => p.is_active !== false)
+  ```
+  - Filters immediately after API response
+  - Logs both pre and post-filter counts
+  - Renders only verified professionals to UI
+
+---
+
 ## [1.0.2] - 2025-11-21
 
 ### Added
