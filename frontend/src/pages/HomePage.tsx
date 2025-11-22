@@ -139,7 +139,11 @@ function HomePage() {
             className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           >
             {professionalsData.results
-              .filter(professional => professional.is_active === true)
+              .filter(professional => {
+                // Backend should filter, but if is_active is undefined (old API), show all
+                // Once backend deployed, this will properly filter by is_active === true
+                return professional.is_active === undefined || professional.is_active === true
+              })
               .map((professional, index) => {
               console.log('[HomePage] 🔹 Rendering card for:', professional.name, '(ID:', professional.id, ', is_active:', professional.is_active, ')');
               return (
