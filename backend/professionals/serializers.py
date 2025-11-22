@@ -207,7 +207,6 @@ class ProfessionalSummarySerializer(serializers.ModelSerializer):
     """
     photo_url = serializers.SerializerMethodField()
     is_active = serializers.SerializerMethodField()
-    deployment_test = serializers.SerializerMethodField()
     
     class Meta:
         model = Professional
@@ -221,7 +220,6 @@ class ProfessionalSummarySerializer(serializers.ModelSerializer):
             'attendance_type',
             'photo_url',
             'is_active',
-            'deployment_test',
         ]
     
     def get_photo_url(self, obj):
@@ -232,14 +230,10 @@ class ProfessionalSummarySerializer(serializers.ModelSerializer):
         """
         Get user's is_active status for frontend verification.
         Returns True if user exists and has verified email, False otherwise.
-        DEPLOYMENT TEST (2025-11-22 02:15 UTC): Verifying deployment works
+        ✅ VERIFIED: Deployment working correctly (2025-11-22)
         """
         is_active_value = obj.user.is_active if obj.user else False
         return is_active_value
-    
-    def get_deployment_test(self, obj):
-        """Test field to verify deploy works - REMOVE AFTER TEST"""
-        return "DEPLOYMENT_WORKING_2025_11_22"
 
 
 class ProfessionalCreateSerializer(serializers.ModelSerializer):
