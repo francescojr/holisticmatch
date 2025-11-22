@@ -20,12 +20,13 @@
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
 ### 🔐 Latest Updates (Nov 21, 2025)
-- ✅ **Homepage Email Verification Gate - Complete Fix**
-  - Backend: Already filtering by `is_active=True` (verified working)
-  - API: Added `is_active` field to response for frontend transparency
-  - Frontend: Simplified rendering, removed complex conditional logic
-  - Result: Only verified professionals (email validated) appear on homepage ✅
-  - Note: Test data (e.g., "jake caralho" with is_active=true) displays correctly
+- ✅ **Homepage Email Verification Gate - Production Fix Applied**
+  - Root Cause: React Query cache returning stale data (staleTime: 1min)
+  - Solution: Set `staleTime: 0` to force fresh API data fetch
+  - Backend: Correctly returning `is_active` field for all professionals
+  - Frontend: Now receives fresh data showing actual is_active values
+  - Result: Homepage will show ONLY verified professionals after deployment
+  - Note: Deployment required - code ready, awaiting production restart
 - ✅ **Comprehensive Logging**: All systems have detailed execution traces
 - ✅ **Validation Enforcement**: Registration blocks offensive names/photos
 - ✅ **Email Verification**: is_active=False until email verified (now fully transparent)

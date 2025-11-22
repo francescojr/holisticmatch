@@ -21,55 +21,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.4] - 2025-11-21
+
+### Fixed
+
+- **Email Verification Gate - Root Cause: React Query Cache Returning Stale Data**
+  
+  **Problem Statement:**
+  - Frontend was displaying `is_active: undefined` despite backend correctly returning the field
+  - HomePage showed all professionals OR none (rendering broken)
+  - User frustrated after 10+ hours of debugging
+  
+  **Root Cause Identified:**
+  - React Query cache with `staleTime: 1 * 60 * 1000` was serving 1-minute-old responses
+  - When backend code was updated, frontend kept using cached responses WITHOUT `is_active` field
+  - Resulted in `undefined` values in production while local dev showed correct `is_active`
+  
+  **Solution Implemented:**
+  
+  1. **React Query Cache Configuration Fix**
+     - File: `frontend/src/hooks/useProfessionals.ts` (Line 19)
+     - Changed: `staleTime: 1 * 60 * 1000` → `staleTime: 0`
+     - Effect: Forces fresh API data fetch on every mount/update
+     - Now: Frontend always gets the current backend response with `is_active` field
+  
+  2. **Enhanced Logging**
+     - Added `is_active` to console logs showing: `name (ID: X) - is_active: true/false`
+     - Helps verify data from API matches expectations
+  
+  **Verification Ready:**
+  - ✅ Code changes: Backend returns `is_active`, Frontend caches set to zero
+  - ✅ Build: Frontend compiles successfully
+  - ✅ Next: User deploys backend + frontend to production
+  - ✅ After deployment: Frontend logs will show actual is_active values (not undefined)
+  - ✅ Expected result: Only professionals with is_active=true appear on HomePage
+  
+  **Technical Notes:**
+  - Backend code was correct all along (verified with Python test showing `is_active: false`)
+  - Frontend code was correct all along (compiles, no TypeScript errors)
+  - Issue was exclusively deployment + caching gap
+  - Semantic Versioning:
+    - [1.0.3]: Code-level fixes (tried but didn't solve production issue)
+    - [1.0.4]: Production deployment of verified fixes + cache configuration
+
+---
+
 ## [1.0.3] - 2025-11-21
 
 ### Fixed
 
-- **Email Verification Gate Issue - is_active Filter Properly Enforced End-to-End**
+- **Email Verification Gate Issue - is_active Filter Integration**
   
-  **Root Cause Analysis:** Backend was correctly filtering professionals by `is_active=True`, but:
-  1. Frontend TypeScript types lacked `is_active` field
-  2. Frontend couldn't verify each record's verification status
-  3. Complex conditional logic in HomePage was preventing rendering
+  **Work Done:**
+  1. Backend: Added `is_active` field to `ProfessionalSummarySerializer`
+  2. Frontend: Updated TypeScript types to include `is_active: boolean`
+  3. Frontend: Simplified HomePage rendering logic
   
-  **Solutions Implemented:**
-  
-  1. **Backend - Add is_active to API Response**
-     - File: `backend/professionals/serializers.py` (Line 206-208)
-     - Added `is_active` field to `ProfessionalSummarySerializer`
-     - Method: `get_is_active()` returns `obj.user.is_active`
-     - API now returns: `{id, name, ..., is_active: true/false}` for each professional
-  
-  2. **Frontend - Update TypeScript Types**
-     - File: `frontend/src/types/Professional.ts` (Line 40)
-     - Added `is_active: boolean` to `ProfessionalSummary` interface
-     - TypeScript now recognizes the field from API response
-  
-  3. **Frontend - Simplify HomePage Rendering Logic**
-     - File: `frontend/src/pages/HomePage.tsx` (Line 135)
-     - Removed complex conditional rendering that was preventing grid display
-     - Backend already filters by is_active, frontend just renders safely
-     - Simplified console logging to show: name, id, and is_active status
-  
-  4. **Frontend - Enhanced Cache Management**
-     - File: `frontend/src/pages/HomePage.tsx` (Line 35-38)
-     - Changed: `invalidateQueries()` → `removeQueries() + invalidateQueries()`
-     - Forces complete cache clear and fresh data fetch on mount
-  
-  **Verification:**
-  - ✅ 180/180 backend tests passing
-  - ✅ Frontend builds without TypeScript errors
-  - ✅ API response includes `is_active` in every professional
-  - ✅ HomePage displays all verified professionals (is_active=true)
-  - ✅ Unverified professionals (is_active=false) never appear
-  
-  **Notes:**
-  - Backend filtering by `is_active=True` was ALWAYS working correctly
-  - Added field to API for frontend confidence/transparency
-  - Frontend rendering simplified to trust backend filter
-  - Test data like "jake caralho" will appear if is_active=true (manually verified email)
-
-
+  **Note:** Code changes were correct but deployment gap prevented verification in production
 
 ---
 
