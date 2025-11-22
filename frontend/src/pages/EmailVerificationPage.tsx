@@ -83,10 +83,11 @@ function EmailVerificationPage() {
         message: 'Redirecionando para seu dashboard...'
       })
       
-      // Redirect to dashboard after 2 seconds (user is now auto-logged in)
-      setTimeout(() => {
-        navigate('/dashboard')
-      }, 2000)
+      // v1.3.0: Redirect immediately (not after delay)
+      // Delayed redirect caused race condition where HomePage would try to fetch
+      // data while redirect was pending, creating stale cache issues
+      console.log('[EmailVerification] 🚀 Redirecting to dashboard immediately (auto-login active)')
+      navigate('/dashboard')
     } catch (error: any) {
       const errorMsg = 
         error.response?.data?.message ||

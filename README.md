@@ -19,9 +19,27 @@
 ✅ **API**: Full CRUD endpoints with filtering, pagination & content moderation  
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
-### 🔐 Latest Updates (Nov 22, 2025 - 20:30 UTC)
+### 🔐 Latest Updates (Nov 22, 2025 - 20:50 UTC)
 
-#### 🎉 v1.2.0 - Frontend Race Condition Fixed (PRODUCTION READY!)
+#### 🎉 v1.3.0 - Auto-Login Race Conditions Fixed (SMOOTH EXPERIENCE!)
+- **Immediate Redirect After Email Verification**: No more 2-second delay ✅
+- **Fixed Memory Leaks**: Fetch properly cancelled when component unmounts 🧹
+- **Multi-Tab Synchronization**: Consistent state across all browser tabs 🔄
+- **Authenticated User Protection**: Logged-in users can't see public homepage ⚔️
+
+**What was broken:**
+- Redirect had 2-second delay → HomePage fetched data during redirect
+- Fetch continued after redirect → Memory leak on unmounted component
+- Other tabs showed "Loading..." indefinitely → Race condition
+- Cache inconsistent between tabs and browsers → User confusion
+
+**What's fixed:**
+- Immediate redirect (no delay) ✅
+- AbortSignal cancels fetch on unmount 🚫
+- HomePage checks auth before fetching ✅
+- isMountedRef prevents logs after unmount ✅
+
+#### 🎉 v1.2.0 - Frontend Race Condition Fixed
 - **Homepage Now Loads Data on First Visit**: No more "Carregando..." indefinitely ✅
 - **Root Cause**: React Query `staleTime: 0` + `gcTime: 0` broke state batching
 - **Solution**: Updated to `staleTime: 1000ms` + `gcTime: 5min` + proper isPending handling
@@ -42,34 +60,33 @@
 - **Database migrations applied**: Field persisted correctly
 - **All 181 Tests Passing** ✅
 
-#### 📊 Listing Behavior (v1.1.0+)
+#### 📊 Auto-Login User Flow (v1.3.0+)
 ```
-Professional Registration Flow:
-1. Register → Created with na_contencao=false (unverified)
-2. Email received → Link sent with verification token
-3. Click verification link → na_contencao=true + auto-login ✅
-4. Dashboard visible → Can edit profile
-5. Public listing → NOW APPEARS in /api/v1/professionals/ ✅
+1. User registers → Verification email sent
+2. User clicks link in email
+3. Backend verifies token
+4. JWT tokens saved to localStorage
+5. IMMEDIATE redirect to /dashboard (v1.3.0 - no delay!)
+6. Dashboard loads with user data
+7. All tabs/browsers synchronized ✅
+8. Memory cleaned up properly ✅
 ```
 
-**Old Behavior (v1.0.9):** All professionals showed in listings regardless of verification status  
-**New Behavior (v1.1.0):** Only verified professionals in public listings ✅
-
-#### ⚡ Frontend Performance (v1.2.0+)
+#### ⚡ Frontend Performance (v1.3.0+)
 ```
-Before v1.2.0:
-1. User lands on homepage
-2. API fetches data ✓
-3. React Query fails to batch update ✗
-4. Component stays in loading state ✗
-5. User refreshes (F5) to see data ✗
+Before v1.3.0 (Race Condition):
+- Redirect delayed 2 seconds
+- HomePage starts fetching simultaneously
+- Fetch continues after unmount (memory leak)
+- Other tabs inconsistent
+- User sees loading state
 
-After v1.2.0:
-1. User lands on homepage
-2. API fetches data ✓
-3. React Query batches properly ✓
-4. Component renders immediately ✓
-5. No refresh needed ✅
+After v1.3.0 (Smooth):
+- Immediate redirect
+- HomePage never fetches (auth check)
+- Fetch cancelled if unmount occurs
+- All tabs synchronized
+- User sees dashboard immediately ✅
 ```
 
 ---

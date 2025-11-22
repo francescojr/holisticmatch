@@ -11,8 +11,12 @@ import type {
 export const professionalService = {
   /**
    * Get list of professionals with filters and pagination
+   * v1.3.0: Added signal parameter to support request cancellation on unmount
    */
-  async getProfessionals(filters: ProfessionalFilters = {}): Promise<ProfessionalListResponse> {
+  async getProfessionals(
+    filters: ProfessionalFilters = {}, 
+    signal?: AbortSignal
+  ): Promise<ProfessionalListResponse> {
     const params = new URLSearchParams()
 
     if (filters.service) params.append('service', filters.service)
@@ -23,8 +27,19 @@ export const professionalService = {
     if (filters.limit) params.append('limit', filters.limit.toString())
     if (filters.offset) params.append('offset', filters.offset.toString())
 
-    const response = await api.get<ProfessionalListResponse>(`/professionals/?${params}`)
-    return response.data
+    try {
+      const response = await api.get<ProfessionalListResponse>(
+        `/professionals/?${params}`,
+        { signal }  // v1.3.0: Pass abort signal to cancel if needed
+      )
+      return response.data
+    } catch (error: any) {
+      // v1.3.0: Handle abort errors gracefully
+      if (error.name === 'AbortError' || error.message === 'AbortError') {
+        throw new Error('AbortError')
+      }
+      throw error
+    }
   },
 
   /**

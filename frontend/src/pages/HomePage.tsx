@@ -24,6 +24,25 @@ function HomePage() {
   const { scrollY } = useScroll()
   const y = useTransform(scrollY, [0, 500], [0, -150]) // Parallax effect
   
+  // v1.3.0: Check if user is authenticated (shouldn't be on public homepage)
+  const authToken = localStorage.getItem('access_token')
+  if (authToken) {
+    console.log('[HomePage] ⚠️ Authenticated user on homepage - should be redirected by ProtectedRoute')
+    // Redirect to dashboard if accidentally accessed while logged in
+    useEffect(() => {
+      navigate('/dashboard')
+    }, [navigate])
+    
+    return (
+      <div className="min-h-screen bg-background-light dark:bg-background-dark flex items-center justify-center">
+        <div className="text-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-purple-200 border-t-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirecionando...</p>
+        </div>
+      </div>
+    )
+  }
+  
   const { data: professionalsData, isLoading, error, isPending } = useProfessionals(filters)
   const { containerRef, isContainerVisible } = useSequentialAnimation<HTMLDivElement>()
 
