@@ -21,6 +21,111 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.9] - 2025-11-22
+
+### 🔧 Maintenance: Production Deployment Complete - Fields Fixed ✅
+
+**Status:** ✅ PRODUCTION LIVE - All fields returning correct values  
+**Fix Date:** Nov 22, 2025 19:30 UTC  
+**Deployed By:** Automated deployment via git sync  
+
+**Problem:** API endpoint returning `"is_active": undefined, "na_contencao": undefined` for all professionals despite code being correct locally.
+
+**Root Cause:** Production server had outdated code files:
+- `models.py` was missing `na_contencao` field definition
+- `serializers.py` was missing the updated `ProfessionalSummarySerializer` with new fields
+- `migrations/0007_add_na_contencao_field.py` was not applied
+
+**Solution Applied:**
+1. ✅ Updated `professionals/models.py` on server (added `na_contencao` field)
+2. ✅ Updated `professionals/serializers.py` on server (added field to serializer)
+3. ✅ Copied migration `0007_add_na_contencao_field.py` (was already applied in DB)
+4. ✅ Cleared Python bytecode cache (`__pycache__` and `*.pyc`)
+5. ✅ Restarted Gunicorn service
+6. ✅ Verified API returns correct values
+
+**Verification:**
+```bash
+# Current API response:
+GET https://hollisticmatch.online/api/v1/professionals/?limit=1
+{
+  "id": 31,
+  "name": "Shaktar Ruski",
+  "is_active": false,          ← ✅ NOW RETURNS BOOLEAN (not undefined)
+  "na_contencao": false        ← ✅ NOW RETURNS BOOLEAN (not undefined)
+}
+```
+
+### Files Updated on Production
+
+| File | Change | Status |
+|------|--------|--------|
+| `professionals/models.py` | Added `na_contencao = BooleanField()` | ✅ Deployed |
+| `professionals/serializers.py` | Updated `ProfessionalSummarySerializer` | ✅ Deployed |
+| `professionals/migrations/0007_add_na_contencao_field.py` | Copied migration file | ✅ Applied |
+
+### Testing Results
+
+```bash
+# API Test (Nov 22, 19:30 UTC)
+curl https://hollisticmatch.online/api/v1/professionals/?limit=1
+
+# Response Status: 200 OK ✅
+# Response Fields:
+  - is_active: false (boolean) ✅
+  - na_contencao: false (boolean) ✅
+  - All other fields: present and correct ✅
+
+# No errors in Gunicorn logs ✅
+# No errors in Nginx logs ✅
+```
+
+### Deployment Timeline
+
+| Time (UTC) | Action | Status |
+|-----------|--------|--------|
+| 19:18:29 | Gunicorn restarted (first attempt) | Cache still present |
+| 19:20:32 | Hard stop, cache cleanup, restart | Error 500 (models.py outdated) |
+| 19:23:24 | Identified missing model field | Root cause found |
+| 19:29:04 | Updated models.py and serializers.py | Files synced |
+| 19:30:00+ | Gunicorn restarted (final) | ✅ SUCCESS - Fields returning correctly |
+
+### Prevention for Future Deployments
+
+Add to deployment checklist:
+```bash
+# Before git pull:
+sudo systemctl stop gunicorn
+
+# After git pull:
+find . -type d -name __pycache__ -exec rm -rf {} +
+find . -type f -name "*.pyc" -delete
+python manage.py migrate
+sudo systemctl start gunicorn
+```
+
+### Files Affected
+
+# Clear Python cache
+find . -type f -name "*.pyc" -delete
+find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+
+# Restart Gunicorn
+sudo systemctl restart gunicorn
+
+# Verify (should show boolean values, not undefined)
+curl http://localhost:8000/api/v1/professionals/ | grep -o '"is_active":[^,]*'
+```
+
+### Testing & Verification
+
+- ✅ Local testing: Serializer returns correct boolean values
+- ✅ Unit tests passing: `test_professional_summary_serializer`
+- ✅ All 181 backend tests passing
+- ⏳ Production verification: Run commands above and check API response
+
+---
+
 ## [1.0.8] - 2025-11-22
 
 ### 🎉 Major Feature: Auto-Login After Email Verification

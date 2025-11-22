@@ -555,6 +555,80 @@ npm run build
 npm run preview
 ```
 
+## 🔧 Troubleshooting
+
+### Issue: API Returns `undefined` for Fields After Deployment
+
+**Symptoms:**
+- Frontend shows `undefined` for fields like `is_active`, `na_contencao`, `photo_url`
+- Local development works fine, but production is broken
+- No error messages in logs, fields just return `undefined`
+
+**Root Cause:**
+Python bytecode cache (`.pyc` files) in `__pycache__` directories is not cleaned after deployment. Old compiled code is being loaded instead of new code.
+
+**Solution - Production Server:**
+
+```bash
+# SSH to EC2 instance
+ssh -i your-key.pem ubuntu@your-ec2-ip
+
+# Navigate to backend directory
+cd /var/app/current/backend
+# OR
+cd /path/to/your/holisticmatch/backend
+
+# Delete all .pyc files
+find . -type f -name "*.pyc" -delete
+
+# Delete all __pycache__ directories
+find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+
+# Restart the application
+sudo systemctl restart gunicorn
+
+# Verify fix (wait 5 seconds for restart)
+sleep 5
+curl https://hollisticmatch.online/api/v1/professionals/
+# Response should now show: "is_active": true/false, "na_contencao": true/false (NOT undefined)
+```
+
+**Alternative: Using the Cleanup Scripts**
+
+We provide two ready-made scripts for this common issue:
+
+**For Linux/Mac (Bash):**
+```bash
+bash FIX_PRODUCTION_CACHE.sh
+```
+
+**For Windows (PowerShell):**
+```powershell
+.\FIX_PRODUCTION_CACHE.ps1
+```
+
+Both scripts:
+1. Count `.pyc` files before cleanup
+2. Delete all `.pyc` files
+3. Delete all `__pycache__` directories
+4. Restart Gunicorn
+5. Verify the fix by testing the API endpoint
+6. Show results and count of deleted files
+
+**Why This Happens:**
+- Django compiles Python files to bytecode for faster loading
+- Bytecode cached in `__pycache__` directories
+- After git pull/deployment, `.py` files are updated but `.pyc` files are old
+- Python loads the old bytecode instead of recompiling from new source
+- Solution: Delete old bytecode so Python regenerates from current `.py` files
+
+**Prevention:**
+- Always run cache cleanup after production deployments
+- Consider adding this to your deployment automation script
+- Add to CI/CD pipeline: `find . -type d -name "__pycache__" -exec rm -rf {} +`
+
+---
+
 ## 📊 Project Status
 
 - ✅ **Phase 1: Setup** - COMPLETE (Directory structure, configs, dependencies)
