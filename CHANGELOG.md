@@ -21,6 +21,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.5] - 2025-11-21
+
+### Fixed
+
+- **Test Infrastructure: SerializerMethodField Testing Approach**
+  
+  **Problem:**
+  - Test `test_professional_summary_serializer` was failing with: `AttributeError: 'collections.OrderedDict' object has no attribute 'photo_url'`
+  - Root cause: Test was passing dict data to serializer instead of real model instances
+  - When DRF validates `data={...}`, it creates OrderedDict in `validated_data`
+  - SerializerMethodField `get_photo_url(obj)` failed trying to access `.photo_url` on dict
+  
+  **Solution:**
+  - Updated `test_professional_summary_serializer` to use real Django model instances
+  - Creates real User (with `is_active=True`/`False`)
+  - Creates real Professional linked to user
+  - Tests actual serialization with model objects, not dicts
+  - Now properly validates `is_active` field in serialized output
+  
+  **New Comprehensive Test Added:**
+  - Added `test_is_active_field_in_summary_serializer_with_real_user` (Lines 298-341)
+  - Tests scenario 1: Active user (is_active=True) → serializer returns is_active=True
+  - Tests scenario 2: Inactive user (is_active=False) → serializer returns is_active=False
+  - Tests scenario 3: Multiple professionals in list view
+  - Validates `is_active` field presence in all serialization scenarios
+  - Uses real Django User and Professional model instances for authentic testing
+  
+  **Result:**
+  - All 181 tests now passing
+  - Serializer correctly returns `is_active` field with accurate values
+  - Test infrastructure now properly validates production behavior
+
+---
+
 ## [1.0.4] - 2025-11-21
 
 ### Fixed

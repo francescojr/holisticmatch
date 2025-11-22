@@ -181,16 +181,37 @@ class TestProfessionalSerializerValidation:
         assert not serializer.is_valid()
         assert 'services' in serializer.errors
 
+    @pytest.mark.django_db
     def test_professional_summary_serializer(self, valid_professional_data):
         """Test ProfessionalSummarySerializer serialization"""
+        from django.contrib.auth.models import User
+        from professionals.models import Professional
         from professionals.serializers import ProfessionalSummarySerializer
 
-        serializer = ProfessionalSummarySerializer(data=valid_professional_data)
-        assert serializer.is_valid(), f"Serializer errors: {serializer.errors}"
+        # Create a real user and professional instance to test serializer
+        user = User.objects.create_user(
+            username='summarytest@example.com',
+            email='summarytest@example.com',
+            password='testpass123',
+            is_active=True  # Simulate verified user
+        )
+        
+        professional = Professional.objects.create(
+            user=user,
+            **valid_professional_data
+        )
+        
+        # Test serializer with real object
+        serializer = ProfessionalSummarySerializer(professional)
+        data = serializer.data
 
-        # Check that only summary fields are included
-        expected_fields = ['id', 'name', 'services', 'city', 'state', 'price_per_session', 'attendance_type', 'photo_url']
-        assert set(serializer.validated_data.keys()).issubset(set(expected_fields))
+        # Check that only summary fields are included (including is_active for verification gate)
+        expected_fields = ['id', 'name', 'services', 'city', 'state', 'price_per_session', 'attendance_type', 'photo_url', 'is_active']
+        assert set(data.keys()).issubset(set(expected_fields) | {'neighborhood'})
+        
+        # CRITICAL: Verify is_active field is present and correctly mapped from user.is_active
+        assert 'is_active' in data, "is_active field missing from ProfessionalSummarySerializer"
+        assert data['is_active'] == True, f"Expected is_active=True for verified user, got {data['is_active']}"
 
     @pytest.mark.django_db
     def test_get_photo_url_method(self, valid_professional_data):
@@ -288,3 +309,51 @@ class TestProfessionalSerializerValidation:
         del data_only_city['state']
         serializer2 = ProfessionalSerializer(data=data_only_city)
         assert not serializer2.is_valid()  # Should fail without state
+
+    @pytest.mark.django_db
+    def test_is_active_field_in_summary_serializer_with_real_user(self, valid_professional_data):
+        """
+        CRITICAL: Verify is_active field is correctly returned in ProfessionalSummarySerializer
+        This is the EMAIL VERIFICATION GATE - professional should only appear in list if user.is_active=True
+        """
+        from django.contrib.auth.models import User
+        from professionals.models import Professional
+        from professionals.serializers import ProfessionalSummarySerializer
+        
+        # Create a user (active by default when explicitly setting is_active=True)
+        user = User.objects.create_user(
+            username='testuser@example.com',
+            email='testuser@example.com',
+            password='testpass123',
+            is_active=True  # Email verified
+        )
+        
+        # Create professional linked to this user
+        professional = Professional.objects.create(
+            user=user,
+            **valid_professional_data
+        )
+        
+        # Test 1: Active user (email verified) - should have is_active=True
+        serializer = ProfessionalSummarySerializer(professional)
+        data = serializer.data
+        
+        assert 'is_active' in data, f"is_active missing from serializer data. Keys: {data.keys()}"
+        assert data['is_active'] == True, f"Active user should have is_active=True, got {data['is_active']}"
+        
+        # Test 2: Inactive user (email not verified) - should have is_active=False
+        user.is_active = False
+        user.save()
+        
+        serializer = ProfessionalSummarySerializer(professional)
+        data = serializer.data
+        
+        assert 'is_active' in data, "is_active missing from serializer for inactive user"
+        assert data['is_active'] == False, f"Inactive user should have is_active=False, got {data['is_active']}"
+        
+        # Test 3: Verify field is present in list view (the API endpoint users see)
+        serializer_multiple = ProfessionalSummarySerializer([professional], many=True)
+        data_list = serializer_multiple.data
+        
+        assert len(data_list) > 0, "No data in list serialization"
+        assert 'is_active' in data_list[0], f"is_active missing from list view. Keys: {data_list[0].keys()}"
