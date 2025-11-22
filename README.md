@@ -13,25 +13,29 @@
 ## 🎉 Production Status - LIVE! 
 
 ✅ **Frontend**: https://holisticmatch.vercel.app/ (React 18 + Vite)  
-✅ **Backend**: http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/ (Django 4.2)  
-✅ **Database**: Supabase PostgreSQL (12+ professionals)  
-✅ **API**: Full CRUD endpoints with filtering & pagination  
+✅ **Backend**: https://hollisticmatch.online/api/v1 (Django 4.2 on AWS EC2 t3.micro)  
+✅ **Database**: Supabase PostgreSQL  
+✅ **SSL/TLS**: Active on hollisticmatch.online (Let's Encrypt)  
+✅ **API**: Full CRUD endpoints with filtering, pagination & content moderation  
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
-### 🔐 Latest Updates (Nov 19, 2025)
-- ✅ **3 UX Fixes Deployed**:
-  - Price input tooltip moved below field (registration form)
-  - Terms & Conditions checkbox added to form
-  - Dashboard location field → City/State dropdowns (consistent with registration)
-- ✅ **Multi-Tab Session Sync**: Logout in one tab immediately logs out all other tabs
-- ✅ **Secure Auth with Proxy Headers**: SECURE_PROXY_SSL_HEADER properly configured for AWS ALB
-- **Status**: All 179 tests passing ✅ | Ready for production ✅
+### 🔐 Latest Updates (Nov 21, 2025)
+- ✅ **Homepage Rendering Fixed**: Grid cards now display correctly (return null → return true)
+- ✅ **Validation Enforcement - Registration**:
+  - Name validation: OpenAI + Regex moderation
+  - Photo validation: AWS Rekognition (94.4% nudity detection)
+  - "jake caralho" → **BLOCKED** ✅
+  - Explicit photos → **BLOCKED** ✅
+- ✅ **Validation Enforcement - Dashboard Edit**: All fields pass through moderation pipeline
+- ✅ **Email Verification**: is_active=False until email verified
+- ✅ **Comprehensive Audit Completed**: Professional code review, no breaking changes
+- **Status**: **180/180 tests passing** ✅ | **Production ready** ✅ | **Build passing** ✅
 
-### 📸 Recent Fixes
-- Photo Upload: Nginx/Django limits 250MB, Axios headers fixed
-- Registration Form: City/State validation with dynamic dropdowns
-- Dashboard: Location field now uses same selector pattern as registration
-- Session Management: Real-time logout synchronization across browser tabs
+### 📸 Content Moderation Pipeline
+- **Text**: OpenAI API (primary) → Regex fallback (Portuguese offensive words)
+- **Photos**: AWS Rekognition (DetectModerationLabels + custom threshold)
+- **Rekognition Policies**: ✅ Applied to `holisticmatch-s3-user` IAM user
+- **Comprehend Policies**: ✅ Applied to `holisticmatch-s3-user` IAM user
 
 ---
 
@@ -40,7 +44,8 @@
 ### Acesso Rápido (Produção)
 ```
 Frontend: https://holisticmatch.vercel.app
-API Base: http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com/api/v1
+API Base: https://hollisticmatch.online/api/v1 (Primary - HTTPS)
+API Backup: http://44.197.112.222/api/v1 (Secondary - HTTP)
 ```
 
 ### Desenvolvimento Local
@@ -90,11 +95,13 @@ Acesse:
 - **Session**: Real-time sync across browser tabs
 
 ### Infrastructure  
-- **Backend**: AWS Elastic Beanstalk (t3.micro, us-east-2)
-- **Frontend**: Vercel (auto-deploy)
-- **Database**: Supabase PostgreSQL
-- **SSL/TLS**: AWS ALB with proxy header support for secure cookies
-- **Networking**: IPv6 enabled, Security Groups configured
+- **Backend**: AWS EC2 t3.micro (sa-east-1) with Gunicorn + Nginx
+- **Frontend**: Vercel (auto-deploy on main branch)
+- **Database**: Supabase PostgreSQL (sa-east-1)
+- **Storage**: AWS S3 `holisticmatch-media` bucket (sa-east-1)
+- **SSL/TLS**: Let's Encrypt (certbot, hollisticmatch.online)
+- **Email**: Resend API (custom Django backend)
+- **Moderation**: AWS Rekognition + OpenAI + Regex fallback
 
 ---
 

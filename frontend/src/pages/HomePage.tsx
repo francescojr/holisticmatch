@@ -137,7 +137,7 @@ function HomePage() {
           console.log('[HomePage] Total to render:', professionalsData.results.length);
           console.log('[HomePage] IDs:', professionalsData.results.map(p => p.id));
           console.log('[HomePage] Names:', professionalsData.results.map(p => p.name));
-          return null;
+          return true;
         })() && (
           <div
             ref={containerRef}

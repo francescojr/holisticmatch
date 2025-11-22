@@ -242,6 +242,13 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
         allow_blank=True
     )
     
+    # Bio is optional on creation (will be auto-generated in some cases)
+    bio = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text='Descrição profissional (opcional no cadastro)'
+    )
+    
     # CRITICAL: Explicit ImageField declaration for proper FormData handling
     # This ensures DRF properly validates multipart/form-data uploads
     photo = serializers.ImageField(
@@ -404,6 +411,34 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
     
     def validate(self, data):
         """Cross-field validation including city-state pair and content moderation"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.warning(f"🔴 [VALIDATE] ======== STARTING FULL VALIDATION ========")
+        logger.warning(f"🔴 [VALIDATE] Data keys: {list(data.keys())}")
+        logger.warning(f"🔴 [VALIDATE] Name value: {data.get('name')}")
+        logger.warning(f"🔴 [VALIDATE] Photo present: {bool(data.get('photo'))}")
+        
+        # EXPLICITLY call validate_name to ensure blocking happens
+        if 'name' in data:
+            try:
+                logger.warning(f"🔴 [VALIDATE] Calling validate_name('{data['name']}')")
+                self.validate_name(data['name'])
+                logger.warning(f"✅ [VALIDATE] Name validation PASSED")
+            except serializers.ValidationError as e:
+                logger.error(f"❌ [VALIDATE] Name validation FAILED: {e}")
+                raise
+        
+        # EXPLICITLY call validate_photo to ensure blocking happens
+        if 'photo' in data and data['photo']:
+            try:
+                logger.warning(f"🔴 [VALIDATE] Calling validate_photo()")
+                self.validate_photo(data['photo'])
+                logger.warning(f"✅ [VALIDATE] Photo validation PASSED")
+            except serializers.ValidationError as e:
+                logger.error(f"❌ [VALIDATE] Photo validation FAILED: {e}")
+                raise
+        
         # Validate city and state pair
         city = data.get('city')
         state = data.get('state')
@@ -432,6 +467,7 @@ class ProfessionalCreateSerializer(serializers.ModelSerializer):
             }
             raise serializers.ValidationError(error_messages)
         
+        logger.warning(f"🔴 [VALIDATE] ======== VALIDATION COMPLETE (PASSED) ========")
         return data
     
     def create(self, validated_data):
