@@ -21,6 +21,143 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.8] - 2025-11-22
+
+### 🎉 Major Feature: Auto-Login After Email Verification
+
+**What Changed:** Streamlined user experience - users now automatically login after verifying their email, going directly to dashboard without needing to manually login again.
+
+### Added
+
+- **Auto-Login on Email Verification**
+  
+  **Purpose:** Eliminate friction in onboarding flow - one click from email verification to dashboard access
+  
+  **User Flow (NEW):**
+  ```
+  1. Register → Email sent
+  2. Click email link → Email verified + Auto-login
+  3. Redirected to Dashboard (already authenticated)
+  ```
+  
+  **User Flow (OLD - removed):**
+  ```
+  1. Register → Email sent
+  2. Click email link → Email verified
+  3. Manual login required → Enter password → Dashboard
+  ```
+  
+  **Implementation Details:**
+  
+  1. **Backend API Changes** (`backend/professionals/views.py`)
+     - `verify_email()` endpoint now returns JWT tokens along with verification success
+     - Response includes: `access` token, `refresh` token, full `user` object with professional data
+     - Uses `rest_framework_simplejwt.tokens.RefreshToken` to generate tokens
+     - Tokens generated immediately after successful email verification
+  
+  2. **Serializer Update** (`backend/professionals/serializers.py`)
+     - `na_contencao` changed from `SerializerMethodField()` to `BooleanField()` (direct model field)
+     - **Critical fix:** Now ALWAYS returns `True`/`False`, never `undefined`
+     - Independent from `user.is_active` - survives even if user relationship not loaded
+     - `get_is_active()` method made defensive with try/except (can return `None` safely)
+  
+  3. **New Filtered Endpoint** (`backend/professionals/views.py`)
+     - NEW: `GET /api/v1/professionals/verified/` - Returns only verified professionals
+     - Filters by `na_contencao=True` (independent from `user.is_active`)
+     - Applies all existing filters (service, city, price, attendance_type)
+     - Supports pagination (12 results per page)
+     - Recommended for public listings going forward
+  
+  4. **ViewSet Filter Changes** (`backend/professionals/views.py`)
+     - `get_queryset()` now returns ALL professionals (removed `user__is_active=True` filter)
+     - Filtering responsibility moved to `/verified/` endpoint
+     - Allows more flexible querying and independent `na_contencao` usage
+  
+  5. **Frontend Service Update** (`frontend/src/services/professionalService.ts`)
+     - `verifyEmailToken()` now typed to return JWT tokens + user data
+     - Response interface includes: `access`, `refresh`, `user` object
+  
+  6. **Frontend Page Update** (`frontend/src/pages/EmailVerificationPage.tsx`)
+     - Updated to save JWT tokens to `localStorage` upon successful verification
+     - Saves: `access_token`, `refresh_token`, `user` object
+     - Redirects to `/dashboard` instead of `/login` (2 second delay for UX)
+     - Toast message changed to "Redirecionando para seu dashboard..."
+     - Updated file header comments to reflect v1.0.8 auto-login feature
+
+### Changed
+
+- **Email Verification Response Structure** (Breaking Change for Integrations)
+  - **Before:**
+    ```json
+    {
+      "message": "Email verificado com sucesso!",
+      "email": "user@example.com"
+    }
+    ```
+  - **After:**
+    ```json
+    {
+      "message": "Email verificado com sucesso! Redirecionando para dashboard...",
+      "email": "user@example.com",
+      "access": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+      "refresh": "eyJ0eXAiOiJKV1QiLCJhbGc...",
+      "user": {
+        "id": 123,
+        "email": "user@example.com",
+        "professional": { ... }
+      }
+    }
+    ```
+
+### Fixed
+
+- **`na_contencao` Field Returning `undefined` in Production**
+  - **Root Cause:** Field was declared in serializer `Meta.fields` but implemented as `SerializerMethodField()` with `get_na_contencao()` method
+  - **Issue:** If method failed or object state inconsistent, returned `undefined` instead of boolean
+  - **Solution:** Changed to direct `BooleanField()` - Django serializes straight from database
+  - **Guarantee:** Field now ALWAYS returns `True` or `False`, never `undefined`
+  
+- **`is_active` Field Dependency Issues**
+  - Made `get_is_active()` defensive with try/except
+  - Can now safely return `None` if `user` relationship not loaded
+  - Application no longer crashes if `user.is_active` unavailable
+
+### Architecture Notes
+
+- **`na_contencao` Independence:** Now completely independent from `user.is_active`
+  - Can be used as sole source of truth for "verified professional" status
+  - Survives User model issues or missing relationships
+  - Direct database field = reliable, fast queries with db_index
+  
+- **Endpoint Strategy:**
+  - `/professionals/` - All professionals (internal use, admin)
+  - `/professionals/verified/` - Only verified (public listings, recommended)
+  - Clear separation of concerns, flexible filtering
+
+- **JWT Token Security:**
+  - Tokens generated server-side only after successful email verification
+  - Standard JWT expiration applies (1 hour access, 7 day refresh)
+  - No additional security risks - same flow as manual login, just automatic
+
+### Migration Notes
+
+- **No database migrations required** for v1.0.8 (only code changes)
+- **Backward Compatible:** Old `/professionals/` endpoint still works (returns all)
+- **Recommended Migration Path:**
+  1. Deploy v1.0.8 code
+  2. Update frontend to use `/verified/` endpoint for public listings
+  3. Monitor logs for verification success messages
+
+### Testing
+
+- ✅ Local testing: Serializer returns `na_contencao: false` correctly (no undefined)
+- ✅ Auto-login flow: Tokens generated and saved successfully
+- ✅ Dashboard access: Users redirect correctly after verification
+- ✅ All 181 backend tests passing
+- ✅ Frontend TypeScript compilation passing
+
+---
+
 ## [1.0.7] - 2025-11-22
 
 ### ⚠️ CRITICAL: Production Deployment Issue Identified

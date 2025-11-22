@@ -146,9 +146,30 @@ export const professionalService = {
 
   /**
    * Verify email with token (TASK 6.2)
+   * UPDATED v1.0.8: Now returns JWT tokens for auto-login
    */
-  async verifyEmailToken(token: string): Promise<{ message: string; email: string }> {
-    const response = await api.post<{ message: string; email: string }>('/professionals/verify-email/', {
+  async verifyEmailToken(token: string): Promise<{
+    message: string
+    email: string
+    access: string
+    refresh: string
+    user: {
+      id: number
+      email: string
+      professional: Professional
+    }
+  }> {
+    const response = await api.post<{
+      message: string
+      email: string
+      access: string
+      refresh: string
+      user: {
+        id: number
+        email: string
+        professional: Professional
+      }
+    }>('/professionals/verify-email/', {
       token,
     })
     return response.data

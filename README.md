@@ -19,20 +19,30 @@
 ✅ **API**: Full CRUD endpoints with filtering, pagination & content moderation  
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
-### 🔐 Latest Updates (Nov 22, 2025 - 14:30 UTC)
-- 🚨 **CRITICAL: Production Database Migration Required** 
-  - Issue: API returning `is_active: undefined, na_contencao: undefined`
-  - Cause: Code deployed but **migrations NOT applied to production database**
-  - Solution: SSH to EC2 and run: `python manage.py migrate professionals`
-  - See: `DEPLOYMENT_MANUAL.md` for step-by-step instructions
-- ✅ **New Field Added**: `na_contencao` on Professional model (v1.0.7+)
-  - Tracks email verification status independently from User.is_active
-  - Default: False on registration
-  - Set to True when email verified
-- ✅ **Frontend Updated**: Type definitions include `na_contencao` field
-- ✅ **Deployment Guide Created**: `DEPLOYMENT_MANUAL.md` with full instructions
-- ✅ **All 181 Tests Passing** - Full test suite validation
-- **Status**: **Code ready** ✅ | **Production migrations pending** ⏳
+### 🔐 Latest Updates (Nov 22, 2025 - 18:00 UTC)
+
+#### 🎉 v1.0.8 - Auto-Login After Email Verification (NEW!)
+- **Streamlined Onboarding**: Users now automatically login after email verification
+- **One-Click Flow**: Verify email → Dashboard (no manual login needed!)
+- **JWT Tokens**: Auto-generated upon successful email verification
+- **Better UX**: Eliminates password re-entry friction
+
+#### ✅ Technical Improvements
+- **`na_contencao` Field Fixed**: Now always returns boolean (never `undefined`)
+- **New Endpoint**: `GET /api/v1/professionals/verified/` - Returns only verified professionals
+- **Independent Filtering**: `na_contencao` field no longer depends on `user.is_active`
+- **Frontend Updated**: Auto-saves JWT tokens and redirects to dashboard
+- **All 181 Tests Passing** ✅
+
+#### 📊 Email Verification Flow (v1.0.8)
+```
+1. User registers → Email sent with verification link
+2. User clicks link → Backend verifies token + generates JWT
+3. Frontend saves tokens → Auto-login complete
+4. Redirect to dashboard (user already authenticated) ✅
+```
+
+**No more manual login after verification!** 🚀
 
 ### 📸 Content Moderation Pipeline
 - **Text**: OpenAI API (primary) → Regex fallback (Portuguese offensive words)
@@ -160,11 +170,13 @@ sudo systemctl restart gunicorn
   - Botões de contato: WhatsApp, Email, Telefone
 
 - **Backend API** ✅
-  - `GET /api/v1/professionals/` - Listagem com filtros
-  - `GET /api/v1/professionals/{id}/` - Detalhes
-  - `GET /api/v1/professionals/service_types/` - Tipos de serviço
+  - `GET /api/v1/professionals/` - Listagem completa (todos profissionais)
+  - `GET /api/v1/professionals/verified/` - **Recomendado**: Apenas verificados (na_contencao=True) ⭐
+  - `GET /api/v1/professionals/{id}/` - Detalhes de um profissional
+  - `GET /api/v1/professionals/service_types/` - Tipos de serviço disponíveis
+  - `POST /api/v1/professionals/verify-email/` - Verificação de email com auto-login (v1.0.8)
   - Paginação (12 por página)
-  - 10/10 tests passing
+  - 181/181 tests passing ✅
 
 - **Database** ✅
   - 12 profissionais de exemplo em 8 cidades brasileiras

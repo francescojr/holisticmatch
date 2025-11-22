@@ -310,6 +310,20 @@ class TestProfessionalViewSet:
             is_active=False
         )
         
+        # Create professional for this user
+        professional = Professional.objects.create(
+            user=user,
+            name='Verified Professional',
+            bio='A' * 50,
+            services=['yoga'],
+            city='São Paulo',
+            state='SP',
+            price_per_session=100,
+            attendance_type='presencial',
+            whatsapp='11999999999',
+            na_contencao=False
+        )
+        
         # Create verification token
         token = EmailVerificationToken.create_token(user)
         
@@ -321,11 +335,18 @@ class TestProfessionalViewSet:
         )
         
         assert response.status_code == 200
-        assert response.data['message'] == 'Email verificado com sucesso!'
+        assert response.data['message'] == 'Email verificado com sucesso! Redirecionando para dashboard...'
+        assert 'access' in response.data
+        assert 'refresh' in response.data
+        assert 'user' in response.data
         
         # Check that user is now active
         user.refresh_from_db()
         assert user.is_active == True
+        
+        # Check that professional na_contencao is now True
+        professional.refresh_from_db()
+        assert professional.na_contencao == True
 
     @pytest.mark.django_db
     def test_verify_email_action_invalid_token(self, api_client):

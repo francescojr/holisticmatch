@@ -203,11 +203,13 @@ class ProfessionalSummarySerializer(serializers.ModelSerializer):
     """
     Lightweight serializer for list views
     Only includes essential fields for cards
-    Includes is_active from user model (email verification status)
-    Includes na_contencao status (email verified = active professional)
+    
+    UPDATED v1.0.8: na_contencao now as direct BooleanField (independent from user.is_active)
+    This ensures the field ALWAYS returns True/False, never undefined
     """
     photo_url = serializers.SerializerMethodField()
     is_active = serializers.SerializerMethodField()
+    na_contencao = serializers.BooleanField()  # Direct field from model - ALWAYS returns boolean
     
     class Meta:
         model = Professional
@@ -229,12 +231,11 @@ class ProfessionalSummarySerializer(serializers.ModelSerializer):
         return obj.photo_url
     
     def get_is_active(self, obj):
-        """Get is_active from related user model"""
-        return obj.user.is_active
-    
-    def get_na_contencao(self, obj):
-        """Get na_contencao from professional model"""
-        return obj.na_contencao
+        """Get is_active from related user model (may be None if not loaded)"""
+        try:
+            return obj.user.is_active if hasattr(obj, 'user') and obj.user else None
+        except Exception:
+            return None
 
 
 class ProfessionalCreateSerializer(serializers.ModelSerializer):

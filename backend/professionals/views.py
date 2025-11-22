@@ -42,24 +42,43 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Return ONLY professionals with na_contencao=True (email verified).
-        This prevents unverified accounts from appearing in the listing.
-        Uses db_index for efficient filtering.
+        Return ALL professionals with user relationship loaded.
+        
+        UPDATED v1.0.8: Removed filter by user__is_active=True
+        Now filtering is done by na_contencao field (Professional model)
+        Use /verified/ endpoint to get only verified professionals
+        """
+        return Professional.objects.select_related('user').all()
+    
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def verified(self, request):
+        """
+        GET /api/v1/professionals/verified/
+        
+        Returns ONLY verified professionals (na_contencao=True)
+        This is the new recommended endpoint for public listings
+        
+        NEW in v1.0.8: Filters by na_contencao field (independent from user.is_active)
         """
         import logging
         logger = logging.getLogger(__name__)
         
-        # Get ALL professionals
-        all_professionals = Professional.objects.select_related('user').all()
-        total_count = all_professionals.count()
+        # Filter by na_contencao=True (email verified + first access)
+        queryset = self.get_queryset().filter(na_contencao=True)
         
-        # CRITICAL FILTER: Only return professionals who verified email (user.is_active=True)
-        verified_only = all_professionals.filter(user__is_active=True)
-        verified_count = verified_only.count()
+        # Apply other filters (service, city, price, etc.)
+        queryset = self.filter_queryset(queryset)
         
-        logger.info(f"[VIEWSET] get_queryset() called: Total={total_count}, Verified={verified_count}, Filter by user__is_active=True applied")
+        logger.info(f"[VERIFIED_ENDPOINT] Returning {queryset.count()} verified professionals")
         
-        return verified_only
+        # Paginate
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def list(self, request, *args, **kwargs):
         """
@@ -175,9 +194,13 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
     def verify_email(self, request):
         """
         POST /api/professionals/verify-email/
-        Verify email with token from registration link
+        Verify email with token and return JWT tokens for auto-login
+        
+        UPDATED v1.0.8: Now returns JWT tokens + user data for immediate dashboard access
+        User verifies email → Auto-login → Redirect to dashboard
         """
         import logging
+        from rest_framework_simplejwt.tokens import RefreshToken
         logger = logging.getLogger(__name__)
         
         try:
@@ -193,10 +216,30 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
                     email_token.refresh_from_db()
                     email_token.user.refresh_from_db()
                     
-                                                    
+                    user = email_token.user
+                    professional = user.professional
+                    
+                    # Generate JWT tokens for auto-login
+                    refresh = RefreshToken.for_user(user)
+                    access_token = str(refresh.access_token)
+                    refresh_token = str(refresh)
+                    
+                    # Serialize professional data
+                    from .serializers import ProfessionalSerializer
+                    professional_data = ProfessionalSerializer(professional).data
+                    
+                    logger.info(f'✅ Email verified for user {user.id} ({professional.name}). Auto-login tokens generated.')
+                    
                     return Response({
-                        'message': 'Email verificado com sucesso!',
-                        'email': email_token.user.email,
+                        'message': 'Email verificado com sucesso! Redirecionando para dashboard...',
+                        'email': user.email,
+                        'access': access_token,
+                        'refresh': refresh_token,
+                        'user': {
+                            'id': user.id,
+                            'email': user.email,
+                            'professional': professional_data
+                        }
                     }, status=status.HTTP_200_OK)
                 elif result == 'invalid_or_expired':
                             return Response({

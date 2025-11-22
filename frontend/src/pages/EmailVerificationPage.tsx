@@ -1,7 +1,10 @@
 /**
  * Email Verification Page
  * TASK 6.2: Email verification with token
- * Supports both URL token auto-detection and manual token input
+ * UPDATED v1.0.8: Now implements auto-login after verification
+ * 
+ * Flow: User clicks email link → Token verified → JWT tokens saved → Redirect to dashboard
+ * No need to login manually after verification!
  */
 
 import { useState, useEffect } from 'react'
@@ -71,19 +74,19 @@ function EmailVerificationPage() {
       // Clear pending verification flag
       sessionStorage.removeItem('pendingEmailVerification')
       
-      // Store email in localStorage for login redirect
-      const verifiedEmail = result.email || email
-      localStorage.setItem('verification_email', verifiedEmail)
-      localStorage.setItem('just_verified_email', verifiedEmail)
+      // ⭐ NEW v1.0.8: Save JWT tokens for auto-login
+      localStorage.setItem('access_token', result.access)
+      localStorage.setItem('refresh_token', result.refresh)
+      localStorage.setItem('user', JSON.stringify(result.user))
       
       toast.success('Email verificado com sucesso!', {
-        message: 'Você pode fazer login agora'
+        message: 'Redirecionando para seu dashboard...'
       })
       
-      // Redirect to login after 3 seconds
+      // Redirect to dashboard after 2 seconds (user is now auto-logged in)
       setTimeout(() => {
-        navigate('/login')
-      }, 3000)
+        navigate('/dashboard')
+      }, 2000)
     } catch (error: any) {
       const errorMsg = 
         error.response?.data?.message ||
