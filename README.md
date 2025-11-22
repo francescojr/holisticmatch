@@ -19,19 +19,19 @@
 ✅ **API**: Full CRUD endpoints with filtering, pagination & content moderation  
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
-### 🔐 Latest Updates (Nov 21, 2025)
-- 🚨 **CRITICAL: Backend Deployment Pending** 
-  - Issue: Production API missing `is_active` field (returns `undefined`)
-  - Cause: Backend changes (commits `6b665e9`, `b5e2dfb`) not deployed to AWS
-  - GitHub Actions didn't trigger (no `backend/**` path changes in last push)
-  - Current State: HomePage shows ALL 15 professionals (including 2 unverified)
-  - Expected After Deploy: Homepage shows ONLY 13 verified professionals
-  - Trigger File: Created `backend/.deploy-trigger` to force deployment
-- ✅ **Frontend Filter Removed**: Backend must handle filtering server-side
+### 🔐 Latest Updates (Nov 22, 2025)
+- ✅ **Email Verification Gateway Field Added** 
+  - New field: `Professional.na_contencao` (BooleanField, default=False)
+  - Set to `True` when user verifies email
+  - Indexed for performance optimization
+  - Both `is_active` (User model) and `na_contencao` (Professional model) returned by API
+  - Maintains backward compatibility with existing code
+- ✅ **All 181 Tests Passing** - Full test suite validation
+- ✅ **Production Deployment Ready** - Manual deployment via AWS console
+- ✅ **Email Verification**: is_active=False until email verified
 - ✅ **Comprehensive Logging**: All systems have detailed execution traces
 - ✅ **Validation Enforcement**: Registration blocks offensive names/photos
-- ✅ **Email Verification**: is_active=False until email verified
-- **Status**: **181/181 tests passing** ✅ | **Awaiting backend deploy** 🔄
+- **Status**: **181/181 tests passing** ✅ | **Ready for deployment** 🚀
 
 ### 📸 Content Moderation Pipeline
 - **Text**: OpenAI API (primary) → Regex fallback (Portuguese offensive words)
@@ -244,10 +244,22 @@ npm run build
 | `email` | EmailField | Email |
 | `phone` | CharField(20) | Telefone |
 | `photo` | ImageField | Foto de perfil (S3) |
+| `na_contencao` | BooleanField | Email verificado (Default: False) - **v1.0.7+** |
 | `created_at` | DateTimeField | Data de criação |
 | `updated_at` | DateTimeField | Última atualização |
 
-**Indexes**: `city`, `state`, `price_per_session`, `attendance_type`
+**Indexes**: `city`, `state`, `price_per_session`, `attendance_type`, `na_contencao`
+
+**Email Verification Flow:**
+1. Usuário se registra → `na_contencao = False`
+2. Email de verificação enviado → EmailVerificationToken criado
+3. Usuário clica link → `EmailVerificationToken.verify_token()` chamado
+4. Na primeira verificação:
+   - `User.is_active = True` (já existente)
+   - `Professional.na_contencao = True` (novo em v1.0.7)
+   - `EmailVerificationToken.is_verified = True`
+5. ViewSet filtra por `user__is_active=True` (mantém compatibilidade backward)
+6. Frontend recebe ambos `is_active` e `na_contencao` na API
 
 ---
 

@@ -203,7 +203,8 @@ class ProfessionalSummarySerializer(serializers.ModelSerializer):
     """
     Lightweight serializer for list views
     Only includes essential fields for cards
-    Includes is_active status for frontend verification (double-check)
+    Includes is_active from user model (email verification status)
+    Includes na_contencao status (email verified = active professional)
     """
     photo_url = serializers.SerializerMethodField()
     is_active = serializers.SerializerMethodField()
@@ -220,6 +221,7 @@ class ProfessionalSummarySerializer(serializers.ModelSerializer):
             'attendance_type',
             'photo_url',
             'is_active',
+            'na_contencao',
         ]
     
     def get_photo_url(self, obj):
@@ -227,13 +229,8 @@ class ProfessionalSummarySerializer(serializers.ModelSerializer):
         return obj.photo_url
     
     def get_is_active(self, obj):
-        """
-        Get user's is_active status for frontend verification.
-        Returns True if user exists and has verified email, False otherwise.
-        ✅ VERIFIED: Deployment working correctly (2025-11-22)
-        """
-        is_active_value = obj.user.is_active if obj.user else False
-        return is_active_value
+        """Get is_active from related user model"""
+        return obj.user.is_active
 
 
 class ProfessionalCreateSerializer(serializers.ModelSerializer):

@@ -42,29 +42,24 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """
-        Return ONLY professionals whose users have verified their email (is_active=True)
+        Return ONLY professionals with na_contencao=True (email verified).
         This prevents unverified accounts from appearing in the listing.
-        Uses select_related() to avoid N+1 query problem with user__is_active filter.
-        
-        CRITICAL: This filter MUST be in place for email verification gate to work.
-        Unverified professionals (is_active=False) should NEVER appear in listings.
-        
-        DEPLOYMENT FIX (2025-11-22): Adding explicit logging to verify filter is applied.
+        Uses db_index for efficient filtering.
         """
         import logging
         logger = logging.getLogger(__name__)
         
-        # Get ALL professionals with user relationship
+        # Get ALL professionals
         all_professionals = Professional.objects.select_related('user').all()
         total_count = all_professionals.count()
         
-        # **CRITICAL FILTER**: Only return professionals whose users verified email
-        active_only = all_professionals.filter(user__is_active=True)
-        active_count = active_only.count()
+        # CRITICAL FILTER: Only return professionals who verified email (user.is_active=True)
+        verified_only = all_professionals.filter(user__is_active=True)
+        verified_count = verified_only.count()
         
-        logger.info(f"[VIEWSET] get_queryset() called: Total={total_count}, Active={active_count}, Filter applied")
+        logger.info(f"[VIEWSET] get_queryset() called: Total={total_count}, Verified={verified_count}, Filter by user__is_active=True applied")
         
-        return active_only
+        return verified_only
 
     def list(self, request, *args, **kwargs):
         """

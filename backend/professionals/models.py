@@ -90,6 +90,9 @@ class Professional(models.Model):
     email = models.EmailField()
     phone = models.CharField(max_length=20, blank=True, validators=[validate_phone_number])
     
+    # Email verification status (true = verified, false = pending)
+    na_contencao = models.BooleanField(default=False, db_index=True, help_text="Professional has verified email and is active")
+    
     # Profile photo
     photo = models.ImageField(
         upload_to='photos/',
@@ -219,6 +222,15 @@ class EmailVerificationToken(models.Model):
                 email_token.user.is_active = True
                 email_token.user.save()
                 logger.info(f'[EmailVerificationToken.verify_token] ✅ User marked as active')
+                
+                # Mark Professional as verified (na_contencao=True) if professional exists
+                try:
+                    professional = email_token.user.professional
+                    professional.na_contencao = True
+                    professional.save()
+                    logger.info(f'[EmailVerificationToken.verify_token] ✅ Professional marked as na_contencao=True')
+                except Professional.DoesNotExist:
+                    logger.warning(f'[EmailVerificationToken.verify_token] ⚠️ No Professional found for user {email_token.user.email}')
             
             # Reload fresh from DB
             email_token.refresh_from_db()
