@@ -225,8 +225,13 @@ class ProfessionalSummarySerializer(serializers.ModelSerializer):
         return obj.photo_url
     
     def get_is_active(self, obj):
-        """Get user's is_active status for frontend verification"""
-        return obj.user.is_active if obj.user else False
+        """
+        Get user's is_active status for frontend verification.
+        Returns True if user exists and has verified email, False otherwise.
+        DEPLOYMENT FIX (2025-11-22): Ensure this field is always present in API response.
+        """
+        is_active_value = obj.user.is_active if obj.user else False
+        return is_active_value
 
 
 class ProfessionalCreateSerializer(serializers.ModelSerializer):

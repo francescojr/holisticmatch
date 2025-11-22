@@ -31,6 +31,8 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
     """
     ViewSet for Professional model
     Provides full CRUD operations with proper permissions
+    
+    CRITICAL: Email verification gate - only verified professionals appear in listings
     """
     queryset = Professional.objects.all()
     serializer_class = ProfessionalSerializer
@@ -46,14 +48,39 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
         
         CRITICAL: This filter MUST be in place for email verification gate to work.
         Unverified professionals (is_active=False) should NEVER appear in listings.
+        
+        DEPLOYMENT FIX (2025-11-22): Adding explicit logging to verify filter is applied.
         """
+        import logging
+        logger = logging.getLogger(__name__)
+        
         # Get ALL professionals with user relationship
         all_professionals = Professional.objects.select_related('user').all()
+        total_count = all_professionals.count()
         
         # **CRITICAL FILTER**: Only return professionals whose users verified email
         active_only = all_professionals.filter(user__is_active=True)
+        active_count = active_only.count()
+        
+        logger.info(f"[VIEWSET] get_queryset() called: Total={total_count}, Active={active_count}, Filter applied")
         
         return active_only
+
+    def list(self, request, *args, **kwargs):
+        """
+        Override list to explicitly apply filter before pagination.
+        GET /api/professionals/
+        Returns ONLY verified professionals (is_active=True)
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        # Explicitly call get_queryset() to ensure filter is applied
+        queryset = self.get_queryset()
+        logger.info(f"[LIST_ACTION] Queryset count: {queryset.count()}")
+        
+        # Call parent list which will handle pagination and serialization
+        return super().list(request, *args, **kwargs)
 
     def get_serializer_class(self):
         """Use summary serializer for list view"""
