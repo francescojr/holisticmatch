@@ -19,30 +19,31 @@
 ✅ **API**: Full CRUD endpoints with filtering, pagination & content moderation  
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
-### 🔐 Latest Updates (Nov 22, 2025 - 18:00 UTC)
+### 🔐 Latest Updates (Nov 22, 2025 - 20:00 UTC)
 
-#### 🎉 v1.0.8 - Auto-Login After Email Verification (NEW!)
-- **Streamlined Onboarding**: Users now automatically login after email verification
-- **One-Click Flow**: Verify email → Dashboard (no manual login needed!)
-- **JWT Tokens**: Auto-generated upon successful email verification
-- **Better UX**: Eliminates password re-entry friction
+#### 🎉 v1.1.0 - Professional Verification Gate (JUST DEPLOYED!)
+- **Listing Now Filters by Verification**: Only verified professionals (`na_contencao=true`) appear in `/api/v1/professionals/`
+- **Unverified Hidden**: New registrations don't appear publicly until email is verified
+- **Cleaner Marketplace**: Eliminates test/incomplete profiles from public view
+- **Incentivizes Verification**: Users must verify email to appear in listings
 
-#### ✅ Technical Improvements
-- **`na_contencao` Field Fixed**: Now always returns boolean (never `undefined`)
-- **New Endpoint**: `GET /api/v1/professionals/verified/` - Returns only verified professionals
-- **Independent Filtering**: `na_contencao` field no longer depends on `user.is_active`
-- **Frontend Updated**: Auto-saves JWT tokens and redirects to dashboard
+#### ✅ v1.0.9 - Production Field Values Fixed
+- **`na_contencao` & `is_active` now return proper booleans** (not `undefined`)
+- **Database migrations applied**: Field persisted correctly
 - **All 181 Tests Passing** ✅
 
-#### 📊 Email Verification Flow (v1.0.8)
+#### 📊 Listing Behavior (v1.1.0+)
 ```
-1. User registers → Email sent with verification link
-2. User clicks link → Backend verifies token + generates JWT
-3. Frontend saves tokens → Auto-login complete
-4. Redirect to dashboard (user already authenticated) ✅
+Professional Registration Flow:
+1. Register → Created with na_contencao=false (unverified)
+2. Email received → Link sent with verification token
+3. Click verification link → na_contencao=true + auto-login ✅
+4. Dashboard visible → Can edit profile
+5. Public listing → NOW APPEARS in /api/v1/professionals/ ✅
 ```
 
-**No more manual login after verification!** 🚀
+**Old Behavior (v1.0.9):** All professionals showed in listings regardless of verification status  
+**New Behavior (v1.1.0):** Only verified professionals in public listings ✅
 
 ### 📸 Content Moderation Pipeline
 - **Text**: OpenAI API (primary) → Regex fallback (Portuguese offensive words)
@@ -170,8 +171,8 @@ sudo systemctl restart gunicorn
   - Botões de contato: WhatsApp, Email, Telefone
 
 - **Backend API** ✅
-  - `GET /api/v1/professionals/` - Listagem completa (todos profissionais)
-  - `GET /api/v1/professionals/verified/` - **Recomendado**: Apenas verificados (na_contencao=True) ⭐
+  - `GET /api/v1/professionals/` - **Apenas verificados** (na_contencao=true) - v1.1.0+
+  - `GET /api/v1/professionals/verified/` - Alias antigo (redundante, mesma filtragem)
   - `GET /api/v1/professionals/{id}/` - Detalhes de um profissional
   - `GET /api/v1/professionals/service_types/` - Tipos de serviço disponíveis
   - `POST /api/v1/professionals/verify-email/` - Verificação de email com auto-login (v1.0.8)

@@ -82,19 +82,32 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """
-        Override list to explicitly apply filter before pagination.
+        Override list to explicitly filter by na_contencao=True before pagination.
         GET /api/professionals/
-        Returns ONLY verified professionals (is_active=True)
+        Returns ONLY verified professionals (na_contencao=True)
+        
+        This endpoint is the primary listing endpoint used by frontend.
+        Only professionals who have verified their email should appear here.
         """
         import logging
         logger = logging.getLogger(__name__)
         
-        # Explicitly call get_queryset() to ensure filter is applied
-        queryset = self.get_queryset()
-        logger.info(f"[LIST_ACTION] Queryset count: {queryset.count()}")
+        # Get base queryset and filter by verified status
+        queryset = self.get_queryset().filter(na_contencao=True)
         
-        # Call parent list which will handle pagination and serialization
-        return super().list(request, *args, **kwargs)
+        # Apply other DRF filters (service, city, price, etc.) AFTER the na_contencao filter
+        queryset = self.filter_queryset(queryset)
+        
+        logger.info(f"[LIST_ACTION] Returning {queryset.count()} verified professionals (na_contencao=True)")
+        
+        # Manually handle pagination and serialization
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def get_serializer_class(self):
         """Use summary serializer for list view"""

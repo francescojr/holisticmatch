@@ -21,6 +21,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2025-11-22
+
+### ✨ Feature: Professional Verification Gate - Only Verified Professionals Appear in Listings
+
+**Status:** ✅ PRODUCTION LIVE  
+**Deploy Date:** Nov 22, 2025 19:45 UTC
+
+**What Changed:** 
+Implemented proper filtering in `/api/v1/professionals/` endpoint. Now ONLY professionals who have verified their email (`na_contencao=true`) appear in the main listing. Unverified professionals are hidden from public view until they complete email verification.
+
+### Added
+
+- **Verification Gate on Main Listing:**
+  - GET `/api/v1/professionals/` now filters by `na_contencao=true` BEFORE returning results
+  - Unverified professionals completely hidden from public listings
+  - Applied to all filters (service, city, price, attendance_type work on verified-only set)
+
+### Fixed
+
+- **Bug: Unverified professionals appearing in listings**
+  - Previous Issue: `list()` method in `ProfessionalViewSet` returned ALL professionals
+  - Fix Applied: Added `.filter(na_contencao=True)` before pagination in `list()` method
+  - Verified: All 12 returned professionals now have `na_contencao=true`
+  - Unverified professionals (Shaktar Ruski, new registrations) correctly hidden
+
+### Technical Details
+
+**Files Modified:**
+- `backend/professionals/views.py` - Updated `ProfessionalViewSet.list()` method
+
+**Code Change:**
+```python
+# Before (v1.0.9): Returned ALL professionals
+def list(self):
+    queryset = self.get_queryset()  # Returns .all()
+    return super().list(...)        # No filter applied
+
+# After (v1.1.0): Filters by verification status
+def list(self):
+    queryset = self.get_queryset().filter(na_contencao=True)  # Only verified
+    queryset = self.filter_queryset(queryset)                  # Apply other filters
+    # Manual pagination + serialization
+```
+
+**Database Query Impact:**
+- Before: `SELECT * FROM professionals_professional LIMIT 12` → 12 results (unverified included)
+- After: `SELECT * FROM professionals_professional WHERE na_contencao=true LIMIT 12` → 12 results (only verified)
+
+### Testing Results
+
+```bash
+# Test 1: Count of professionals returned
+GET /api/v1/professionals/
+- Total in DB: 14 (12 verified + 2 unverified)
+- Returned: 12 (only verified) ✅
+
+# Test 2: Verify all results are verified
+- All 12 results have na_contencao=true ✅
+- Zero results with na_contencao=false ✅
+
+# Test 3: New registration flow
+1. User registers → Created with na_contencao=false
+2. API /professionals/ endpoint → Not returned ✅
+3. User verifies email → na_contencao=true set
+4. API /professionals/ endpoint → Appears immediately ✅
+```
+
+### User Journey Impact
+
+**Positive:**
+1. ✅ Cleaner marketplace - only verified professionals shown
+2. ✅ New users see professional list without test/incomplete profiles
+3. ✅ Incentivizes email verification (requirement to appear publicly)
+4. ✅ Reduces confusion from incomplete profiles
+
+**Implementation:**
+- Unverified professionals can still login to dashboard (if authenticated)
+- Unverified professionals CAN access their own profile via `/professionals/{id}/`
+- Only PUBLIC listing (`/professionals/` without ID) filters unverified users
+- Alternative `/verified/` endpoint now redundant (same logic)
+
+### Breaking Changes
+
+None - This is a bug fix that improves existing behavior. Any API consumers expecting unverified professionals in the listing will see fewer results (which is correct behavior).
+
+---
+
 ## [1.0.9] - 2025-11-22
 
 ### 🔧 Maintenance: Production Deployment Complete - Fields Fixed ✅
