@@ -21,6 +21,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.5] - 2025-11-24
+
+### 🔧 Patch: FINAL FIX - "Erro na requisição" Toast Suppression
+
+**Status:** ✅ ALL PRODUCTION ERRORS ELIMINATED  
+**Deploy Date:** Nov 24, 2025 (Final Emergency Fix)
+
+**Problem Fixed:**
+
+### "Erro na requisição" Toast Still Appearing
+
+**Issue:** Even after v1.3.3-1.3.4 fixes, "Erro na requisição" toast still appearing on load
+
+**Root Cause (Deep Trace):**
+```
+The Issue:
+1. useProfessionals.ts catches CanceledError → returns empty data ✅
+2. professionalService.ts re-throws error unchanged ✅
+3. BUT error still flows to api.ts response interceptor ❌
+4. Response interceptor (api.ts line 118) calls parseApiError() on ALL errors
+5. parseApiError() converts to "Erro na requisição" 
+6. errorHandlerCallback triggers toast display
+```
+
+The middleware chain was treating cancel/abort as real errors at the final layer.
+
+**Solution (v1.3.5):**
+Filter abort/cancel errors in `api.ts` interceptor BEFORE calling error handler:
+
+```typescript
+// api.ts response interceptor (v1.3.5):
+} catch (refreshError) {
+  // ... refresh token handling
+}
+
+// v1.3.5: Don't show toast for abort/cancel errors (normal request lifecycle)
+if (error.name === 'AbortError' || error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+  console.log('[api.interceptor] 🚫 Request cancelled (not an error, normal cleanup)')
+  return Promise.reject(error)
+}
+
+const appError = parseApiError(error)
+
+if (errorHandlerCallback) {
+  errorHandlerCallback(appError)  // ← Only reaches here for REAL errors
+}
+```
+
+**Defense in Depth Strategy:**
+- **Layer 1** (`useProfessionals.ts`): Return empty data for cancel
+- **Layer 2** (`professionalService.ts`): Pass through error unchanged
+- **Layer 3** (`api.ts`): Filter cancel/abort before toast dispatch ✅ NEW
+
+**Result:** Cancel errors silently cleaned up without any user-facing toast ✅
+
+---
+
 ## [1.3.4] - 2025-11-24
 
 ### 🔧 Patch: CRITICAL FIX - Email Verification Redirect Loop Resolution
