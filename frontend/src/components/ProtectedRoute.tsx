@@ -1,5 +1,7 @@
 /**
  * Protected Route Component
+ * v1.3.13: Simplified to prevent re-render spam
+ * 
  * Redirects unauthenticated users to login page
  * Shows loading state while checking authentication
  */
@@ -14,8 +16,7 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth()
 
-  console.log('[ProtectedRoute] 🔐 Auth state:', { isAuthenticated, isLoading })
-
+  // v1.3.13: Simplified logging - reduced console spam
   // Show loading skeleton while checking authentication
   if (isLoading) {
     console.log('[ProtectedRoute] ⏳ Auth still loading, showing skeleton...')

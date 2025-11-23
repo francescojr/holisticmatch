@@ -23,24 +23,16 @@ function HomePage() {
   const [filters, setFilters] = useState<ProfessionalFilters>({})
   const [heroImage, setHeroImage] = useState<string>(hero01) // Default to first image
   
-  // v1.3.6: Add protection to prevent redirect race condition
-  const redirectedRef = useRef(false)
+  // v1.3.13: REMOVED redirect ref and useEffect
+  // HomePage is now a PUBLIC page that both authenticated and non-authenticated users can access
+  // Authenticated users can navigate to dashboard via navbar link
+  // This prevents the redirect loop that was causing user to get trapped on dashboard
   
   const { scrollY } = useScroll()
   const y = useTransform(scrollY, [0, 500], [0, -150]) // Parallax effect
   
   const { data: professionalsData, isLoading, error, isPending } = useProfessionals(filters)
   const { containerRef, isContainerVisible } = useSequentialAnimation<HTMLDivElement>()
-
-  // v1.3.6: Redirect authenticated users to dashboard
-  // Use ref to ensure redirect happens ONCE even with strict mode / re-mounts
-  useEffect(() => {
-    if (!authLoading && isAuthenticated && !redirectedRef.current) {
-      console.log('[HomePage] v1.3.6 ⚠️ Authenticated user on homepage - redirecting to dashboard (once)')
-      redirectedRef.current = true
-      navigate('/dashboard', { replace: true })
-    }
-  }, [isAuthenticated, authLoading, navigate])
 
   console.log('[HomePage] 📊 Current state:');
   console.log('[HomePage] - isPending:', isPending, '| isLoading:', isLoading);

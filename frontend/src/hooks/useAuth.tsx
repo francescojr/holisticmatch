@@ -12,15 +12,7 @@ interface AuthContextType {
   isLoading: boolean
   login: (credentials: LoginRequest) => Promise<void>
   register: (data: RegisterRequest) => Promise<void>
-  logout: () => Promise<void>
-}
-
-interface AuthContextType {
-  user: User | null
-  isAuthenticated: boolean
-  isLoading: boolean
-  login: (credentials: LoginRequest) => Promise<void>
-  register: (data: RegisterRequest) => Promise<void>
+  // v1.3.13: logout now properly clears isLoading state
   logout: () => Promise<void>
   // v1.3.12: Force re-check authentication (called after email verification)
   recheckAuth: () => Promise<void>
@@ -135,36 +127,69 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // So we don't set user state here
   }
 
+  // v1.3.13: CRITICAL FIX - logout must set isLoading=false
+  // Previously: logout was async but never called setIsLoading(false)
+  // This caused loading spinner to never disappear after logout
   const logout = async () => {
-    await authService.logout()
-    setUser(null)
+    console.log('[useAuth] v1.3.13 🚪 Logout called - clearing auth state')
+    try {
+      await authService.logout()
+    } catch (error) {
+      console.error('[useAuth] v1.3.13 Error calling authService.logout():', error)
+    } finally {
+      // v1.3.13: ALWAYS clear state, even if logout API call fails
+      localStorage.removeItem('access_token')
+      localStorage.removeItem('refresh_token')
+      localStorage.removeItem('user')
+      localStorage.removeItem('professional_id')
+      setUser(null)
+      setIsLoading(false)  // ← CRITICAL: Must be false so loading spinner disappears
+      console.log('[useAuth] v1.3.13 ✅ Logout complete - user state cleared, isLoading=false')
+    }
   }
 
   // v1.3.12: Force re-check authentication
   // Called by EmailVerificationPage after saving tokens
   // This ensures AuthContext is updated immediately after email verification
+  // v1.3.13: Enhanced error handling with proper try/catch/finally
   const recheckAuth = async () => {
     console.log('[useAuth] v1.3.12 🔄 recheckAuth() called by EmailVerificationPage')
     setIsLoading(true)
     try {
       if (authService.isAuthenticated()) {
         console.log('[useAuth] v1.3.12 ✅ Tokens found, fetching user profile...')
-        const userProfile = await authService.getCurrentUser()
-        if (userProfile) {
-          const professionalId = localStorage.getItem('professional_id')
-          const fullUser = {
-            ...userProfile,
-            professional_id: userProfile.professional_id || (professionalId ? parseInt(professionalId) : undefined),
+        try {
+          const userProfile = await authService.getCurrentUser()
+          if (userProfile) {
+            const professionalId = localStorage.getItem('professional_id')
+            const fullUser = {
+              ...userProfile,
+              professional_id: userProfile.professional_id || (professionalId ? parseInt(professionalId) : undefined),
+            }
+            console.log('[useAuth] v1.3.12 ✅ User authenticated and loaded:', fullUser.email)
+            setUser(fullUser)
           }
-          console.log('[useAuth] v1.3.12 ✅ User authenticated and loaded:', fullUser.email)
-          setUser(fullUser)
+        } catch (apiError) {
+          // v1.3.13: If API fails but tokens exist, still set minimal user
+          console.log('[useAuth] v1.3.13 ⚠️ API error but tokens exist - setting minimal user')
+          const professionalId = localStorage.getItem('professional_id')
+          setUser({
+            id: 0,
+            email: '',
+            professional_id: professionalId ? parseInt(professionalId) : undefined,
+          })
         }
+      } else {
+        console.log('[useAuth] v1.3.12 ❌ No tokens found - user not authenticated')
+        setUser(null)
       }
     } catch (error) {
-      console.log('[useAuth] v1.3.12 ⚠️ Error during recheckAuth:', error)
+      console.error('[useAuth] v1.3.13 Unexpected error in recheckAuth:', error)
+      setUser(null)
     } finally {
-      console.log('[useAuth] v1.3.12 🏁 recheckAuth() complete')
+      // v1.3.13: ALWAYS set isLoading to false
       setIsLoading(false)
+      console.log('[useAuth] v1.3.13 🏁 recheckAuth() complete, isLoading=false')
     }
   }
 
