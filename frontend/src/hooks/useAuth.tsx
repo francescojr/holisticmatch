@@ -24,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Check if user is authenticated on mount
     const checkAuth = async () => {
+      console.log('[useAuth] 🔄 checkAuth() starting...')
       try {
         
         if (authService.isAuthenticated()) {
@@ -42,16 +43,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               professional_id: userProfile.professional_id || (professionalId ? parseInt(professionalId) : undefined),
             }
             
+            console.log('[useAuth] ✅ Setting user with API data:', fullUser)
             setUser(fullUser)
           } else {
             // If API endpoint doesn't exist, user is still authenticated but we'll use minimal data
             console.log('[useAuth] v1.3.7 ⚠️ API returned null, using minimal user data (tokens are valid)')
             const professionalId = localStorage.getItem('professional_id')
-            setUser({ 
+            const minimalUser = { 
               id: 0, 
               email: '',
               professional_id: professionalId ? parseInt(professionalId) : undefined,
-            })
+            }
+            console.log('[useAuth] ✅ Setting user with minimal data:', minimalUser)
+            setUser(minimalUser)
           }
         } else {
           console.log('[useAuth] v1.3.7 ℹ️ No tokens in localStorage - user not authenticated')
@@ -59,18 +63,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error: any) {
         // v1.3.7: On error (e.g., 401), STILL set user if tokens exist
         // This prevents ProtectedRoute from redirecting authenticated users during token refresh
+        console.log('[useAuth] ❌ Error during auth check:', error.message)
         if (authService.isAuthenticated()) {
           console.log('[useAuth] v1.3.7 ⚠️ API error but tokens present - using minimal user data (will refresh on next request)')
           const professionalId = localStorage.getItem('professional_id')
-          setUser({ 
+          const minimalUser = { 
             id: 0, 
             email: '',
             professional_id: professionalId ? parseInt(professionalId) : undefined,
-          })
+          }
+          console.log('[useAuth] ✅ Setting user despite error:', minimalUser)
+          setUser(minimalUser)
         } else {
           console.log('[useAuth] v1.3.7 ❌ API error AND no tokens - user not authenticated')
         }
       } finally {
+        console.log('[useAuth] 🏁 checkAuth() finished, setting isLoading=false')
         setIsLoading(false)
       }
     }

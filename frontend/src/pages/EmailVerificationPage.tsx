@@ -95,16 +95,17 @@ function EmailVerificationPage() {
         message: 'Redirecionando para seu dashboard...'
       })
       
-      // v1.3.10: Redirect to HomePage instead of /dashboard directly
-      // HomePage will detect authenticated user and redirect to dashboard
-      // This avoids race condition with ProtectedRoute component
-      console.log('[EmailVerification] v1.3.10 ⏳ Tokens saved, redirecting to HomePage...')
+      // v1.3.11: Redirect DIRECTLY to /dashboard (not via HomePage)
+      // Reason: ProtectedRoute will check tokens, which are now in localStorage
+      // AuthProvider will have time to initialize while ProtectedRoute validates
+      console.log('[EmailVerification] v1.3.11 ✅ Tokens saved in localStorage')
+      console.log('[EmailVerification] v1.3.11   - access_token:', result.access.substring(0, 20) + '...')
+      console.log('[EmailVerification] v1.3.11   - refresh_token:', result.refresh.substring(0, 20) + '...')
+      console.log('[EmailVerification] v1.3.11   - professional_id:', result.user?.professional?.id)
       
-      // Give AuthProvider 100ms to pick up tokens
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      console.log('[EmailVerification] v1.3.10 🚀 Redirecting to / (HomePage will redirect to dashboard)')
-      navigate('/', { replace: true })
+      // Navigate immediately - ProtectedRoute will handle auth check
+      console.log('[EmailVerification] v1.3.11 🚀 Redirecting to /dashboard')
+      navigate('/dashboard', { replace: true })
     } catch (error: any) {
       const errorMsg = 
         error.response?.data?.message ||
