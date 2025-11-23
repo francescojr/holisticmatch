@@ -95,9 +95,14 @@ function EmailVerificationPage() {
         message: 'Redirecionando para seu dashboard...'
       })
       
+      // v1.3.9: Give AuthProvider time to pick up new tokens and finish loading
+      // This prevents race condition where ProtectedRoute checks before auth is fully initialized
+      console.log('[EmailVerification] v1.3.9 ⏳ Tokens saved, waiting for AuthProvider to sync...')
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
       // v1.3.2: Redirect immediately and bypass any pending redirects
       // Use replace: true to prevent back button from returning to verify page
-      console.log('[EmailVerification] 🚀 Redirecting to dashboard immediately (auto-login active)')
+      console.log('[EmailVerification] v1.3.9 🚀 Redirecting to dashboard (AuthProvider should be ready)')
       navigate('/dashboard', { replace: true })
     } catch (error: any) {
       const errorMsg = 

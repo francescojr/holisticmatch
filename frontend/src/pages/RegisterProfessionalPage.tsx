@@ -189,9 +189,21 @@ function RegisterProfessionalPage() {
     }
 
     // Validate password confirmation
+    console.log('[RegisterPage.validateStep1Form] Password comparison:', {
+      password: step1Data.password,
+      passwordConfirm: step1Data.passwordConfirm,
+      match: step1Data.password === step1Data.passwordConfirm
+    })
+    
     if (step1Data.password !== step1Data.passwordConfirm) {
+      console.log('[RegisterPage.validateStep1Form] ❌ Passwords do NOT match!', {
+        pass: step1Data.password,
+        confirm: step1Data.passwordConfirm
+      })
       toast.error('Erro de validação', { message: 'As senhas não conferem' })
       isFormValid = false
+    } else {
+      console.log('[RegisterPage.validateStep1Form] ✅ Passwords match!')
     }
 
     // Validate photo
