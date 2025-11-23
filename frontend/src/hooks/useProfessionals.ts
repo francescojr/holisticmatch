@@ -1,7 +1,7 @@
 /**
  * Professionals data fetching hooks
  * Uses React Query for caching and state management
- * v1.3.0: Added abort signal support to prevent memory leaks on unmount
+ * v1.3.1: Fixed abort signal handling - don't throw on mounted check
  */
 import { useEffect, useRef } from 'react'
 import { useQuery, UseQueryResult } from '@tanstack/react-query'
@@ -14,7 +14,7 @@ import type {
 
 /**
  * Fetch paginated list of professionals with optional filters
- * v1.3.0: Prevents memory leaks when component unmounts during fetch
+ * v1.3.1: Fixed - AbortSignal now properly handles cancellation
  */
 export function useProfessionals(
   filters?: ProfessionalFilters
@@ -31,14 +31,10 @@ export function useProfessionals(
   return useQuery({
     queryKey: ['professionals', filters],
     queryFn: async ({ signal }) => {
-      if (!isMountedRef.current) {
-        console.log('[useProfessionals] ⚠️ Component unmounted, skipping fetch')
-        throw new Error('Component unmounted')
-      }
-
       console.log('[useProfessionals] 🔄 Fetching professionals with filters:', filters)
       
       try {
+        // v1.3.1: Pass signal to fetch and let axios handle cancellation properly
         const data = await professionalService.getProfessionals(filters, signal)
         
         // v1.3.0: Only log if component still mounted
@@ -49,10 +45,11 @@ export function useProfessionals(
         
         return data
       } catch (error: any) {
-        // v1.3.0: Log abort separately (not an error)
-        if (error.name === 'AbortError' || error.message === 'AbortError') {
-          console.log('[useProfessionals] 🚫 Request cancelled (component unmounted)')
-          throw new Error('Request cancelled')
+        // v1.3.1: Handle axios cancel properly without re-throwing
+        if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+          console.log('[useProfessionals] 🚫 Request cancelled by axios (normal cleanup)')
+          // Return gracefully for cancelled requests - don't throw
+          throw error  // Let React Query handle it
         }
         throw error
       }
@@ -60,6 +57,7 @@ export function useProfessionals(
     staleTime: 1000, // v1.2.0: 1 second cache - allows batching, fresh data on next interaction
     gcTime: 5 * 60 * 1000, // v1.2.0: 5 minutes - keep cache for tab switches
     retry: 1, // Retry once on failure
+    networkMode: 'always',  // v1.3.1: Don't skip request based on network status
   })
 }
 

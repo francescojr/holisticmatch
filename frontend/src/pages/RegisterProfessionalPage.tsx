@@ -704,10 +704,10 @@ function RegisterProfessionalPage() {
                 <h4 className="font-medium text-gray-700 mb-4">Selecionar Serviço:</h4>
 
                 <div className="space-y-4">
-                  {/* Service Type Dropdown */}
+                  {/* Service Type Dropdown - v1.3.1: Added feedback for empty services */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Tipo de Serviço
+                      Tipo de Serviço <span className="text-red-500">*</span>
                     </label>
                     <select
                       onChange={(e) => {
@@ -716,7 +716,9 @@ function RegisterProfessionalPage() {
                           e.target.value = ''
                         }
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${
+                        step2Data.services.length === 0 ? 'border-yellow-400' : 'border-gray-300'
+                      }`}
                     >
                       <option value="">Selecione um serviço para adicionar</option>
                       {availableServices
@@ -727,24 +729,38 @@ function RegisterProfessionalPage() {
                           </option>
                         ))}
                     </select>
+                    {step2Data.services.length === 0 && (
+                      <p className="text-xs text-yellow-700 mt-2 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">info</span>
+                        Selecione pelo menos um serviço
+                      </p>
+                    )}
                   </div>
 
-                  {/* Price Base Input - "a partir de" */}
-                  <FormInput
-                    label="Preço Base (a partir de)"
-                    type="number"
-                    value={step2Data.pricePerSession || ''}
-                    onChange={(value) => handleStep2PriceChange(value)}
-                    placeholder="Ex: 150.00"
-                    min="0"
-                    step="0.01"
-                    required
-                  />
+                  {/* Price Base Input - v1.3.1: Added feedback for empty price */}
+                  <div>
+                    <FormInput
+                      label="Preço Base (a partir de)"
+                      type="number"
+                      value={step2Data.pricePerSession || ''}
+                      onChange={(value) => handleStep2PriceChange(value)}
+                      placeholder="Ex: 150.00"
+                      min="0"
+                      step="0.01"
+                      required
+                    />
+                    {step2Data.pricePerSession === 0 && (
+                      <p className="text-xs text-yellow-700 mt-2 flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">info</span>
+                        Insira um preço válido (maior que 0)
+                      </p>
+                    )}
+                  </div>
 
                   {/* Attendance Type Selection */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Como você atende? *
+                      Como você atende? <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={step2Data.attendanceType}
@@ -789,7 +805,7 @@ function RegisterProfessionalPage() {
                         >
                           Termos e Condições
                         </a>
-                        {' '}do HolisticMatch *
+                        {' '}do HolisticMatch <span className="text-red-500">*</span>
                       </label>
                       {!step2Data.acceptTerms && (
                         <p className="text-xs text-yellow-700 mt-1 flex items-center gap-1">
@@ -817,6 +833,19 @@ function RegisterProfessionalPage() {
                 <motion.button
                   type="button"
                   onClick={() => {
+                    // v1.3.1: Detailed validation with feedback
+                    if (step2Data.services.length === 0) {
+                      toast.error('Selecione um serviço', {
+                        message: 'Você precisa selecionar pelo menos um serviço'
+                      })
+                      return
+                    }
+                    if (step2Data.pricePerSession === 0) {
+                      toast.error('Insira um preço', {
+                        message: 'O preço deve ser maior que 0'
+                      })
+                      return
+                    }
                     if (!step2Data.acceptTerms) {
                       toast.error('Aceite os Termos e Condições', {
                         message: 'Você precisa aceitar os termos para continuar'
@@ -825,12 +854,12 @@ function RegisterProfessionalPage() {
                     }
                     handleStep2Submit(new Event('submit') as any)
                   }}
-                  disabled={loading || !step2Data.acceptTerms}
-                  whileHover={!step2Data.acceptTerms ? {} : { scale: 1.02 }}
-                  whileTap={!step2Data.acceptTerms ? {} : { scale: 0.98 }}
+                  disabled={loading || step2Data.services.length === 0 || step2Data.pricePerSession === 0 || !step2Data.acceptTerms}
+                  whileHover={loading || step2Data.services.length === 0 || step2Data.pricePerSession === 0 || !step2Data.acceptTerms ? {} : { scale: 1.02 }}
+                  whileTap={loading || step2Data.services.length === 0 || step2Data.pricePerSession === 0 || !step2Data.acceptTerms ? {} : { scale: 0.98 }}
                   className={`
                     flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-200
-                    ${loading || !step2Data.acceptTerms
+                    ${loading || step2Data.services.length === 0 || step2Data.pricePerSession === 0 || !step2Data.acceptTerms
                       ? 'bg-gray-400 cursor-not-allowed'
                       : 'bg-primary hover:bg-primary/90 text-white shadow-lg hover:shadow-xl'
                     }
@@ -841,13 +870,17 @@ function RegisterProfessionalPage() {
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                       Cadastrando...
                     </div>
-                  ) : !step2Data.acceptTerms ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <span className="material-symbols-outlined text-sm">info</span>
-                      Aceite os termos para continuar
-                    </div>
                   ) : (
-                    'Finalizar Cadastro'
+                    <div className="flex items-center justify-center gap-2">
+                      {step2Data.services.length === 0 || step2Data.pricePerSession === 0 || !step2Data.acceptTerms ? (
+                        <>
+                          <span className="material-symbols-outlined text-sm">info</span>
+                          {step2Data.services.length === 0 ? 'Selecione um serviço' : step2Data.pricePerSession === 0 ? 'Insira um preço' : 'Aceite os termos'}
+                        </>
+                      ) : (
+                        'Finalizar Cadastro'
+                      )}
+                    </div>
                   )}
                 </motion.button>
               </div>

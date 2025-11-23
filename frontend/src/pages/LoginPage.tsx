@@ -8,6 +8,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
 import { pageVariants, itemVariants } from '../lib/animations'
 import { ToastContainer } from '../components/toast'
+import { authService } from '../services/authService'
 
 function LoginPage() {
   const navigate = useNavigate()
@@ -19,8 +20,15 @@ function LoginPage() {
   const [error, setError] = useState('')
   const [justVerifiedEmail, setJustVerifiedEmail] = useState('')
 
-  // Check if user just verified email
+  // v1.3.1: Check if user already authenticated (e.g., after email verification)
   useEffect(() => {
+    if (authService.isAuthenticated()) {
+      console.log('[LoginPage] 🚀 User already authenticated (tokens present) - redirecting to dashboard')
+      navigate('/dashboard', { replace: true })
+      return
+    }
+
+    // Check if user just verified email
     const verifiedEmail = localStorage.getItem('just_verified_email') || localStorage.getItem('verification_email')
     if (verifiedEmail) {
       setJustVerifiedEmail(verifiedEmail)
@@ -29,7 +37,7 @@ function LoginPage() {
         message: 'Agora você pode fazer login com sua senha'
       })
     }
-  }, []) // Empty dependency array - only run once on mount
+  }, [navigate, toast]) // Include navigate in dependency array
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
