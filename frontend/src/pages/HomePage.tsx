@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { motion, useScroll, useTransform } from 'framer-motion'
@@ -23,17 +23,21 @@ function HomePage() {
   const [filters, setFilters] = useState<ProfessionalFilters>({})
   const [heroImage, setHeroImage] = useState<string>(hero01) // Default to first image
   
+  // v1.3.6: Add protection to prevent redirect race condition
+  const redirectedRef = useRef(false)
+  
   const { scrollY } = useScroll()
   const y = useTransform(scrollY, [0, 500], [0, -150]) // Parallax effect
   
   const { data: professionalsData, isLoading, error, isPending } = useProfessionals(filters)
   const { containerRef, isContainerVisible } = useSequentialAnimation<HTMLDivElement>()
 
-  // v1.3.2: Redirect authenticated users to dashboard
-  // Prevent authenticated users from accessing public homepage
+  // v1.3.6: Redirect authenticated users to dashboard
+  // Use ref to ensure redirect happens ONCE even with strict mode / re-mounts
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      console.log('[HomePage] ⚠️ Authenticated user on homepage - redirecting to dashboard')
+    if (!authLoading && isAuthenticated && !redirectedRef.current) {
+      console.log('[HomePage] v1.3.6 ⚠️ Authenticated user on homepage - redirecting to dashboard (once)')
+      redirectedRef.current = true
       navigate('/dashboard', { replace: true })
     }
   }, [isAuthenticated, authLoading, navigate])

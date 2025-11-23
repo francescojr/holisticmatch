@@ -1,8 +1,8 @@
 /**
  * Login page for clients and professionals :)
  */
-import { useState, useEffect, useRef } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -12,7 +12,6 @@ import { authService } from '../services/authService'
 
 function LoginPage() {
   const navigate = useNavigate()
-  const location = useLocation()
   const { login } = useAuth()
   const { toast, toasts } = useToast()
   const [email, setEmail] = useState('')
@@ -20,27 +19,10 @@ function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [justVerifiedEmail, setJustVerifiedEmail] = useState('')
-  // v1.3.4: Use sessionStorage to prevent infinite redirect loop across re-mounts
-  const navigationKeyRef = useRef<string | null>(null)
 
-  // v1.3.4: Check if user already authenticated - redirect ONLY if coming from email verification
+  // v1.3.6: Check if user just verified email (for UX - pre-fill email field)
+  // NOTE: Redirect logic moved to HomePage to prevent race condition with ProtectedRoute
   useEffect(() => {
-    // Generate unique key for this page instance + session
-    const sessionKey = `loginpage_redirect_${location.key}`
-    navigationKeyRef.current = sessionKey
-    
-    // Check if we already tried to redirect in THIS session
-    const hasRedirected = sessionStorage.getItem(sessionKey)
-    if (hasRedirected) return
-    
-    if (authService.isAuthenticated()) {
-      console.log('[LoginPage] v1.3.4 🚀 User already authenticated - redirecting to dashboard (once per session)')
-      // Mark that we're redirecting to prevent re-execution
-      sessionStorage.setItem(sessionKey, 'true')
-      navigate('/dashboard', { replace: true })
-      return
-    }
-
     // Check if user just verified email
     const verifiedEmail = localStorage.getItem('just_verified_email') || localStorage.getItem('verification_email')
     if (verifiedEmail) {
@@ -50,7 +32,7 @@ function LoginPage() {
         message: 'Agora você pode fazer login com sua senha'
       })
     }
-  }, [location.key]) // Run only when location changes
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
