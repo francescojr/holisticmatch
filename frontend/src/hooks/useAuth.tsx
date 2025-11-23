@@ -27,11 +27,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         
         if (authService.isAuthenticated()) {
+          console.log('[useAuth] v1.3.7 🔍 Tokens present in localStorage - checking user profile')
           
           // Try to fetch user profile from API
           const userProfile = await authService.getCurrentUser()
           
           if (userProfile) {
+            console.log('[useAuth] v1.3.7 ✅ User profile fetched from API')
             
             // Also get professional_id from localStorage
             const professionalId = localStorage.getItem('professional_id')
@@ -43,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(fullUser)
           } else {
             // If API endpoint doesn't exist, user is still authenticated but we'll use minimal data
+            console.log('[useAuth] v1.3.7 ⚠️ API returned null, using minimal user data (tokens are valid)')
             const professionalId = localStorage.getItem('professional_id')
             setUser({ 
               id: 0, 
@@ -51,9 +54,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             })
           }
         } else {
+          console.log('[useAuth] v1.3.7 ℹ️ No tokens in localStorage - user not authenticated')
         }
       } catch (error: any) {
-        // On error, still mark as loading done
+        // v1.3.7: On error (e.g., 401), STILL set user if tokens exist
+        // This prevents ProtectedRoute from redirecting authenticated users during token refresh
+        if (authService.isAuthenticated()) {
+          console.log('[useAuth] v1.3.7 ⚠️ API error but tokens present - using minimal user data (will refresh on next request)')
+          const professionalId = localStorage.getItem('professional_id')
+          setUser({ 
+            id: 0, 
+            email: '',
+            professional_id: professionalId ? parseInt(professionalId) : undefined,
+          })
+        } else {
+          console.log('[useAuth] v1.3.7 ❌ API error AND no tokens - user not authenticated')
+        }
       } finally {
         setIsLoading(false)
       }
