@@ -45,9 +45,9 @@ export function useProfessionals(
         
         return data
       } catch (error: any) {
-        // v1.3.3: Handle axios cancel properly - return empty data instead of throwing
-        if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
-          console.log('[useProfessionals] 🚫 Request cancelled by axios (normal cleanup, not an error)')
+        // v1.3.3: Handle axios cancel + abort errors properly - return empty data instead of throwing
+        if (error.name === 'CanceledError' || error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+          console.log('[useProfessionals] 🚫 Request cancelled by axios/abort (normal cleanup, not an error)')
           // Return gracefully for cancelled requests - don't show error toast
           return { count: 0, results: [], next: null, previous: null }
         }

@@ -34,19 +34,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 **Issue:** "Erro na requisição - canceled" toast popup appearing on first HomePage load, confusing users  
 **Root Cause:** React Strict Mode double-render in development/React Query unmount cancellation  
 - React Query cancels previous request during component mount lifecycle
-- `useProfessionals.ts` caught `CanceledError` but re-threw it
+- `professionalService.ts` caught `AbortError` but re-threw it as new Error('AbortError')
+- `useProfessionals.ts` caught `CanceledError` but also re-threw it
 - React Query treated re-thrown error as real error, triggered error toast
 
 **Manifestation:** Cosmetic but unprofessional - data loaded correctly despite error message
 
-**Solution:** Return empty data silently on cancellation instead of re-throwing error
+**Solution:** 
+1. **professionalService.ts**: Pass through abort/cancel errors without wrapping
+2. **useProfessionals.ts**: Detect both CanceledError AND AbortError, return empty data silently
 
 ```typescript
+// professionalService.ts (v1.3.3):
+} catch (error: any) {
+  // v1.3.3: Don't re-throw abort/cancel errors - let the hook handle it
+  if (error.name === 'AbortError' || error.name === 'CanceledError' || error.message === 'AbortError') {
+    console.log('[professionalService.getProfessionals] 🚫 Request cancelled (normal cleanup)')
+    // Re-throw as-is so useProfessionals.ts can detect and handle properly
+    throw error
+  }
+  throw error
+}
+
 // useProfessionals.ts (v1.3.3):
 } catch (error: any) {
-  // v1.3.3: Handle axios cancel properly - return empty data instead of throwing
-  if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
-    console.log('[useProfessionals] 🚫 Request cancelled by axios (normal cleanup, not an error)')
+  // v1.3.3: Handle axios cancel + abort errors properly - return empty data instead of throwing
+  if (error.name === 'CanceledError' || error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+    console.log('[useProfessionals] 🚫 Request cancelled by axios/abort (normal cleanup, not an error)')
     // Return gracefully for cancelled requests - don't show error toast
     return { count: 0, results: [], next: null, previous: null }
   }
@@ -56,10 +70,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 **Technical Details:**
 - AbortSignal cancellation is normal React Query cleanup, not an error
-- Empty data allows React Query to handle gracefully without error state
-- Logging still tracks cancellation for debugging, but doesn't propagate to UI
+- Two layers of error handling:
+  - **Service layer**: Detects abort/cancel and re-throws without wrapping
+  - **Hook layer**: Catches and converts to graceful empty response
+- Empty data allows React Query to handle without triggering error state
+- Logging at both layers for debugging chain
 
 **Result:** Clean HomePage load without spurious error messages ✅
+**Files Modified:** `professionalService.ts`, `useProfessionals.ts`
 
 ---
 
@@ -166,7 +184,8 @@ useEffect(() => {
 
 | File | Changes | Version | Purpose |
 |------|---------|---------|---------|
-| `useProfessionals.ts` | Return empty data on CanceledError instead of throwing | v1.3.3 | Fix spurious "canceled" error toast |
+| `professionalService.ts` | Pass through abort/cancel errors without wrapping in new Error | v1.3.3 | Preserve error type for proper detection in hook layer |
+| `useProfessionals.ts` | Return empty data on both CanceledError AND AbortError | v1.3.3 | Fix spurious "canceled" error toast |
 | `LoginPage.tsx` | Add `useRef` redirect guard + empty dependency array | v1.3.3 | Prevent infinite redirect loop |
 | `EmailVerificationPage.tsx` | Add `useRef` verification guard + prevent double execution | v1.3.3 | Prevent double verification + enable smooth redirect |
 

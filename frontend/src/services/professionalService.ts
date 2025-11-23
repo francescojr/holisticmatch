@@ -34,9 +34,11 @@ export const professionalService = {
       )
       return response.data
     } catch (error: any) {
-      // v1.3.0: Handle abort errors gracefully
-      if (error.name === 'AbortError' || error.message === 'AbortError') {
-        throw new Error('AbortError')
+      // v1.3.3: Don't re-throw abort/cancel errors - let the hook handle it
+      if (error.name === 'AbortError' || error.name === 'CanceledError' || error.message === 'AbortError') {
+        console.log('[professionalService.getProfessionals] 🚫 Request cancelled (normal cleanup)')
+        // Re-throw as-is so useProfessionals.ts can detect and handle properly
+        throw error
       }
       throw error
     }
