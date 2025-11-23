@@ -1,7 +1,7 @@
 /**
  * Login page for clients and professionals :)
  */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../hooks/useAuth'
@@ -19,11 +19,17 @@ function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [justVerifiedEmail, setJustVerifiedEmail] = useState('')
+  // v1.3.3: Prevent infinite redirect loop - mark when redirect already executed
+  const redirectExecutedRef = useRef(false)
 
-  // v1.3.1: Check if user already authenticated (e.g., after email verification)
+  // v1.3.3: Check if user already authenticated (e.g., after email verification)
+  // Execute redirect ONLY ONCE on component mount, even if dependencies change
   useEffect(() => {
+    if (redirectExecutedRef.current) return
+    
     if (authService.isAuthenticated()) {
       console.log('[LoginPage] 🚀 User already authenticated (tokens present) - redirecting to dashboard')
+      redirectExecutedRef.current = true
       navigate('/dashboard', { replace: true })
       return
     }
@@ -37,7 +43,7 @@ function LoginPage() {
         message: 'Agora você pode fazer login com sua senha'
       })
     }
-  }, [navigate, toast]) // Include navigate in dependency array
+  }, []) // EMPTY dependency array - run only on mount, never again
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

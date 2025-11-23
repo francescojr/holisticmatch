@@ -7,7 +7,7 @@
  * No need to login manually after verification!
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { pageVariants, itemVariants } from '../lib/animations'
@@ -21,6 +21,8 @@ function EmailVerificationPage() {
   const { toast, toasts } = useToast()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  // v1.3.3: Prevent double verification in React Strict Mode
+  const verificationExecutedRef = useRef(false)
   
   const [state, setState] = useState<VerificationState>('input')
   const [token, setToken] = useState('')
@@ -31,6 +33,9 @@ function EmailVerificationPage() {
 
   // Try to get token from URL params
   useEffect(() => {
+    // v1.3.3: Prevent double execution in Strict Mode double-render
+    if (verificationExecutedRef.current) return
+    
     const urlToken = searchParams.get('token')
     const urlEmail = searchParams.get('email')
     
@@ -39,6 +44,7 @@ function EmailVerificationPage() {
     }
     
     if (urlToken) {
+      verificationExecutedRef.current = true
       setToken(urlToken)
       verifyTokenDirectly(urlToken)
     }

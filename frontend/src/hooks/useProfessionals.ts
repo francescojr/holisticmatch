@@ -45,11 +45,11 @@ export function useProfessionals(
         
         return data
       } catch (error: any) {
-        // v1.3.1: Handle axios cancel properly without re-throwing
+        // v1.3.3: Handle axios cancel properly - return empty data instead of throwing
         if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
-          console.log('[useProfessionals] 🚫 Request cancelled by axios (normal cleanup)')
-          // Return gracefully for cancelled requests - don't throw
-          throw error  // Let React Query handle it
+          console.log('[useProfessionals] 🚫 Request cancelled by axios (normal cleanup, not an error)')
+          // Return gracefully for cancelled requests - don't show error toast
+          return { count: 0, results: [], next: null, previous: null }
         }
         throw error
       }
