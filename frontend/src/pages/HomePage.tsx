@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { containerVariants, fadeInVariants, scrollItemVariants } from '../lib/animations'
+import { useAuth } from '../hooks/useAuth'
 import { useProfessionals } from '../hooks/useProfessionals'
 import { useSequentialAnimation } from '../hooks/useSequentialAnimation'
 import SearchFilters from '../components/SearchFilters'
@@ -18,6 +19,7 @@ function HomePage() {
   
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { isAuthenticated, isLoading: authLoading } = useAuth()
   const [filters, setFilters] = useState<ProfessionalFilters>({})
   const [heroImage, setHeroImage] = useState<string>(hero01) // Default to first image
   
@@ -26,6 +28,15 @@ function HomePage() {
   
   const { data: professionalsData, isLoading, error, isPending } = useProfessionals(filters)
   const { containerRef, isContainerVisible } = useSequentialAnimation<HTMLDivElement>()
+
+  // v1.3.2: Redirect authenticated users to dashboard
+  // Prevent authenticated users from accessing public homepage
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      console.log('[HomePage] ⚠️ Authenticated user on homepage - redirecting to dashboard')
+      navigate('/dashboard', { replace: true })
+    }
+  }, [isAuthenticated, authLoading, navigate])
 
   console.log('[HomePage] 📊 Current state:');
   console.log('[HomePage] - isPending:', isPending, '| isLoading:', isLoading);

@@ -672,6 +672,27 @@ function RegisterProfessionalPage() {
                 Serviços & Preço Base
               </h3>
 
+              {/* v1.3.2: Validation Summary Alert */}
+              {(step2Data.services.length === 0 || step2Data.pricePerSession === 0 || !step2Data.acceptTerms) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md"
+                >
+                  <div className="flex gap-3">
+                    <span className="material-symbols-outlined text-yellow-600 flex-shrink-0">warning</span>
+                    <div className="text-sm text-yellow-800">
+                      <p className="font-semibold mb-1">Campos obrigatórios faltando:</p>
+                      <ul className="list-disc list-inside space-y-0.5 text-xs">
+                        {step2Data.services.length === 0 && <li>Selecione pelo menos um serviço</li>}
+                        {step2Data.pricePerSession === 0 && <li>Insira um preço válido (maior que 0)</li>}
+                        {!step2Data.acceptTerms && <li>Aceite os Termos e Condições</li>}
+                      </ul>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               {/* Added Services List */}
               {step2Data.services.length > 0 && (
                 <div className="space-y-3">

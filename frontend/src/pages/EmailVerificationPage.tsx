@@ -74,20 +74,25 @@ function EmailVerificationPage() {
       // Clear pending verification flag
       sessionStorage.removeItem('pendingEmailVerification')
       
-      // ⭐ NEW v1.0.8: Save JWT tokens for auto-login
+      // ⭐ v1.3.2: Save JWT tokens and professional_id for auto-login
       localStorage.setItem('access_token', result.access)
       localStorage.setItem('refresh_token', result.refresh)
       localStorage.setItem('user', JSON.stringify(result.user))
+      
+      // v1.3.2: Save professional_id from response for dashboard access
+      if (result.user?.professional?.id) {
+        localStorage.setItem('professional_id', result.user.professional.id.toString())
+        console.log('[EmailVerification] 💾 Saved professional_id:', result.user.professional.id)
+      }
       
       toast.success('Email verificado com sucesso!', {
         message: 'Redirecionando para seu dashboard...'
       })
       
-      // v1.3.0: Redirect immediately (not after delay)
-      // Delayed redirect caused race condition where HomePage would try to fetch
-      // data while redirect was pending, creating stale cache issues
+      // v1.3.2: Redirect immediately and bypass any pending redirects
+      // Use replace: true to prevent back button from returning to verify page
       console.log('[EmailVerification] 🚀 Redirecting to dashboard immediately (auto-login active)')
-      navigate('/dashboard')
+      navigate('/dashboard', { replace: true })
     } catch (error: any) {
       const errorMsg = 
         error.response?.data?.message ||

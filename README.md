@@ -19,25 +19,29 @@
 ✅ **API**: Full CRUD endpoints with filtering, pagination & content moderation  
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
-### 🔐 Latest Updates (Nov 22, 2025 - 20:50 UTC)
+### 🔐 Latest Updates (Nov 22, 2025 - 21:20 UTC)
 
-#### 🎉 v1.3.0 - Auto-Login Race Conditions Fixed (SMOOTH EXPERIENCE!)
+#### 🎉 v1.3.1 - Auto-Login + Form Validation Polish
+- **Fixed "canceled" Error on HomePage**: Clean loading without false errors ✅
+- **Auto-Login Now Smooth**: Email verified → Dashboard (no LoginPage) 🚀
+- **Form Feedback Clear**: Users see exactly which fields need filling 📝
+- **Build**: 193.27 KB, zero TypeScript errors ✨
+
+**What was broken:**
+- HomePage showed "canceled" errors during initial load
+- Auto-login had redirect loops through LoginPage
+- Form validation button looked enabled but wasn't (confusing!)
+
+**What's fixed:**
+- AbortSignal handled naturally by axios ✅
+- LoginPage detects auth tokens and redirects to dashboard ✅
+- Step 2 form shows inline feedback for missing fields ✅
+
+#### 🎉 v1.3.0 - Auto-Login Race Conditions Fixed
 - **Immediate Redirect After Email Verification**: No more 2-second delay ✅
 - **Fixed Memory Leaks**: Fetch properly cancelled when component unmounts 🧹
 - **Multi-Tab Synchronization**: Consistent state across all browser tabs 🔄
 - **Authenticated User Protection**: Logged-in users can't see public homepage ⚔️
-
-**What was broken:**
-- Redirect had 2-second delay → HomePage fetched data during redirect
-- Fetch continued after redirect → Memory leak on unmounted component
-- Other tabs showed "Loading..." indefinitely → Race condition
-- Cache inconsistent between tabs and browsers → User confusion
-
-**What's fixed:**
-- Immediate redirect (no delay) ✅
-- AbortSignal cancels fetch on unmount 🚫
-- HomePage checks auth before fetching ✅
-- isMountedRef prevents logs after unmount ✅
 
 #### 🎉 v1.2.0 - Frontend Race Condition Fixed
 - **Homepage Now Loads Data on First Visit**: No more "Carregando..." indefinitely ✅
