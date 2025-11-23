@@ -15,6 +15,17 @@ interface AuthContextType {
   logout: () => Promise<void>
 }
 
+interface AuthContextType {
+  user: User | null
+  isAuthenticated: boolean
+  isLoading: boolean
+  login: (credentials: LoginRequest) => Promise<void>
+  register: (data: RegisterRequest) => Promise<void>
+  logout: () => Promise<void>
+  // v1.3.12: Force re-check authentication (called after email verification)
+  recheckAuth: () => Promise<void>
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -129,6 +140,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }
 
+  // v1.3.12: Force re-check authentication
+  // Called by EmailVerificationPage after saving tokens
+  // This ensures AuthContext is updated immediately after email verification
+  const recheckAuth = async () => {
+    console.log('[useAuth] v1.3.12 🔄 recheckAuth() called by EmailVerificationPage')
+    setIsLoading(true)
+    try {
+      if (authService.isAuthenticated()) {
+        console.log('[useAuth] v1.3.12 ✅ Tokens found, fetching user profile...')
+        const userProfile = await authService.getCurrentUser()
+        if (userProfile) {
+          const professionalId = localStorage.getItem('professional_id')
+          const fullUser = {
+            ...userProfile,
+            professional_id: userProfile.professional_id || (professionalId ? parseInt(professionalId) : undefined),
+          }
+          console.log('[useAuth] v1.3.12 ✅ User authenticated and loaded:', fullUser.email)
+          setUser(fullUser)
+        }
+      }
+    } catch (error) {
+      console.log('[useAuth] v1.3.12 ⚠️ Error during recheckAuth:', error)
+    } finally {
+      console.log('[useAuth] v1.3.12 🏁 recheckAuth() complete')
+      setIsLoading(false)
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -138,6 +177,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        recheckAuth,
       }}
     >
       {children}

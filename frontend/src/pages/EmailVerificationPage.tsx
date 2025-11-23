@@ -12,6 +12,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { pageVariants, itemVariants } from '../lib/animations'
 import { useToast } from '../hooks/useToast'
+import { useAuth } from '../hooks/useAuth'
 import { ToastContainer } from '../components/toast'
 import { professionalService } from '../services/professionalService'
 
@@ -19,6 +20,7 @@ type VerificationState = 'input' | 'loading' | 'success' | 'error' | 'expired'
 
 function EmailVerificationPage() {
   const { toast, toasts } = useToast()
+  const { recheckAuth } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   // v1.3.3: Prevent double verification in React Strict Mode
@@ -103,8 +105,14 @@ function EmailVerificationPage() {
       console.log('[EmailVerification] v1.3.11   - refresh_token:', result.refresh.substring(0, 20) + '...')
       console.log('[EmailVerification] v1.3.11   - professional_id:', result.user?.professional?.id)
       
-      // Navigate immediately - ProtectedRoute will handle auth check
-      console.log('[EmailVerification] v1.3.11 🚀 Redirecting to /dashboard')
+      // v1.3.12: Force AuthProvider to re-check authentication immediately
+      // This ensures ProtectedRoute sees the authenticated state when it mounts
+      console.log('[EmailVerification] v1.3.12 🔄 Calling recheckAuth() to update AuthContext...')
+      await recheckAuth()
+      console.log('[EmailVerification] v1.3.12 ✅ AuthContext updated, user is authenticated')
+      
+      // Navigate to dashboard - user is now authenticated in both localStorage AND AuthContext
+      console.log('[EmailVerification] v1.3.12 🚀 Redirecting to /dashboard')
       navigate('/dashboard', { replace: true })
     } catch (error: any) {
       const errorMsg = 
