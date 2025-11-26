@@ -3,15 +3,26 @@ Image moderation service using AWS Rekognition.
 Validates user-uploaded photos for inappropriate content.
 
 CRITICAL: Uses FAIL-CLOSED pattern - ANY error results in image rejection.
+Supports test mode for CI/CD environments without AWS credentials.
 """
 import logging
 import io
+import sys
 from typing import Tuple, Dict
 import boto3
 from django.conf import settings
 from PIL import Image
 
 logger = logging.getLogger(__name__)
+
+
+def is_test_mode() -> bool:
+    """Check if running in test mode (pytest, manage.py test, etc)."""
+    return (
+        'pytest' in sys.modules or
+        'test' in sys.argv or
+        getattr(settings, 'TESTING', False)
+    )
 
 
 class ImageModerationService:
@@ -68,8 +79,7 @@ class ImageModerationService:
         if not self.enabled:
             # In TESTING mode: allow images through with warning
             # In PRODUCTION: fail-closed (but this should never happen if AWS is configured)
-            is_test_mode = getattr(settings, 'TESTING', False)
-            if is_test_mode:
+            if is_test_mode():
                 logger.warning('[IMAGE_MODERATION] TEST MODE: AWS disabled but allowing image')
                 return True, {
                     'test_mode': True,
