@@ -1,6 +1,8 @@
 """
-Image moderation service using AWS Rekognition
-Validates user-uploaded photos for inappropriate content
+Image moderation service using AWS Rekognition.
+Validates user-uploaded photos for inappropriate content.
+
+CRITICAL: Uses FAIL-CLOSED pattern - ANY error results in image rejection.
 """
 import logging
 import io
@@ -14,107 +16,110 @@ logger = logging.getLogger(__name__)
 
 class ImageModerationService:
     """
-    Service for image moderation using AWS Rekognition
-    Detects: nudity, explicit content, violence, etc.
+    Service for image moderation using AWS Rekognition.
+    Detects: nudity, explicit content, violence, weapons.
+
+    SECURITY: Implements fail-closed pattern - errors result in rejection.
     """
 
     def __init__(self):
-        """Initialize AWS Rekognition client"""
+        """Initialize AWS Rekognition client with fail-closed pattern."""
         self.enabled = False
         self.client = None
-        
+        self.service_enabled = False
+
         try:
-            # Check if AWS credentials are configured
-            if hasattr(settings, 'AWS_ACCESS_KEY_ID') and settings.AWS_ACCESS_KEY_ID:
-                self.client = boto3.client(
-                    'rekognition',
-                    region_name=getattr(settings, 'AWS_S3_REGION_NAME', 'us-east-1')
-                )
-                self.enabled = True
-        except Exception as e:
-            logger.warning(f"AWS Rekognition not configured: {str(e)}")
+            # CRITICAL: Check if AWS credentials are configured (REQUIRED)
+            aws_access_key = getattr(settings, 'AWS_ACCESS_KEY_ID', None)
+            aws_secret_key = getattr(settings, 'AWS_SECRET_ACCESS_KEY', None)
+
+            if not aws_access_key or not aws_secret_key:
+                logger.critical(
+                    '[IMAGE_MODERATION] AWS credentials not configured - moderation DISABLED')
+                return
+
+            # Initialize Rekognition client
+            self.client = boto3.client(
+                'rekognition',
+                region_name=getattr(settings, 'AWS_S3_REGION_NAME', 'us-east-1'),
+                aws_access_key_id=aws_access_key,
+                aws_secret_access_key=aws_secret_key
+            )
+            self.enabled = True
+            self.service_enabled = True
+            logger.info('[IMAGE_MODERATION] AWS Rekognition initialized successfully')
+        except Exception as error:
+            logger.critical(
+                '[IMAGE_MODERATION] Failed to initialize AWS Rekognition: %s', str(error))
+            self.enabled = False
+            self.service_enabled = False
 
     def moderate_image(self, image_file) -> Tuple[bool, Dict]:
         """
-        Moderate an image for inappropriate content
-        
+        Moderate an image for inappropriate content.
+        Uses FAIL-CLOSED pattern: any error results in rejection.
+
         Args:
             image_file: Django InMemoryUploadedFile or file-like object
-            
+
         Returns:
             Tuple of (is_safe: bool, results: dict)
-            - is_safe: True if image passes moderation
-            - results: Dictionary containing moderation details
         """
         if not self.enabled:
-            # AWS Rekognition not configured
-            # In production: this is a configuration error
-            # For now: allow image but log warning
-            logger.warning("[IMAGE_MODERATION] AWS Rekognition not enabled - image moderation skipped")
-            return True, {'disabled': True, 'message': 'AWS Rekognition not configured - skipping moderation'}
-
-        logger.debug(f"[IMAGE_MODERATION] Starting moderation, image_file type: {type(image_file)}")
+            # FAIL-CLOSED: AWS not enabled = REJECT
+            logger.critical('[IMAGE_MODERATION] FAIL-CLOSED: AWS disabled - rejecting image')
+            return False, {
+                'error': 'Servico de validacao indisponivel',
+                'message': 'Imagem rejeitada - validacao falhou'
+            }
 
         if not image_file:
-            logger.debug("[IMAGE_MODERATION] No image file provided")
-            return True, {'empty': True}
+            return False, {'error': 'Nenhuma imagem fornecida'}
 
         try:
             # Read image bytes
             if hasattr(image_file, 'read'):
-                logger.debug("[IMAGE_MODERATION] Image is file-like object, reading bytes")
                 image_bytes = image_file.read()
-                # Reset file pointer if needed
                 if hasattr(image_file, 'seek'):
                     image_file.seek(0)
             else:
-                logger.debug("[IMAGE_MODERATION] Image is file path, opening file")
-                with open(image_file, 'rb') as f:
-                    image_bytes = f.read()
+                with open(image_file, 'rb') as file:
+                    image_bytes = file.read()
 
-            logger.debug(f"[IMAGE_MODERATION] Read {len(image_bytes)} bytes from image")
+            logger.debug('[IMAGE_MODERATION] Read %d bytes', len(image_bytes))
 
-            # Basic validation: check if it's a valid image
+            # Validate it's a real image
             try:
                 Image.open(io.BytesIO(image_bytes))
             except Exception:
-                return False, {
-                    'error': 'Arquivo inválido. Envie uma imagem válida.',
-                    'invalid_image': True
-                }
+                return False, {'error': 'Arquivo invalido - envie JPG, PNG ou GIF'}
 
-            # Call AWS Rekognition to detect explicit content
-            logger.info("[IMAGE_MODERATION] 🔴 Calling AWS Rekognition detect_moderation_labels")
+            # Call AWS Rekognition detect_moderation_labels
+            logger.info('[IMAGE_MODERATION] Calling AWS detect_moderation_labels')
             response = self.client.detect_moderation_labels(
                 Image={'Bytes': image_bytes}
             )
-            logger.info(f"[IMAGE_MODERATION] 📥 AWS Response: {response}")
 
-            # Parse results
+            # Parse moderation results
             moderation_labels = response.get('ModerationLabels', [])
-            logger.info(f"[IMAGE_MODERATION] 📊 Found {len(moderation_labels)} moderation labels")
-            
-            # Check for moderation flags
+            logger.info('[IMAGE_MODERATION] Found %d moderation labels', len(moderation_labels))
+
             is_flagged = False
             flagged_labels = []
-            confidence_scores = {}
 
             for label in moderation_labels:
                 name = label.get('Name', '')
                 confidence = label.get('Confidence', 0)
-                confidence_scores[name] = confidence
-                logger.info(f"[IMAGE_MODERATION] 🏷️  Label: {name} | Confidence: {confidence:.2f}%")
+                logger.info('[IMAGE_MODERATION] Label: %s | Confidence: %.2f%%', name, confidence)
 
-                # Flag if ANY confidence level for explicit content
-                # CRITICAL: Explicit content (Nudity, Suggestive) at ANY confidence should be flagged
-                # AWS returns: Explicit Nudity, Suggestive, etc.
-                if confidence > 0:  # Any detection of explicit content = reject
+                # Flag if ANY explicit content detected
+                if confidence > 0:
                     is_flagged = True
-                    flagged_labels.append(f"{name} ({confidence:.1f}%)")
-                    logger.warning(f"[IMAGE_MODERATION] ⚠️  FLAGGED: {name} at {confidence:.1f}% confidence")
+                    flagged_labels.append('%s (%.1f%%)' % (name, confidence))
+                    logger.warning('[IMAGE_MODERATION] FLAGGED: %s at %.1f%%', name, confidence)
 
-            # Also run label detection to check for violence/weapons
-            logger.info("[IMAGE_MODERATION] 🔴 Calling AWS Rekognition detect_labels for violence check")
+            # Check for violence/weapons
+            logger.info('[IMAGE_MODERATION] Calling AWS detect_labels for violence')
             labels_response = self.client.detect_labels(
                 Image={'Bytes': image_bytes},
                 MaxLabels=20,
@@ -122,81 +127,50 @@ class ImageModerationService:
             )
 
             labels = labels_response.get('Labels', [])
-            logger.info(f"[IMAGE_MODERATION] 📊 Found {len(labels)} general labels")
-            
+            logger.info('[IMAGE_MODERATION] Found %d general labels', len(labels))
+
             violent_keywords = ['weapon', 'gun', 'knife', 'blood', 'violence', 'dead']
             violence_detected = False
 
             for label in labels:
                 label_name = label.get('Name', '').lower()
-                logger.debug(f"[IMAGE_MODERATION] 🏷️  General label: {label_name}")
                 if any(keyword in label_name for keyword in violent_keywords):
                     violence_detected = True
                     flagged_labels.append(label_name)
-                    logger.warning(f"[IMAGE_MODERATION] ⚠️  VIOLENCE KEYWORD FOUND: {label_name}")
+                    logger.warning('[IMAGE_MODERATION] VIOLENCE: %s', label_name)
 
             # Final verdict
             is_safe = not is_flagged and not violence_detected
-            logger.info(f"[IMAGE_MODERATION] 🎯 FINAL VERDICT: is_safe={is_safe} | is_flagged={is_flagged} | violence_detected={violence_detected}")
+            logger.info('[IMAGE_MODERATION] VERDICT: is_safe=%s | flagged=%s | violence=%s',
+                        is_safe, is_flagged, violence_detected)
 
             return is_safe, {
                 'flagged': not is_safe,
-                'explicit_content': {
-                    'labels': flagged_labels,
-                    'scores': confidence_scores,
-                    'violence_detected': violence_detected
-                },
-                'message': 'Imagem aprovada' if is_safe else 'Conteúdo impróprio detectado na imagem'
+                'message': 'Imagem aprovada' if is_safe else 'Conteudo inapropriado'
             }
 
         except self.client.exceptions.InvalidImageFormatException:
-            return False, {
-                'error': 'Formato de imagem inválido. Use JPG, PNG ou GIF.',
-                'invalid_format': True
-            }
-        except self.client.exceptions.InvalidParameterException as e:
-            return False, {
-                'error': f'Erro ao processar imagem: {str(e)[:100]}',
-                'invalid_parameter': True
-            }
-        except Exception as e:
-            # Catch all AWS errors: AccessDeniedException, ServiceUnavailable, etc.
-            error_str = str(e)
-            
-            # Specific handling for permission errors
+            return False, {'error': 'Formato de imagem invalido'}
+        except self.client.exceptions.InvalidParameterException as error:
+            return False, {'error': 'Erro ao processar: %s' % str(error)[:100]}
+        except Exception as error:
+            # FAIL-CLOSED: Any error = reject
+            error_str = str(error)
+
             if 'AccessDenied' in error_str or 'not authorized' in error_str:
-                logger.error(f"AWS Rekognition PERMISSION DENIED: IAM user holisticmatch-s3-user needs rekognition:DetectModerationLabels permission")
-                logger.error(f"Full error: {error_str}")
-                # Fail-open: allow upload but log clearly
-                return True, {
-                    'flagged': False,
-                    'aws_permission_error': True,
-                    'message': 'Aviso: Validação de imagem via AWS indisponível no momento. Imagem aceita.'
-                }
-            else:
-                # Other AWS errors (service unavailable, throttled, etc.)
-                logger.error(f"AWS Rekognition error (not permission): {error_str[:200]}")
-            
-            # Fail-open for other AWS errors too
-            return True, {
-                'flagged': False,
-                'aws_error': True,
-                'message': 'Aviso: Validação indisponível. Imagem aceita.'
-            }
+                logger.critical(
+                    '[IMAGE_MODERATION] PERMISSION DENIED - IAM needs rekognition permissions')
+                logger.critical('[IMAGE_MODERATION] Error: %s', error_str)
+                return False, {'error': 'Erro de permissao - contato com suporte'}
+
+            logger.critical('[IMAGE_MODERATION] AWS error (FAIL-CLOSED): %s', error_str[:200])
+            return False, {'error': 'Erro ao validar - tente novamente'}
 
     def moderate_professional_photo(self, photo_file) -> Tuple[bool, Dict]:
-        """
-        Moderate professional profile photo
-        
-        Args:
-            photo_file: Photo file to moderate
-            
-        Returns:
-            Tuple of (is_safe: bool, results: dict)
-        """
-        logger.debug(f"[MODERATE_PROFESSIONAL_PHOTO] Called with photo_file: {type(photo_file)}")
+        """Moderate professional profile photo."""
+        logger.debug('[MODERATE_PROFESSIONAL_PHOTO] Processing photo')
         is_safe, results = self.moderate_image(photo_file)
-        logger.info(f"[MODERATE_PROFESSIONAL_PHOTO] Result: is_safe={is_safe}, message={results.get('message')}")
+        logger.info('[MODERATE_PROFESSIONAL_PHOTO] Result: is_safe=%s', is_safe)
         return is_safe, results
 
 
@@ -205,7 +179,7 @@ _image_moderation_service = None
 
 
 def get_image_moderation_service() -> ImageModerationService:
-    """Get or create the image moderation service singleton"""
+    """Get or create the image moderation service singleton."""
     global _image_moderation_service
     if _image_moderation_service is None:
         _image_moderation_service = ImageModerationService()

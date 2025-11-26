@@ -21,6 +21,19 @@
 
 ### 🔐 Latest Updates (Nov 26, 2025 - CURRENT)
 
+#### 🔐 v1.4.0 - CRITICAL: Photo Validation Security Fix
+
+- **Photo Moderation**: Fail-closed pattern implemented - any validation error = image rejection ✅
+- **AWS Rekognition**: Now properly blocks explicit content, violence, weapons ✅
+- **Error Handling**: Service unavailability or permission errors reject uploads (not allow) ✅
+- **Testing**: ✅ Service tests pass, ✅ Serializer validation enforced
+
+**Why This Matters:**
+- Users could previously register with inappropriate photos (fail-open bug)
+- AWS service errors would accidentally allow uploads through
+- Now: Any error in validation = automatic rejection for security
+- AWS credentials must be properly configured for this to work
+
 #### 🎨 v1.3.14 - UX Improvements for Registration & Dashboard
 
 - **CPF Input**: Now filters to digits only (cleaner format, no letters accepted) ✅

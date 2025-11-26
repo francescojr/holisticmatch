@@ -7,6 +7,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.0] - 2025-11-26
+
+### 🔐 CRITICAL: Photo Validation Security Fix
+
+**Status:** ✅ PRODUCTION READY  
+**Deploy Date:** Nov 26, 2025  
+**Focus:** Fix photo moderation security gap - prevent users from uploading inappropriate images
+
+**Security Issue Fixed:**
+- Users could register and upload photos that should have been rejected by AWS Rekognition
+- Validation system had fail-open patterns: errors resulted in allowing images through
+- AWS permission errors, service unavailability, or configuration issues allowed bypass
+
+**Changes Implemented:**
+
+1. **Fail-Closed Pattern Implementation** (`image_moderation.py`)
+   - Changed all error handlers from allow-through to reject
+   - If AWS Rekognition disabled → REJECT image (previously: ALLOW)
+   - If AWS permission denied → REJECT image (previously: ALLOW)
+   - If AWS service error → REJECT image (previously: ALLOW)
+   - Invalid image files → REJECT image (already working)
+
+2. **Enhanced Error Messages**
+   - User receives clear message when photo is rejected
+   - Admin/logs receive detailed error information
+   - Production logs clearly indicate validation failures
+
+3. **AWS Configuration Validation**
+   - Service initialization validates AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+   - Service initialization validates AWS_S3_REGION_NAME
+   - Critical errors logged if configuration missing
+
+4. **Testing & Validation**
+   - ✅ Service test: Clean images pass, invalid images rejected
+   - ✅ Serializer test: Validation enforced in DRF serializer
+   - ✅ Django check: No critical errors
+
+**Testing Results:**
+```
+[PASS] AWS Rekognition service initialized
+[PASS] Clean images accepted by validation
+[PASS] Invalid images rejected (fail-closed pattern)
+[PASS] Serializer validation enforces rejection
+```
+
+**Deployment Requirements:**
+- AWS_ACCESS_KEY_ID must be set in .env (already configured)
+- AWS_SECRET_ACCESS_KEY must be set in .env (already configured)
+- IAM user must have rekognition:DetectModerationLabels permission
+- IAM user must have rekognition:DetectLabels permission
+
+**Files Modified:**
+- `backend/professionals/image_moderation.py` - Complete refactor with fail-closed pattern
+- Added test scripts: `test_photo_validation.py`, `test_serializer_validation.py`
+
+---
+
 ## [Unreleased]
 
 ### Planned Features
