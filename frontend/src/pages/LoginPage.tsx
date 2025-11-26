@@ -52,6 +52,11 @@ function LoginPage() {
       // Call login from auth context (which calls authService.login)
       await login({ email, password })
       
+      // v1.4.4 FIX: Add microtask delay to allow React state updates to propagate
+      // This prevents race condition where navigation happens before state update completes
+      // The delay allows pending state updates to flush through React's batching mechanism
+      await new Promise(resolve => setTimeout(resolve, 0))
+      
       // Check what's in localStorage AFTER login
       const postAccessToken = localStorage.getItem('access_token')
       const postRefreshToken = localStorage.getItem('refresh_token')

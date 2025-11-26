@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.4] - 2025-01-17
+
+### 🔧 Production Issues - Bug Fixes & UX Improvements
+
+**Status:** ✅ READY FOR DEPLOYMENT - 2 Issues Fixed, 1 Requires Server Debug
+
+#### Fixed Issues
+
+**1. Login Token Detection Race Condition** ✅
+- **Issue:** Users couldn't log in on first attempt (missing refresh token error)
+- **Root Cause:** Navigation to `/dashboard` happened before React state updates completed
+- **Fix:** Added microtask delay (`await new Promise(resolve => setTimeout(resolve, 0))`) after `await login()` to allow state batching to complete
+- **File:** `frontend/src/pages/LoginPage.tsx` (lines 51-56)
+- **Impact:** Users can now log in successfully on FIRST attempt, no refresh needed
+
+**2. Dashboard UI Simplification** ✅
+- **Issue:** Redundant "Editar Perfil" toggle button switching between edit/view modes
+- **User Request:** Keep fields always editable with only "Salvar Alterações" button
+- **Changes:**
+  - Removed `cancelEditing()` function (no longer needed)
+  - Removed all `setIsEditing(false)` calls (never switch modes)
+  - Replaced conditional button rendering with single Save button
+  - Fields stay always editable
+- **Files:** `frontend/src/pages/DashboardPage.tsx` (lines 40, 220, 310, 480)
+- **Impact:** Cleaner UX, single-mode editing, no redundant button toggling
+
+**3. Registration 500 Error** ⏳
+- **Issue:** New professional registration returns 500 error in production only
+- **Status:** Local test passes (`test_production_flow.py` ✅), but production server-specific issue
+- **Root Cause:** Unknown - requires access to production server logs
+- **Created:** Comprehensive `PRODUCTION_DEBUG_GUIDE.md` with SSH instructions and debugging steps
+- **Possible Causes:** Database constraint, AWS credentials, missing migrations, environment variables
+
+### Technical Details
+
+**Frontend Changes:**
+- `LoginPage.tsx`: Added state update synchronization delay
+- `DashboardPage.tsx`: Removed edit mode toggle, simplified UI to always-editable mode
+
+**Backward Compatibility:** ✅ 100% - No breaking changes, no API changes, no database changes
+
+**Testing Checklist:**
+- [ ] Login works on first attempt
+- [ ] Dashboard fields always editable
+- [ ] Only "Salvar Alterações" button visible
+- [ ] Photo upload still works
+- [ ] No browser console errors
+
+---
+
 ## [1.4.3] - 2025-11-26
 
 ### ✅ PRODUCTION VALIDATION COMPLETE

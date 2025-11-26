@@ -216,17 +216,6 @@ function DashboardPage() {
     validate(field, value, rules)
   }
 
-  // Cancel editing and restore original data
-  const cancelEditing = () => {
-    setFormData(originalData)
-    setPhotoPreview(null)
-    setSelectedPhoto(null)
-    setIsUploadingPhoto(false)
-    setHasConflicts(false)
-    setIsEditing(false)
-    clearErrors()
-  }
-
   // Detect changes between current form data and original data
   const detectChanges = () => {
     const changes: Partial<typeof formData> = {}
@@ -324,7 +313,6 @@ function DashboardPage() {
         toast.info('Nenhuma alteração', {
           message: 'Não há mudanças para salvar.'
         })
-        setIsEditing(false)
         return
       }
 
@@ -354,7 +342,7 @@ function DashboardPage() {
       setProfessional(updatedProfessional)
       setOriginalData(formData)
       setHasConflicts(false)
-      setIsEditing(false)
+      // v1.4.4: Don't set isEditing=false since fields are always editable now
 
       toast.success('Perfil atualizado!', {
         message: 'Suas informações foram salvas com sucesso.'
@@ -489,40 +477,23 @@ function DashboardPage() {
                           )}
                         </div>
                         <div className="flex gap-3">
-                          {isEditing ? (
-                            <>
-                                <button
-                                onClick={cancelEditing}
-                                disabled={isSaving}
-                                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors disabled:opacity-50"
+                          {/* v1.4.4: Simplified UI - only show Save button, fields always editable */}
+                          <button
+                            onClick={saveChanges}
+                            disabled={isSaving}
+                            className="px-4 py-2 bg-primary hover:bg-primary/90 disabled:bg-primary/50 text-white rounded-lg font-medium transition-colors flex items-center gap-2 disabled:cursor-not-allowed"
+                          >
+                            {isSaving && (
+                              <motion.span
+                                className="material-symbols-outlined text-sm"
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                               >
-                                Cancelar
-                              </button>
-                              <button
-                                onClick={saveChanges}
-                                disabled={isSaving}
-                                className="px-4 py-2 bg-primary hover:bg-primary/90 disabled:bg-primary/50 text-white rounded-lg font-medium transition-colors flex items-center gap-2 disabled:cursor-not-allowed"
-                              >
-                                {isSaving && (
-                                  <motion.span
-                                    className="material-symbols-outlined text-sm"
-                                    animate={{ rotate: 360 }}
-                                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                                  >
-                                    refresh
-                                  </motion.span>
-                                )}
-                                {isSaving ? 'Salvando...' : 'Salvar Alterações'}
-                              </button>
-                            </>
-                          ) : (
-                            <button
-                              onClick={() => setIsEditing(true)}
-                              className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors"
-                            >
-                              Editar Perfil
-                            </button>
-                          )}
+                                refresh
+                              </motion.span>
+                            )}
+                            {isSaving ? 'Salvando...' : 'Salvar Alterações'}
+                          </button>
                         </div>
                       </div>
 
