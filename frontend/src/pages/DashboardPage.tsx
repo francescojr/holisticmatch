@@ -34,7 +34,8 @@ function DashboardPage() {
   const deleteProfessional = useDeleteProfessional()
   const [activeTab, setActiveTab] = useState('profile')
   const [isLoading, setIsLoading] = useState(true)
-  const [isEditing, setIsEditing] = useState(false)
+  // v1.3.14: Fields start unlocked/editable by default
+  const [isEditing, setIsEditing] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [hasConflicts, setHasConflicts] = useState(false)
@@ -432,16 +433,14 @@ function DashboardPage() {
             <aside className="lg:col-span-3">
               <div className="sticky top-28 flex flex-col gap-6">
                 <div className="flex flex-col items-center text-center gap-4 p-4">
-                  <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                  {/* v1.3.14: Edit photo button disabled - photo editing moved to form */}
+                  <div className="relative group cursor-default" onClick={(e) => e.preventDefault()}>
                     <div
                         className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-28 border-4 border-white dark:border-slate-700 shadow-md"
                       style={{
                         backgroundImage: `url("${getProfileImageUrl(professional?.photo_url)}")`
                       }}
                     ></div>
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                      <span className="material-symbols-outlined text-white text-3xl">edit</span>
-                    </div>
                   </div>
                   <div className="flex flex-col">
                     <h1 className="text-[#111814] dark:text-white text-xl font-bold leading-normal">{formData.fullName}</h1>
@@ -527,136 +526,22 @@ function DashboardPage() {
                         </div>
                       </div>
 
-                      {/* Profile Form */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <FormInput
-                          label="Full Name"
-                          type="text"
-                          value={formData.fullName}
-                          onChange={(value) => handleFieldChange('fullName', value)}
-                          error={errors.fullName}
-                          disabled={!isEditing || isSaving}
-                          required
-                          placeholder="Seu nome completo"
-                        />
-                        <FormInput
-                          label="Título Profissional"
-                          type="text"
-                          value={formData.professionalTitle}
-                          onChange={(value) => handleFieldChange('professionalTitle', value)}
-                          error={errors.professionalTitle}
-                          disabled={!isEditing || isSaving}
-                          required
-                          placeholder="Ex: Personal Trainer, Nutricionista"
-                        />
-                        <FormInput
-                          label="E-mail"
-                          type="email"
-                          value={formData.email}
-                          onChange={(value) => handleFieldChange('email', value)}
-                          error={errors.email}
-                          disabled={!isEditing || isSaving}
-                          required
-                          placeholder="seu@email.com"
-                        />
-                        <FormInput
-                          label="Telefone"
-                          type="tel"
-                          value={formData.phone}
-                          onChange={(value) => handleFieldChange('phone', value)}
-                          error={errors.phone}
-                          disabled={!isEditing || isSaving}
-                          required
-                          placeholder="(11) 99999-9999"
-                        />
-                        <FormSelect
-                          label="Estado"
-                          value={formData.state}
-                          onChange={(value) => handleFieldChange('state', value)}
-                          options={BRAZILIAN_STATES}
-                          disabled={!isEditing || isSaving}
-                          required
-                        />
-                        <FormSelect
-                          label="Cidade"
-                          value={formData.city}
-                          onChange={(value) => handleFieldChange('city', value)}
-                          options={citiesRaw}
-                          disabled={!isEditing || isSaving || citiesLoading}
-                          required
-                        />
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Como você atende? *
-                          </label>
-                          <select
-                            value={formData.attendanceType}
-                            onChange={(e) => handleFieldChange('attendanceType', e.target.value)}
-                            disabled={!isEditing || isSaving}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <option value="presencial">Presencial</option>
-                            <option value="online">Online</option>
-                            <option value="ambos">Ambos (Presencial + Online)</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      <div className="mb-6">
-                        <FormTextarea
-                          label="Bio"
-                          value={formData.bio}
-                          onChange={(value) => handleFieldChange('bio', value)}
-                          error={errors.bio}
-                          maxLength={500}
-                          minLength={10}
-                          disabled={!isEditing || isSaving}
-                          required
-                          showCounter={true}
-                        />
-                      </div>
-
-                      {/* Services Selection */}
-                      <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                          Serviços que você oferece *
+                      {/* v1.3.14: Photo Upload Section - Moved to top of form */}
+                      <div className="mb-8 pb-6 border-b border-gray-200 dark:border-gray-700">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">
+                          Foto de Perfil
                         </label>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {SERVICE_TYPES.map((service) => (
-                            <button
-                              key={service}
-                              type="button"
-                              onClick={() => handleServiceToggle(service)}
-                              disabled={!isEditing || isSaving}
-                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                                formData.services.includes(service)
-                                  ? 'bg-primary text-white'
-                                  : 'bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600'
-                              } disabled:opacity-50 disabled:cursor-not-allowed`}
-                            >
-                              {service}
-                            </button>
-                          ))}
-                        </div>
-                        {formData.services.length === 0 && isEditing && (
-                          <p className="text-red-500 text-sm mt-2">Selecione pelo menos um serviço</p>
-                        )}
-                      </div>
-
-                      {/* Photo Upload Section */}
-                      <div className="mb-6">
-                        <p className="text-[#111814] dark:text-gray-300 text-sm font-medium leading-normal pb-3">Foto de Perfil</p>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-6">
                           <div className="relative">
                             <div
-                              className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-20 border-4 border-white dark:border-slate-700 shadow-md"
+                              className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-24 border-4 border-white dark:border-slate-700 shadow-md"
                               style={{
                                 backgroundImage: photoPreview
                                   ? `url("${photoPreview}")`
                                   : `url("${getProfileImageUrl(professional?.photo_url)}")`
                               }}
                             ></div>
-                            {isEditing && !isUploadingPhoto && (
+                            {!isUploadingPhoto && (
                               <button
                                 onClick={() => fileInputRef.current?.click()}
                                 className="absolute -bottom-1 -right-1 bg-primary hover:bg-primary/90 text-white rounded-full p-2 shadow-md transition-colors"
@@ -677,7 +562,7 @@ function DashboardPage() {
                             )}
                           </div>
                           <div className="flex-1">
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                               {isUploadingPhoto
                                 ? 'Enviando foto...'
                                 : selectedPhoto
@@ -691,14 +576,14 @@ function DashboardPage() {
                               accept="image/*"
                               onChange={handlePhotoSelect}
                               className="hidden"
-                              disabled={!isEditing || isSaving || isUploadingPhoto}
+                              disabled={isSaving || isUploadingPhoto}
                             />
                             <div className="flex gap-2">
                               {selectedPhoto && !isUploadingPhoto && (
                                 <>
                                   <button
                                     onClick={uploadPhotoNow}
-                                    className="text-sm bg-primary hover:bg-primary/90 text-white px-3 py-1 rounded transition-colors"
+                                    className="text-sm bg-primary hover:bg-primary/90 text-white px-3 py-2 rounded transition-colors"
                                   >
                                     Enviar Foto
                                   </button>
@@ -717,6 +602,122 @@ function DashboardPage() {
                             </div>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Profile Form - Photo section removed from here */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <FormInput
+                          label="Full Name"
+                          type="text"
+                          value={formData.fullName}
+                          onChange={(value) => handleFieldChange('fullName', value)}
+                          error={errors.fullName}
+                          disabled={isSaving}
+                          required
+                          placeholder="Seu nome completo"
+                        />
+                        <FormInput
+                          label="Título Profissional"
+                          type="text"
+                          value={formData.professionalTitle}
+                          onChange={(value) => handleFieldChange('professionalTitle', value)}
+                          error={errors.professionalTitle}
+                          disabled={isSaving}
+                          required
+                          placeholder="Ex: Personal Trainer, Nutricionista"
+                        />
+                        <FormInput
+                          label="E-mail"
+                          type="email"
+                          value={formData.email}
+                          onChange={(value) => handleFieldChange('email', value)}
+                          error={errors.email}
+                          disabled={isSaving}
+                          required
+                          placeholder="seu@email.com"
+                        />
+                        <FormInput
+                          label="Telefone"
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(value) => handleFieldChange('phone', value)}
+                          error={errors.phone}
+                          disabled={isSaving}
+                          required
+                          placeholder="(11) 99999-9999"
+                        />
+                        <FormSelect
+                          label="Estado"
+                          value={formData.state}
+                          onChange={(value) => handleFieldChange('state', value)}
+                          options={BRAZILIAN_STATES}
+                          disabled={isSaving}
+                          required
+                        />
+                        <FormSelect
+                          label="Cidade"
+                          value={formData.city}
+                          onChange={(value) => handleFieldChange('city', value)}
+                          options={citiesRaw}
+                          disabled={isSaving || citiesLoading}
+                          required
+                        />
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Como você atende? *
+                          </label>
+                          <select
+                            value={formData.attendanceType}
+                            onChange={(e) => handleFieldChange('attendanceType', e.target.value)}
+                            disabled={isSaving}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <option value="presencial">Presencial</option>
+                            <option value="online">Online</option>
+                            <option value="ambos">Ambos (Presencial + Online)</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="mb-6">
+                        <FormTextarea
+                          label="Bio"
+                          value={formData.bio}
+                          onChange={(value) => handleFieldChange('bio', value)}
+                          error={errors.bio}
+                          maxLength={500}
+                          minLength={10}
+                          disabled={isSaving}
+                          required
+                          showCounter={true}
+                        />
+                      </div>
+
+                      {/* Services Selection */}
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                          Serviços que você oferece *
+                        </label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {SERVICE_TYPES.map((service) => (
+                            <button
+                              key={service}
+                              type="button"
+                              onClick={() => handleServiceToggle(service)}
+                              disabled={isSaving}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                formData.services.includes(service)
+                                  ? 'bg-primary text-white'
+                                  : 'bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-slate-600'
+                              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            >
+                              {service}
+                            </button>
+                          ))}
+                        </div>
+                        {formData.services.length === 0 && isEditing && (
+                          <p className="text-red-500 text-sm mt-2">Selecione pelo menos um serviço</p>
+                        )}
                       </div>
 
                       {/* Danger Zone */}

@@ -19,9 +19,26 @@
 ✅ **API**: Full CRUD endpoints with filtering, pagination & content moderation  
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
-### 🔐 Latest Updates (Nov 22, 2025 - 21:20 UTC)
+### 🔐 Latest Updates (Nov 26, 2025 - CURRENT)
 
-#### 🎉 v1.3.1 - Auto-Login + Form Validation Polish
+#### 🎨 v1.3.14 - UX Improvements for Registration & Dashboard
+
+- **CPF Input**: Now filters to digits only (cleaner format, no letters accepted) ✅
+- **Phase 2 Form**: Removed pre-submission validation alert (less user anxiety) ✅
+- **Dashboard Edit Mode**: Fields always editable by default (no "Edit" button needed) ✅
+- **Dashboard Buttons**: Always shows "Salvar Alterações" (simpler UX) ✅
+- **Photo Upload**: Moved to top of form (better discoverability) ✅
+- **Photo Sidebar**: Made display-only (no redundant edit button) ✅
+
+**Why These Changes:**
+- Users were confused by CPF accepting letters - now numeric-only
+- Validation warnings on Phase 2 were appearing before users did anything - removed for UX
+- Dashboard edit mode was too complex - fields always editable now
+- Photo editing in two places was redundant - consolidated to form top
+
+---
+
+#### 🔐 Previous Updates (Nov 24, 2025 - v1.3.13 Hotfixes)
 - **Fixed "canceled" Error on HomePage**: Clean loading without false errors ✅
 - **Auto-Login Now Smooth**: Email verified → Dashboard (no LoginPage) 🚀
 - **Form Feedback Clear**: Users see exactly which fields need filling 📝

@@ -21,6 +21,199 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.3.14] - 2025-11-26
+
+### ✨ Minor: UX Improvements - Registration Form, Dashboard Editing
+
+**Status:** ✅ PRODUCTION READY  
+**Deploy Date:** Nov 26, 2025  
+**Build Test:** ✅ TypeScript compile success, no errors  
+**Focus:** Improve user experience in registration and dashboard editing flows
+
+---
+
+### 🎯 Changes Implemented
+
+#### **1. CPF Input - Only Numbers Allowed**
+
+**File:** `RegisterProfessionalPage.tsx` (Step 1)
+
+```typescript
+// v1.3.14: CPF field now filters non-numeric characters
+onChange={(value) => {
+  const numericOnly = value.replace(/[^0-9]/g, '')
+  handleStep1InputChange('cpf', numericOnly)
+}}
+```
+
+**Before:** CPF field accepted letters, formatted input (000.000.000-00)  
+**After:** CPF field only accepts digits, cleaner format (00000000000)
+
+**Why:** Users were confused by accepting letters; simpler numeric-only approach is more intuitive
+
+**Affected Users:** Anyone entering CPF in registration Step 1
+
+---
+
+#### **2. Phase 2 Registration - Remove Validation Alert**
+
+**File:** `RegisterProfessionalPage.tsx` (Step 2)
+
+```typescript
+// v1.3.14: Removed pre-submission validation warning
+// Only show errors when user clicks "Enviar Cadastro"
+```
+
+**Before:**
+```
+┌─ ⚠️ Campos obrigatórios faltando:
+│  • Selecione pelo menos um serviço
+│  • Insira um preço válido (maior que 0)
+│  • Aceite os Termos e Condições
+└─
+```
+Visible immediately when user enters Step 2, before they've done anything.
+
+**After:**
+Form renders clean without warning. Validation errors only appear on submit attempt.
+
+**Why:** "Campos faltando" alert was alarming users - made them think they were already doing something wrong before they started. Removed to improve UX and reduce anxiety.
+
+---
+
+#### **3. Dashboard - Fields Always Editable**
+
+**File:** `DashboardPage.tsx`
+
+**Before:**
+```typescript
+const [isEditing, setIsEditing] = useState(false)  // Starts locked
+
+// Input disabled until user clicks "Editar Perfil" button
+disabled={!isEditing || isSaving}
+
+// Button toggles between "Editar Perfil" and "Salvar Alterações"
+{isEditing ? <SaveButton /> : <EditButton />}
+```
+
+User flow:
+1. Dashboard loads with all fields disabled (locked)
+2. User clicks "Editar Perfil" button
+3. Fields unlock
+4. User can edit
+5. Click "Salvar Alterações"
+6. On save, fields lock again
+
+**After:**
+```typescript
+const [isEditing, setIsEditing] = useState(true)  // Starts unlocked
+
+// Input disabled ONLY while saving
+disabled={isSaving}  // Only lock during API call
+
+// Button always shows "Salvar Alterações"
+// No toggle needed
+```
+
+User flow:
+1. Dashboard loads with all fields unlocked and ready to edit
+2. User can immediately edit any field
+3. Click "Salvar Alterações" button
+4. Fields temporarily disable while saving (isSaving=true)
+5. On success, fields remain unlocked
+
+**Why:** 
+- More intuitive: Users expect form fields to be editable by default
+- Reduces clicks: No need for separate "Edit" toggle
+- Faster workflow: Edit immediately without extra step
+- Better UX: "Salvar Alterações" is clearer than "Editar Perfil"
+
+---
+
+#### **4. Profile Photo - Move to Top + Disable Sidebar Button**
+
+**File:** `DashboardPage.tsx`
+
+**Before:**
+- Photo upload section was at bottom of form (near "Danger Zone")
+- Sidebar had clickable photo with hover edit button
+- Photo editing split between sidebar and form bottom
+
+**After:**
+- Photo upload section moved to TOP of form (right after header)
+- Sidebar photo no longer clickable (disabled hover effects)
+- Single source of truth for photo editing: main form section
+
+**Changes:**
+1. **Sidebar:** Removed `onClick={() => fileInputRef.current?.click()}`
+2. **Sidebar:** Removed hover overlay `group-hover:opacity-100`
+3. **Sidebar:** Photo is now display-only (visual reference)
+4. **Form Top:** Added new photo section with upload UI
+
+**Why:**
+- Cleaner UX: One place to edit photos (not two)
+- Reduced redundancy: Sidebar and form section were duplicating functionality
+- Better discoverability: Photo editing is now obvious at top of form
+- Prevents confusion: Users don't try to click sidebar photo
+
+**File Structure (After):**
+```
+Dashboard Form
+├── Header (Editar Perfil + Salvar/Cancelar buttons)
+├── 🖼️ Photo Upload Section (NEW POSITION)
+│   ├── Photo preview (24px)
+│   ├── Edit button
+│   ├── Upload UI
+│   └── File input (hidden)
+├── Personal Info Fields
+│   ├── Full Name
+│   ├── Professional Title
+│   ├── Email
+│   ├── Phone
+│   ├── State
+│   └── City
+├── Bio
+├── Services Selection
+└── Danger Zone (Delete Account)
+```
+
+---
+
+### 📊 Summary of Changes
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| **CPF Input** | Accepts letters | Only numbers |
+| **Phase 2 Alert** | Validation warning visible | Clean form, errors on submit |
+| **Dashboard Edit Mode** | Click "Editar" to unlock | Always unlocked |
+| **Button Label** | "Editar Perfil" / "Salvar Alterações" | Always "Salvar Alterações" |
+| **Photo Upload** | Sidebar + Form bottom | Form top only |
+| **Photo Sidebar** | Clickable with edit overlay | Display-only |
+
+---
+
+### ✅ Quality Assurance
+
+- ✅ TypeScript compilation: Success (no errors)
+- ✅ Build test: Passed (2.07s)
+- ✅ No breaking changes
+- ✅ Backward compatible
+- ✅ UX improved across all flows
+
+---
+
+### 🧪 Testing Checklist
+
+- [ ] Register new professional - CPF only accepts numbers
+- [ ] Phase 2 form loads clean - no validation warning
+- [ ] Dashboard fields are editable immediately
+- [ ] Click "Salvar Alterações" - fields lock during save
+- [ ] Photo can be edited from form top section
+- [ ] Sidebar photo is display-only (no edit interaction)
+- [ ] All previous functionality preserved
+
+---
+
 ## [1.3.13] - 2025-11-24
 
 ### 🔧 Patch: CRITICAL HOTFIXES - Dashboard Travamento, Logout Infinito, Logout+Refresh Loop

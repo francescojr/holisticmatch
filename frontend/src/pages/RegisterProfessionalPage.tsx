@@ -570,14 +570,18 @@ function RegisterProfessionalPage() {
                 required
               />
 
-              {/* CPF (Opcional) */}
+              {/* CPF (Opcional) - v1.3.14: Only numbers allowed */}
               <FormInput
                 label="CPF (Opcional)"
                 type="text"
                 value={step1Data.cpf}
-                onChange={(value) => handleStep1InputChange('cpf', value)}
+                onChange={(value) => {
+                  // v1.3.14: Remove non-numeric characters
+                  const numericOnly = value.replace(/[^0-9]/g, '')
+                  handleStep1InputChange('cpf', numericOnly)
+                }}
                 error={errors.cpf}
-                placeholder="000.000.000-00"
+                placeholder="00000000000"
               />
 
               {/* Estado */}
@@ -684,26 +688,8 @@ function RegisterProfessionalPage() {
                 Serviços & Preço Base
               </h3>
 
-              {/* v1.3.2: Validation Summary Alert */}
-              {(step2Data.services.length === 0 || step2Data.pricePerSession === 0 || !step2Data.acceptTerms) && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md"
-                >
-                  <div className="flex gap-3">
-                    <span className="material-symbols-outlined text-yellow-600 flex-shrink-0">warning</span>
-                    <div className="text-sm text-yellow-800">
-                      <p className="font-semibold mb-1">Campos obrigatórios faltando:</p>
-                      <ul className="list-disc list-inside space-y-0.5 text-xs">
-                        {step2Data.services.length === 0 && <li>Selecione pelo menos um serviço</li>}
-                        {step2Data.pricePerSession === 0 && <li>Insira um preço válido (maior que 0)</li>}
-                        {!step2Data.acceptTerms && <li>Aceite os Termos e Condições</li>}
-                      </ul>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
+              {/* v1.3.14: Validation alert removed - only show errors on submit */}
+              {/* Removed pre-fill validation warning to reduce user anxiety */}
 
               {/* Added Services List */}
               {step2Data.services.length > 0 && (
