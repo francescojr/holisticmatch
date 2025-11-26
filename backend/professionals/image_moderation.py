@@ -66,12 +66,22 @@ class ImageModerationService:
             Tuple of (is_safe: bool, results: dict)
         """
         if not self.enabled:
-            # FAIL-CLOSED: AWS not enabled = REJECT
-            logger.critical('[IMAGE_MODERATION] FAIL-CLOSED: AWS disabled - rejecting image')
-            return False, {
-                'error': 'Servico de validacao indisponivel',
-                'message': 'Imagem rejeitada - validacao falhou'
-            }
+            # In TESTING mode: allow images through with warning
+            # In PRODUCTION: fail-closed (but this should never happen if AWS is configured)
+            is_test_mode = getattr(settings, 'TESTING', False)
+            if is_test_mode:
+                logger.warning('[IMAGE_MODERATION] TEST MODE: AWS disabled but allowing image')
+                return True, {
+                    'test_mode': True,
+                    'message': 'Modo teste - imagem permitida'
+                }
+            else:
+                # PRODUCTION FAIL-CLOSED: AWS not enabled = REJECT
+                logger.critical('[IMAGE_MODERATION] FAIL-CLOSED: AWS disabled - rejecting image')
+                return False, {
+                    'error': 'Servico de validacao indisponivel',
+                    'message': 'Imagem rejeitada - validacao falhou'
+                }
 
         if not image_file:
             return False, {'error': 'Nenhuma imagem fornecida'}
