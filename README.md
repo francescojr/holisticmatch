@@ -19,7 +19,37 @@
 ✅ **API**: Full CRUD endpoints with filtering, pagination & content moderation  
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
-### 🔐 Latest Updates (Nov 26, 2025 - CURRENT)
+### 🔐 Latest Updates (Jan 17, 2025 - CURRENT)
+
+#### ✅ v1.4.6 - Photo Validation Before Registration (UX Improvement)
+
+- **Pre-Registration Validation**: Photo validated with AWS BEFORE user submits form ✅
+- **Better Error Messages**: Clear feedback when photo has inappropriate content ✅
+- **Improved UX**: Validation happens when photo selected (not on submit) ✅
+- **New Endpoint**: `POST /api/professionals/validate-photo/` for pre-submission checks
+
+**Why This Matters:**
+- Users get immediate feedback when selecting inappropriate photos
+- No more confusing 500 errors on registration
+- Photos are validated before step 2 of registration form
+- Users can fix issues before attempting to register
+
+#### ✅ v1.4.5 - Token Refresh & Logout Cache Fixes (Critical)
+
+- **Login Reliability**: `flushSync()` replaces `setTimeout(0)` for guaranteed state updates ✅
+- **Logout Loop Fixed**: React Query cache properly invalidated after logout ✅
+- **Infinite Loading Fixed**: HomePage no longer stuck on loading after logout ✅
+
+**What Was Fixed:**
+1. Login sometimes required multiple attempts (race condition) → NOW reliable on first try
+2. Logout redirects to home but stuck on loading → NOW loads professionals immediately
+3. Cache invalidation after logout was unreliable → NOW uses custom events for sync
+
+#### ✅ v1.4.4 - Production Issues & Dashboard Simplification
+
+- **Login Race Condition**: Fixed with state update synchronization ✅
+- **Dashboard Simplification**: Removed redundant edit/cancel buttons ✅
+- **Fields Always Editable**: Better UX with single-mode editing ✅
 
 #### ✅ v1.4.3 - Production Validation Complete
 

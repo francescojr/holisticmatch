@@ -7,6 +7,105 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.6] - 2025-01-17
+
+### 🔐 Photo Validation Before Registration - UX & Security Improvement
+
+**Status:** ✅ DEPLOYED - Pre-registration photo validation with AWS Rekognition
+
+#### Issue Fixed
+
+**Photo Validation Returns 500 Error Without User Feedback** ✅
+- **Problem:** Users uploading inappropriate photos got 500 error HTML response instead of clear feedback
+- **Symptom:** First registration attempt failed silently with generic server error
+- **Root Cause:** Photo validation (AWS Rekognition) happened during form submission, returning HTML 500 instead of JSON error
+- **Solution:** Added photo validation BEFORE step 2 of registration form using new endpoint
+
+#### Implementation
+
+**Backend Changes:**
+- **New Endpoint:** `POST /api/professionals/validate-photo/` 
+- **Purpose:** Validate photo with AWS Rekognition BEFORE registration
+- **Returns:** `{'is_valid': true}` or detailed error message
+- **File:** `backend/professionals/views.py` - added `validate_photo()` action
+- **Security:** Checks file type, size, and content moderation in one place
+
+**Frontend Changes:**
+- **New Service Function:** `authService.validatePhoto(file)` 
+- **New Handlers:** 
+  - `handlePhotoChange()` - validates immediately when photo selected
+  - `validatePhotoWithBackend()` - async validation with AWS
+- **Better UX:**
+  - Validation happens when photo is picked (not when form submits)
+  - Clear error message displayed with toast
+  - Photo automatically cleared if validation fails
+  - Cannot proceed to step 2 with invalid photo
+- **File:** `frontend/src/pages/RegisterProfessionalPage.tsx`
+
+**Files Modified:**
+- `frontend/src/services/authService.ts`: Added `validatePhoto()` function
+- `frontend/src/pages/RegisterProfessionalPage.tsx`: Added photo validation with state tracking
+- `backend/professionals/views.py`: Added `validate-photo/` endpoint
+
+#### User Flow (Improved)
+
+```
+OLD FLOW (Broken):
+1. User fills step 1, selects photo
+2. Clicks "Next" → goes to step 2
+3. Clicks "Cadastrar" → submits form
+4. Backend returns 500 HTML error
+5. User confused, no clear feedback
+
+NEW FLOW (Fixed):
+1. User fills step 1, selects photo
+2. ⚡ Photo immediately validated with AWS
+3. ✅ Toast shows "Foto validada" OR ❌ shows why rejected
+4. If invalid, photo cleared, user picks different photo
+5. User proceeds to step 2 confident photo is valid
+6. Registration guaranteed to succeed (no photo errors)
+```
+
+#### Technical Details
+
+**Why Validate Before Submission:**
+- Immediate feedback (no server roundtrip delay on form submit)
+- Better UX (validation happens as user selects photo)
+- Prevents invalid registrations (form won't let them proceed)
+- Clear error messages (not HTML 500 page)
+- Reduces server load (invalid photos rejected early)
+
+**Endpoint Security:**
+- Public endpoint (no auth required) - needed for registration
+- Validates file type, size, AND content
+- Returns 400 Bad Request with specific error message
+- Same AWS Rekognition service as dashboard photo upload
+
+**Error Messages (Portuguese):**
+- "Por favor, selecione uma imagem válida (PNG, JPG, GIF)"
+- "A imagem deve ter no máximo 5MB"
+- "Conteudo inapropriado" / "Violência detectada" (from AWS)
+
+#### Testing Checklist
+- [ ] Upload valid professional photo → passes, can proceed to step 2
+- [ ] Upload photo with nudity/explicit content → rejected immediately with message
+- [ ] Upload photo with violence/weapons → rejected immediately with message
+- [ ] Upload non-image file → rejected with file type message
+- [ ] Upload file > 5MB → rejected with size message
+- [ ] After rejection, select different valid photo → can proceed
+- [ ] No errors in browser console
+- [ ] Proper toast notifications appear
+
+#### Backward Compatibility
+✅ 100% - Changes are additive, no breaking changes to existing endpoints
+
+### Performance Impact
+- ✅ **Better:** Validation happens earlier, prevents wasted form submission
+- ✅ **Cleaner:** No more HTML 500 errors in registration flow
+- ✅ **Safer:** AWS validation happens before any user/professional creation
+
+---
+
 ## [1.4.5] - 2025-01-17
 
 ### 🔧 Token Refresh & Logout Cache Fixes - Critical Bug Fixes

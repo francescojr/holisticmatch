@@ -68,6 +68,9 @@ function RegisterProfessionalPage() {
     acceptTerms: false
   })
 
+  const [photoValidating, setPhotoValidating] = useState(false)
+  const [photoValidationError, setPhotoValidationError] = useState<string | null>(null)
+
   const { errors, validate, setFieldError } = useFormValidation()
 
   // Load available services on component mount
@@ -149,16 +152,58 @@ function RegisterProfessionalPage() {
   }
 
   const handlePhotoChange = (file: File | null) => {
+    console.log('[RegisterPage.handlePhotoChange] Photo selected:', file?.name)
+    
+    // Clear previous validation error
+    setPhotoValidationError(null)
+    
+    // Basic validation (size, type)
     const photoError = validatePhoto(file)
     setStep1Data(prev => ({ ...prev, photo: file }))
 
-    // Update validation errors
     if (photoError) {
-      // We need to handle photo validation differently since it's not in the form validation hook
-      // For now, we'll show it via toast
-      if (file) {
-        toast.error('Erro na foto', { message: photoError })
+      console.log('[RegisterPage.handlePhotoChange] Basic validation failed:', photoError)
+      setPhotoValidationError(photoError)
+      toast.error('Erro na foto', { message: photoError })
+      return
+    }
+
+    // v1.4.6: Validate photo with AWS Rekognition via backend
+    if (file) {
+      validatePhotoWithBackend(file)
+    }
+  }
+
+  const validatePhotoWithBackend = async (file: File) => {
+    try {
+      setPhotoValidating(true)
+      console.log('[RegisterPage.validatePhotoWithBackend] Validating with AWS Rekognition...')
+      
+      const result = await authService.validatePhoto(file)
+      
+      if (!result.is_valid) {
+        console.log('[RegisterPage.validatePhotoWithBackend] ❌ Photo rejected:', result.message)
+        setPhotoValidationError(result.message || 'Foto contém conteúdo impróprio')
+        // Clear the photo if validation fails
+        setStep1Data(prev => ({ ...prev, photo: null }))
+        toast.error('Foto rejeitada', {
+          message: result.message || 'A foto contém conteúdo impróprio ou não é apropriada para perfil profissional. Por favor, selecione outra foto.'
+        })
+      } else {
+        console.log('[RegisterPage.validatePhotoWithBackend] ✅ Photo approved')
+        setPhotoValidationError(null)
+        toast.success('Foto validada', {
+          message: 'Sua foto foi validada com sucesso!'
+        })
       }
+    } catch (error: any) {
+      console.error('[RegisterPage.validatePhotoWithBackend] Error:', error)
+      setPhotoValidationError('Erro ao validar foto. Tente novamente.')
+      toast.error('Erro na validação', {
+        message: 'Não foi possível validar a foto. Tente novamente.'
+      })
+    } finally {
+      setPhotoValidating(false)
     }
   }
 
@@ -206,14 +251,22 @@ function RegisterProfessionalPage() {
       console.log('[RegisterPage.validateStep1Form] ✅ Passwords match!')
     }
 
-    // Validate photo
-    const photoError = validatePhoto(step1Data.photo)
-    if (photoError) {
-      console.log('[RegisterPage.validateStep1Form] Photo error:', photoError)
-      toast.error('Erro na foto', { message: photoError })
+    // v1.4.6: Check if photo was already validated with backend
+    // If there's a validation error from previous check, reject form
+    if (photoValidationError) {
+      console.log('[RegisterPage.validateStep1Form] ❌ Photo failed validation:', photoValidationError)
+      toast.error('Erro na foto', { message: photoValidationError })
       isFormValid = false
     } else {
-      console.log('[RegisterPage.validateStep1Form] Photo validation passed')
+      // Basic validation only if no backend validation error
+      const photoError = validatePhoto(step1Data.photo)
+      if (photoError) {
+        console.log('[RegisterPage.validateStep1Form] Photo error:', photoError)
+        toast.error('Erro na foto', { message: photoError })
+        isFormValid = false
+      } else if (step1Data.photo) {
+        console.log('[RegisterPage.validateStep1Form] ✅ Photo validation passed')
+      }
     }
 
     if (!isFormValid) {

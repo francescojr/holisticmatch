@@ -203,6 +203,55 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
                 raise
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['post'], permission_classes=[AllowAny], url_path='validate-photo')
+    def validate_photo(self, request):
+        """
+        POST /api/professionals/validate-photo/
+        v1.4.6: Validate photo for inappropriate content BEFORE registration
+        Allows frontend to show error feedback before user submits registration form
+        
+        Expects: multipart/form-data with 'photo' field
+        Returns: {'is_valid': true} or error details
+        """
+        from django.core.files.uploadedfile import UploadedFile
+        from .image_moderation import get_image_moderation_service
+        
+        photo = request.FILES.get('photo')
+        if not photo:
+            return Response(
+                {'detail': 'Nenhuma foto fornecida'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check file type and size (basic validation)
+        if not photo.content_type.startswith('image/'):
+            return Response(
+                {'detail': 'Por favor, selecione uma imagem válida (PNG, JPG, GIF)'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if photo.size > 5 * 1024 * 1024:  # 5MB
+            return Response(
+                {'detail': 'A imagem deve ter no máximo 5MB'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Validate with AWS Rekognition
+        image_moderation = get_image_moderation_service()
+        is_safe, result = image_moderation.moderate_professional_photo(photo)
+        
+        if not is_safe:
+            error_msg = result.get('message', 'Foto contém conteúdo impróprio ou não é apropriada para perfil profissional')
+            return Response(
+                {'detail': error_msg},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        return Response(
+            {'is_valid': True, 'message': 'Foto validada com sucesso'},
+            status=status.HTTP_200_OK
+        )
+
     @action(detail=False, methods=['post'], permission_classes=[AllowAny], url_path='verify-email')
     def verify_email(self, request):
         """

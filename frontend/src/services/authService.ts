@@ -209,6 +209,35 @@ export const authService = {
     
     return isAuth
   },
+
+  /**
+   * v1.4.6: Validate photo before registration
+   * Sends photo to backend for AWS Rekognition validation
+   * Returns validation result without saving the photo
+   */
+  async validatePhoto(photoFile: File): Promise<{ is_valid: boolean; message?: string }> {
+    try {
+      const formData = new FormData()
+      formData.append('photo', photoFile)
+
+      console.log('[authService.validatePhoto] 📸 Validating photo:', photoFile.name, '(' + (photoFile.size / 1024).toFixed(1) + 'KB)')
+
+      const response = await api.post<any>('/professionals/validate-photo/', formData)
+      
+      console.log('[authService.validatePhoto] ✅ Photo validation passed')
+      return { is_valid: true }
+    } catch (error: any) {
+      // Check for validation errors from backend
+      if (error.response?.status === 400) {
+        const errorMsg = error.response.data?.detail || error.response.data?.photo?.[0] || 'Foto inválida'
+        console.log('[authService.validatePhoto] ❌ Photo validation failed:', errorMsg)
+        return { is_valid: false, message: errorMsg }
+      }
+
+      console.error('[authService.validatePhoto] ❌ Validation error:', error.message)
+      return { is_valid: false, message: 'Erro ao validar foto. Tente novamente.' }
+    }
+  },
 }
 
 export default authService
