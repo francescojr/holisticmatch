@@ -40,10 +40,22 @@ function HomePage() {
   console.log('[HomePage] - professionalsData:', professionalsData);
   console.log('[HomePage] - professionals count:', professionalsData?.results?.length);
 
-  // Invalidate cache on mount to ensure fresh data + clear from memory
+  // v1.4.5 FIX: Invalidate cache on mount AND listen for logout event
+  // This ensures fresh data loads after logout, preventing infinite loading
   useEffect(() => {
+    const handleLogout = () => {
+      console.log('[HomePage] v1.4.5 🔄 Logout detected - invalidating professionals cache')
+      queryClient.removeQueries({ queryKey: ['professionals'] })
+      queryClient.invalidateQueries({ queryKey: ['professionals'], exact: false })
+    }
+    
+    // On mount, clear cache to get fresh data
     queryClient.removeQueries({ queryKey: ['professionals'] })
     queryClient.invalidateQueries({ queryKey: ['professionals'] })
+    
+    // Listen for logout event from useAuth hook
+    window.addEventListener('auth-logout', handleLogout)
+    return () => window.removeEventListener('auth-logout', handleLogout)
   }, [queryClient])
 
   // Select random hero image on component mount

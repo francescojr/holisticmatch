@@ -3,6 +3,7 @@
  */
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { flushSync } from 'react-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
@@ -50,12 +51,11 @@ function LoginPage() {
 
       
       // Call login from auth context (which calls authService.login)
+      // v1.4.5 FIX: Use flushSync for guaranteed React state completion before navigation
+      // v1.4.4 had setTimeout(0) which is microtask - not reliable for state sync
+      // flushSync forces synchronous render, guaranteeing setUser() completes
       await login({ email, password })
-      
-      // v1.4.4 FIX: Add microtask delay to allow React state updates to propagate
-      // This prevents race condition where navigation happens before state update completes
-      // The delay allows pending state updates to flush through React's batching mechanism
-      await new Promise(resolve => setTimeout(resolve, 0))
+      flushSync(() => {})
       
       // Check what's in localStorage AFTER login
       const postAccessToken = localStorage.getItem('access_token')

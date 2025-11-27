@@ -127,15 +127,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // So we don't set user state here
   }
 
-  // v1.3.13: CRITICAL FIX - logout must set isLoading=false
-  // Previously: logout was async but never called setIsLoading(false)
-  // This caused loading spinner to never disappear after logout
+  // v1.4.5: CRITICAL FIX - logout must set isLoading=false AND notify for cache invalidation
+  // v1.3.13: logout was async but never called setIsLoading(false)
+  // v1.4.5: Now dispatches custom event to allow HomePage to refetch after logout
   const logout = async () => {
-    console.log('[useAuth] v1.3.13 🚪 Logout called - clearing auth state')
+    console.log('[useAuth] v1.4.5 🚪 Logout called - clearing auth state')
     try {
       await authService.logout()
     } catch (error) {
-      console.error('[useAuth] v1.3.13 Error calling authService.logout():', error)
+      console.error('[useAuth] v1.4.5 Error calling authService.logout():', error)
     } finally {
       // v1.3.13: ALWAYS clear state, even if logout API call fails
       localStorage.removeItem('access_token')
@@ -144,7 +144,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('professional_id')
       setUser(null)
       setIsLoading(false)  // ← CRITICAL: Must be false so loading spinner disappears
-      console.log('[useAuth] v1.3.13 ✅ Logout complete - user state cleared, isLoading=false')
+      // v1.4.5: Dispatch event to notify HomePage to refetch data
+      window.dispatchEvent(new CustomEvent('auth-logout'))
+      console.log('[useAuth] v1.4.5 ✅ Logout complete - user state cleared, isLoading=false')
     }
   }
 
