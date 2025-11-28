@@ -2,7 +2,7 @@
 Views for the professionals app.
 Implements API endpoints for professional profiles.
 
-DEPLOYMENT: 2025-11-28 - v1.4.9 Password reset fix & Text moderation
+DEPLOYMENT: 2025-11-28 18:30 - v1.4.9 Force deploy - Password reset fix & Text moderation
 """
 from django.contrib.auth.models import User
 from rest_framework import viewsets, status
