@@ -7,12 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.2] - 2025-11-28
+
+### 🔍 City Search Dropdown Feature
+
+**Status:** ✅ READY FOR DEPLOY  
+**Type:** PATCH (Feature + Bug Fix)
+
+#### New Features
+
+**1. City Dropdown Filter in HomePage Search** ✅
+- **Problem:** City filter was free-text input, users had to guess city names
+- **Solution:** 
+  - Created new endpoint `GET /api/v1/professionals/available_cities/`
+  - Returns list of cities with registered active professionals
+  - `SearchFilters.tsx` now uses dropdown populated from API
+- **Files:**
+  - `backend/professionals/views.py` - new `available_cities` action
+  - `frontend/src/services/professionalService.ts` - new `getAvailableCities()` method
+  - `frontend/src/components/SearchFilters.tsx` - city dropdown with loading state
+
+#### Bug Fixes
+
+**2. available_cities Endpoint 500 Error** ✅
+- **Problem:** Endpoint returned 500 Internal Server Error
+- **Root Cause 1:** `available_cities` action not in `public_actions` list (required authentication)
+- **Root Cause 2:** Query used `is_active=True` but field is on `User` model, not `Professional`
+- **Solution:** 
+  - Added `cities` and `available_cities` to `public_actions` in `get_permissions()`
+  - Changed filter from `is_active=True` to `user__is_active=True`
+- **File:** `backend/professionals/views.py`
+
+#### Notes
+- 183 tests passing ✅
+
+---
+
 ## [1.5.1] - 2025-11-28
 
 ### 🔒 Security Hardening & Production Cleanup
 
 **Status:** ✅ READY FOR DEPLOY  
-**Type:** PATCH (Security + Feature)
+**Type:** PATCH (Security)
 
 #### Security Fixes
 
@@ -38,19 +74,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `frontend/src/pages/ForgotPasswordPage.tsx`
   - `frontend/src/pages/EmailVerificationPage.tsx`
   - `frontend/src/components/ProtectedRoute.tsx`
-
-#### New Features
-
-**3. City Dropdown Filter in HomePage Search** ✅
-- **Problem:** City filter was free-text input, users had to guess city names
-- **Solution:** 
-  - Created new endpoint `GET /api/v1/professionals/available_cities/`
-  - Returns list of cities with registered active professionals
-  - `SearchFilters.tsx` now uses dropdown populated from API
-- **Files:**
-  - `backend/professionals/views.py` - new `available_cities` action
-  - `frontend/src/services/professionalService.ts` - new `getAvailableCities()` method
-  - `frontend/src/components/SearchFilters.tsx` - city dropdown with loading state
 
 #### Notes
 - Critical `console.error` statements kept for error tracking

@@ -27,7 +27,7 @@ from .permissions import IsAuthenticatedAndOwnerOrReadOnly
 from .constants import SERVICE_TYPES
 
 # API Version - update this when deploying to verify deployment success
-API_VERSION = "1.5.1"
+API_VERSION = "1.5.2"
 API_BUILD_DATE = "2025-11-28"
 
 
@@ -144,8 +144,8 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
         Require authentication for other write operations
         """
         public_actions = [
-            'list', 'retrieve', 'service_types', 'register', 
-            'verify_email', 'resend_verification',
+            'list', 'retrieve', 'service_types', 'cities', 'available_cities',
+            'register', 'verify_email', 'resend_verification',
             'password_reset', 'password_reset_confirm', 'validate_photo'
         ]
         if self.action in public_actions:
@@ -617,8 +617,9 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
             List of unique cities with active professionals, sorted alphabetically
         """
         # Get distinct cities from active professionals only
+        # Note: is_active is on User model, not Professional
         cities = Professional.objects.filter(
-            is_active=True,
+            user__is_active=True,
             na_contencao=False
         ).exclude(
             city__isnull=True
