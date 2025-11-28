@@ -1,36 +1,27 @@
 """
 Custom validators for the professionals app.
 Contains business logic validation functions.
+
+v1.4.7: Simplified to use centralized moderation service with caching.
 """
 import re
 from django.core.exceptions import ValidationError
 from django.core.files.images import get_image_dimensions
 from .constants import SERVICE_TYPES
+from .moderation import get_moderation_service
 
-# 🔥 PERFORMANCE FIX: Cache moderation checks to avoid redundant API calls
-_moderation_cache = {}
 
-def _get_cached_moderation_result(text):
-    """Get moderation result from cache or compute and cache it."""
+def _get_moderation_result(text: str):
+    """
+    Get moderation result using the centralized service.
+    Caching and rate limiting are handled by the service.
+    """
     import logging
     logger = logging.getLogger(__name__)
     
-    # Create a cache key from the text
-    cache_key = hash(text)
-    logger.warning(f"[CACHE_MODERATION] 🔍 Checking cache for text: '{text[:40]}...' | cache_key={cache_key}")
-    
-    if cache_key not in _moderation_cache:
-        logger.warning(f"[CACHE_MODERATION] 💾 Cache MISS - calling moderation service")
-        from .moderation import ModerationService
-        moderation_service = ModerationService()
-        is_safe, result = moderation_service.moderate_text(text)
-        logger.info(f"[CACHE_MODERATION] 📊 Moderation result: is_safe={is_safe} | source={result.get('source')}")
-        _moderation_cache[cache_key] = (is_safe, result)
-        logger.warning(f"[CACHE_MODERATION] 💾 Result cached: {len(_moderation_cache)} items in cache")
-    else:
-        logger.info(f"[CACHE_MODERATION] ✅ Cache HIT - using cached result")
-
-    return _moderation_cache[cache_key]
+    logger.debug(f"[VALIDATOR] Calling moderation service for text: '{text[:40]}...'")
+    service = get_moderation_service()
+    return service.moderate_text(text)
 
 
 def validate_city_state_pair(city, state):
@@ -184,39 +175,33 @@ def validate_name(value):
     import logging
     logger = logging.getLogger(__name__)
     
-    logger.warning(f"[VALIDATE_NAME] 🔴 Starting name validation for: '{value}'")
+    logger.debug(f"[VALIDATE_NAME] Starting validation for: '{value}'")
     
     if not value or not value.strip():
-        logger.error("[VALIDATE_NAME] ❌ Name is empty")
         raise ValidationError('Nome é obrigatório')
 
     if len(value.strip()) < 3:
-        logger.error(f"[VALIDATE_NAME] ❌ Name too short: {len(value.strip())} chars (min 3)")
         raise ValidationError('Nome deve ter pelo menos 3 caracteres')
 
     if len(value) > 255:
-        logger.error(f"[VALIDATE_NAME] ❌ Name too long: {len(value)} chars (max 255)")
         raise ValidationError('Nome deve ter no máximo 255 caracteres')
 
     # Check for reasonable characters (letters, spaces, accents)
     if not re.match(r'^[a-zA-ZÀ-ÿ\s\'-]+$', value):
-        logger.error(f"[VALIDATE_NAME] ❌ Invalid characters in name: {value}")
         raise ValidationError('Nome deve conter apenas letras, espaços e acentos')
     
-    logger.info("[VALIDATE_NAME] ✅ Basic format validation passed, calling moderation...")
-    
-    # ✅ MODERATE THE NAME (cached to avoid redundant API calls)
-    is_safe, result = _get_cached_moderation_result(value)
+    # Moderate the name using centralized service (with caching + rate limiting)
+    is_safe, result = _get_moderation_result(value)
     
     if not is_safe:
         source = result.get('source', 'unknown')
-        logger.error(f"[VALIDATE_NAME] ❌ BLOCKED BY {source.upper()}: Name contains inappropriate content")
+        logger.warning(f"[VALIDATE_NAME] ❌ BLOCKED BY {source.upper()}: Name contains inappropriate content")
         raise ValidationError(
             f'Nome contém conteúdo impróprio (detectado por {source}). '
             f'Por favor, use um nome profissional apropriado.'
         )
     
-    logger.info(f"[VALIDATE_NAME] ✅ NAME APPROVED via {result.get('source', 'unknown')}")
+    logger.debug(f"[VALIDATE_NAME] ✅ Name approved via {result.get('source', 'unknown')}")
 
 
 def validate_bio(value):
@@ -234,8 +219,8 @@ def validate_bio(value):
     if len(value) > 2000:
         raise ValidationError('Bio deve ter no máximo 2000 caracteres')
     
-    # ✅ MODERATE THE BIO CONTENT (cached to avoid redundant API calls)
-    is_safe, result = _get_cached_moderation_result(value)
+    # Moderate the bio using centralized service (with caching + rate limiting)
+    is_safe, result = _get_moderation_result(value)
     
     if not is_safe:
         source = result.get('source', 'unknown')

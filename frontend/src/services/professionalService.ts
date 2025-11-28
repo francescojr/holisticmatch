@@ -212,9 +212,10 @@ export const professionalService = {
 
   /**
    * Request password reset - sends email with reset link
+   * v1.4.8: Fixed endpoint URL (underscore, not hyphen)
    */
   async requestPasswordReset(email: string): Promise<{ message: string }> {
-    const response = await api.post<{ message: string }>('/professionals/password-reset/', {
+    const response = await api.post<{ message: string }>('/professionals/password_reset/', {
       email,
     })
     return response.data
@@ -222,13 +223,14 @@ export const professionalService = {
 
   /**
    * Confirm password reset - validates token and sets new password
+   * v1.4.8: Fixed endpoint URL (underscore, not hyphen)
    */
   async confirmPasswordReset(data: {
     token: string
     password: string
     password_confirm: string
   }): Promise<{ message: string }> {
-    const response = await api.post<{ message: string }>('/professionals/password-reset-confirm/', data)
+    const response = await api.post<{ message: string }>('/professionals/password_reset_confirm/', data)
     return response.data
   },
 }

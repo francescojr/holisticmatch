@@ -3,7 +3,18 @@ Tests for content moderation service
 """
 import pytest
 from unittest.mock import patch, MagicMock
-from professionals.moderation import ModerationService, get_moderation_service
+from django.core.cache import cache
+from professionals.moderation import ModerationService, get_moderation_service, _rate_limit_store
+
+
+@pytest.fixture(autouse=True)
+def clear_moderation_state():
+    """Clear rate limit and cache before each test"""
+    _rate_limit_store.clear()
+    cache.clear()
+    yield
+    _rate_limit_store.clear()
+    cache.clear()
 
 
 @pytest.mark.unit
@@ -20,11 +31,12 @@ class TestModerationService:
         """Test that moderation falls back to regex when API key is missing"""
         with patch('professionals.moderation.settings.OPENAI_API_KEY', None):
             service = ModerationService()
-            is_safe, results = service.moderate_text("some text")
+            is_safe, results = service.moderate_text("some text for api key test")
             # When OpenAI is not available, should fall back to regex (always available)
             assert is_safe is True
             assert results.get('source') == 'regex'
-            assert results.get('service_chain') == ['openai', 'regex']
+            # v1.4.7: service_chain now indicates 'openai_failed' for clarity
+            assert results.get('service_chain') == ['openai_failed', 'regex']
 
     def test_moderate_text_empty_input(self):
         """Test that empty text is considered safe"""
@@ -121,8 +133,11 @@ class TestModerationService:
         mock_openai_class.return_value.moderations.create.return_value = mock_response
 
         with patch('professionals.moderation.settings.OPENAI_API_KEY', 'test-key'):
+            # Clear state before this specific test
+            _rate_limit_store.clear()
+            cache.clear()
             service = ModerationService()
-            is_safe, results = service.moderate_text("[inappropriate hate speech]")
+            is_safe, results = service.moderate_text("[unique inappropriate hate speech test content]")
             assert is_safe is False
             assert results['flagged'] is True
             assert results['categories']['hate'] is True

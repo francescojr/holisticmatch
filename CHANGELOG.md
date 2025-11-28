@@ -7,6 +7,160 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.8] - 2025-01-17
+
+### 🔧 Password Reset Flow Fix
+
+**Status:** ✅ IMPLEMENTED - Fixed "Esqueci minha senha" (Forgot Password) functionality
+
+#### Issue Fixed
+
+**Password Reset Not Working** ✅
+- **Problem:** "Esqueci minha senha" button was returning 404 errors
+- **Symptoms:** Users couldn't request password reset emails
+- **Root Cause:** Frontend calling wrong API endpoints (hyphens instead of underscores)
+- **Solution:** Fixed endpoint URLs in `professionalService.ts`
+
+#### Technical Details
+
+**Incorrect Endpoints (Before):**
+```typescript
+// ForgotPasswordPage → professionalService.requestPasswordReset()
+POST /professionals/password-reset/  // ❌ WRONG (hyphen)
+
+// ResetPasswordPage → professionalService.confirmPasswordReset()  
+POST /professionals/password-reset-confirm/  // ❌ WRONG (hyphen)
+```
+
+**Correct Endpoints (After):**
+```typescript
+// ForgotPasswordPage → professionalService.requestPasswordReset()
+POST /professionals/password_reset/  // ✅ CORRECT (underscore)
+
+// ResetPasswordPage → professionalService.confirmPasswordReset()
+POST /professionals/password_reset_confirm/  // ✅ CORRECT (underscore)
+```
+
+#### Why This Happened
+
+Django REST Framework's `@action` decorator generates URLs using underscores by default:
+- `@action(detail=False, methods=['post'])` on `password_reset` method
+- Creates URL: `/professionals/password_reset/`
+- Frontend was calling hyphenated version which doesn't exist
+
+#### Files Modified
+
+- `frontend/src/services/professionalService.ts`:
+  - `requestPasswordReset()`: Changed `/professionals/password-reset/` → `/professionals/password_reset/`
+  - `confirmPasswordReset()`: Changed `/professionals/password-reset-confirm/` → `/professionals/password_reset_confirm/`
+
+#### Password Reset Flow
+
+1. User clicks "Esqueci minha senha" on login page
+2. Enters email on `/forgot-password` page
+3. Backend sends email with reset token (valid for 24 hours)
+4. User clicks link → opens `/reset-password?token=xxx`
+5. User enters new password → backend validates and updates
+
+#### Testing Checklist
+- [ ] Go to `/login` → click "Esqueci minha senha"
+- [ ] Enter valid email → should show success message
+- [ ] Check email for reset link
+- [ ] Click link → should open password reset form
+- [ ] Enter new password → should update and redirect to login
+
+#### Backward Compatibility
+✅ 100% - Frontend-only fix, no backend changes needed
+
+---
+
+## [1.4.7] - 2025-01-17
+
+### 🛡️ Text Moderation - Rate Limiting, Caching & Reliability
+
+**Status:** ✅ IMPLEMENTED - Robust text moderation with API protection
+
+#### Issue Fixed
+
+**OpenAI Moderation API Overload** ✅
+- **Problem:** Previous implementation could overload OpenAI API with too many requests
+- **Symptoms:** Rate limits hit, API errors, slow responses
+- **Root Cause:** No rate limiting, no persistent caching, no graceful fallback
+- **Solution:** Added rate limiting, Django cache integration, and accept-on-error fallback
+
+#### Implementation Details
+
+**Rate Limiting (per IP):**
+- Default: 30 requests/minute per IP address
+- Configurable via `MODERATION_RATE_LIMIT_PER_MINUTE` in settings
+- When limit hit, falls back to regex-only validation
+- Prevents single user from exhausting API quota
+
+**Caching (Django Cache with TTL):**
+- Results cached for 1 hour (configurable via `MODERATION_CACHE_TTL_SECONDS`)
+- Uses SHA256 hash of text as cache key
+- Persistent across requests (unlike previous in-memory dict)
+- Dramatically reduces API calls for repeated content
+
+**Graceful Fallback:**
+- If OpenAI API fails, content is ACCEPTED with `needs_manual_review: true` flag
+- Prevents blocking legitimate users due to API outages
+- Configurable via `MODERATION_ACCEPT_ON_ERROR` setting
+- Logged for manual review
+
+**OpenAI Moderation API Info:**
+- **FREE API** - no cost per request
+- Rate limit: 1000 requests/minute
+- Our implementation adds extra protection layer
+
+#### Configuration Options
+
+Add to `settings.py` to customize:
+
+```python
+# Text moderation settings
+MODERATION_RATE_LIMIT_PER_MINUTE = 30  # Per-IP rate limit
+MODERATION_CACHE_TTL_SECONDS = 3600     # Cache duration (1 hour)
+MODERATION_ACCEPT_ON_ERROR = True       # Accept content if API fails
+```
+
+#### Files Modified
+
+- `backend/professionals/moderation.py`:
+  - Added rate limiting with `_check_rate_limit()` function
+  - Added Django cache integration with TTL
+  - Added `MODERATION_ACCEPT_ON_ERROR` fallback strategy
+  - Improved logging with clear status indicators
+  
+- `backend/professionals/validators.py`:
+  - Simplified to use centralized moderation service
+  - Removed duplicate caching logic
+  - Uses singleton `get_moderation_service()` function
+
+#### Technical Flow
+
+```
+Request → Check Cache → [HIT] → Return cached result
+                     → [MISS] → Check Rate Limit
+                                    ↓
+                              [ALLOWED] → OpenAI API → Cache result → Return
+                              [BLOCKED] → Regex fallback → Return
+                                    ↓
+                              [API ERROR] → Accept (if ACCEPT_ON_ERROR) → Log for review
+```
+
+#### Testing Checklist
+- [ ] Submit same text twice → second request uses cache
+- [ ] Submit 30+ texts rapidly → rate limit kicks in, uses regex
+- [ ] Disconnect OpenAI → gracefully falls back, content accepted
+- [ ] Inappropriate content → still blocked by regex fallback
+- [ ] Check logs for `[MODERATE_TEXT]` entries with status
+
+#### Backward Compatibility
+✅ 100% - Internal implementation changes only, same external API
+
+---
+
 ## [1.4.6] - 2025-01-17
 
 ### 🔐 Photo Validation Before Registration - UX & Security Improvement
