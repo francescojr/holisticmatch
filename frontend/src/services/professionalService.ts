@@ -21,6 +21,7 @@ export const professionalService = {
 
     if (filters.service) params.append('service', filters.service)
     if (filters.city) params.append('city', filters.city)
+    if (filters.state) params.append('state', filters.state)  // v1.5.2: Added state filter
     if (filters.price_min) params.append('price_min', filters.price_min.toString())
     if (filters.price_max) params.append('price_max', filters.price_max.toString())
     if (filters.attendance_type) params.append('attendance_type', filters.attendance_type)

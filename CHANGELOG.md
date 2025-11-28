@@ -30,7 +30,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Bug Fixes
 
-**2. available_cities Endpoint 500 Error** ✅ (before changing to states)
+**2. State Filter Not Applied to API Request** ✅
+- **Problem:** Selecting a state returned all professionals (filter not working)
+- **Root Cause:** `professionalService.getProfessionals()` was not passing `state` param to API
+- **Solution:** Added `if (filters.state) params.append('state', filters.state)` to query builder
+- **File:** `frontend/src/services/professionalService.ts`
+
+**3. available_cities Endpoint 500 Error** ✅ (before changing to states)
 - **Root Cause 1:** Action not in `public_actions` list
 - **Root Cause 2:** Query used `is_active=True` but field is on `User` model
 - **Solution:** Fixed permissions and query, then replaced with states endpoint
