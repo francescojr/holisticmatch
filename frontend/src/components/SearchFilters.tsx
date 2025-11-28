@@ -1,7 +1,7 @@
 /**
  * SearchFilters component
  * Provides filtering controls for professional search
- * v1.5.1: City filter now uses dropdown with registered cities
+ * v1.5.2: Changed city filter to state filter (27 options vs 5000+ cities)
  */
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
@@ -22,24 +22,24 @@ const ATTENDANCE_TYPES = [
 
 export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
   const [filters, setFilters] = useState<ProfessionalFilters>({})
-  const [availableCities, setAvailableCities] = useState<string[]>([])
-  const [citiesLoading, setCitiesLoading] = useState(true)
+  const [availableStates, setAvailableStates] = useState<{ code: string; name: string }[]>([])
+  const [statesLoading, setStatesLoading] = useState(true)
 
-  // Load available cities on mount
+  // Load available states on mount
   useEffect(() => {
-    const loadCities = async () => {
+    const loadStates = async () => {
       try {
-        setCitiesLoading(true)
-        const cities = await professionalService.getAvailableCities()
-        setAvailableCities(cities)
+        setStatesLoading(true)
+        const states = await professionalService.getAvailableStates()
+        setAvailableStates(states)
       } catch (error) {
-        console.error('Error loading cities:', error)
-        setAvailableCities([])
+        console.error('Error loading states:', error)
+        setAvailableStates([])
       } finally {
-        setCitiesLoading(false)
+        setStatesLoading(false)
       }
     }
-    loadCities()
+    loadStates()
   }, [])
 
   const handleFilterChange = (key: keyof ProfessionalFilters, value: string | number | undefined) => {
@@ -90,24 +90,24 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
           </select>
         </div>
 
-        {/* City Filter - v1.5.1: Now a dropdown with registered cities */}
+        {/* State Filter - v1.5.2: Dropdown with 27 Brazilian states */}
         <div>
-          <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
-            Cidade
+          <label htmlFor="state" className="block text-sm font-medium text-gray-700 mb-2">
+            Estado
           </label>
           <select
-            id="city"
-            value={filters.city || ''}
-            onChange={(e) => handleFilterChange('city', e.target.value)}
-            disabled={citiesLoading}
+            id="state"
+            value={filters.state || ''}
+            onChange={(e) => handleFilterChange('state', e.target.value)}
+            disabled={statesLoading}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-wait"
           >
             <option value="">
-              {citiesLoading ? 'Carregando...' : 'Todas as cidades'}
+              {statesLoading ? 'Carregando...' : 'Todos os estados'}
             </option>
-            {availableCities.map((city) => (
-              <option key={city} value={city}>
-                {city}
+            {availableStates.map((state) => (
+              <option key={state.code} value={state.code}>
+                {state.name}
               </option>
             ))}
           </select>

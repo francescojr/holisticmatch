@@ -144,7 +144,7 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
         Require authentication for other write operations
         """
         public_actions = [
-            'list', 'retrieve', 'service_types', 'cities', 'available_cities',
+            'list', 'retrieve', 'service_types', 'cities', 'available_states',
             'register', 'verify_email', 'resend_verification',
             'password_reset', 'password_reset_confirm', 'validate_photo'
         ]
@@ -607,32 +607,49 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
             'count': len(sorted_cities)
         }, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['get'], url_path='available_cities')
-    def available_cities(self, request):
+    @action(detail=False, methods=['get'], url_path='available_states')
+    def available_states(self, request):
         """
-        GET /api/v1/professionals/available_cities/
-        Returns list of cities where active professionals are registered
+        GET /api/v1/professionals/available_states/
+        Returns list of Brazilian states for filtering
         
         Returns:
-            List of unique cities with active professionals, sorted alphabetically
+            List of state codes with names, sorted alphabetically
         """
-        # Get distinct cities from active professionals only
-        # Note: is_active is on User model, not Professional
-        cities = Professional.objects.filter(
-            user__is_active=True,
-            na_contencao=False
-        ).exclude(
-            city__isnull=True
-        ).exclude(
-            city__exact=''
-        ).values_list('city', flat=True).distinct()
-        
-        # Sort using Python's sorted() to handle Unicode characters correctly
-        sorted_cities = sorted(set(cities))
+        # All 27 Brazilian states
+        states = [
+            {'code': 'AC', 'name': 'Acre'},
+            {'code': 'AL', 'name': 'Alagoas'},
+            {'code': 'AP', 'name': 'Amapá'},
+            {'code': 'AM', 'name': 'Amazonas'},
+            {'code': 'BA', 'name': 'Bahia'},
+            {'code': 'CE', 'name': 'Ceará'},
+            {'code': 'DF', 'name': 'Distrito Federal'},
+            {'code': 'ES', 'name': 'Espírito Santo'},
+            {'code': 'GO', 'name': 'Goiás'},
+            {'code': 'MA', 'name': 'Maranhão'},
+            {'code': 'MT', 'name': 'Mato Grosso'},
+            {'code': 'MS', 'name': 'Mato Grosso do Sul'},
+            {'code': 'MG', 'name': 'Minas Gerais'},
+            {'code': 'PA', 'name': 'Pará'},
+            {'code': 'PB', 'name': 'Paraíba'},
+            {'code': 'PR', 'name': 'Paraná'},
+            {'code': 'PE', 'name': 'Pernambuco'},
+            {'code': 'PI', 'name': 'Piauí'},
+            {'code': 'RJ', 'name': 'Rio de Janeiro'},
+            {'code': 'RN', 'name': 'Rio Grande do Norte'},
+            {'code': 'RS', 'name': 'Rio Grande do Sul'},
+            {'code': 'RO', 'name': 'Rondônia'},
+            {'code': 'RR', 'name': 'Roraima'},
+            {'code': 'SC', 'name': 'Santa Catarina'},
+            {'code': 'SP', 'name': 'São Paulo'},
+            {'code': 'SE', 'name': 'Sergipe'},
+            {'code': 'TO', 'name': 'Tocantins'},
+        ]
         
         return Response({
-            'cities': sorted_cities,
-            'count': len(sorted_cities)
+            'states': states,
+            'count': len(states)
         }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])

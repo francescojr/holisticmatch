@@ -9,36 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.2] - 2025-11-28
 
-### 🔍 City Search Dropdown Feature
+### 🔍 State Search Dropdown Feature
 
 **Status:** ✅ READY FOR DEPLOY  
-**Type:** PATCH (Feature + Bug Fix)
+**Type:** PATCH (Feature)
 
 #### New Features
 
-**1. City Dropdown Filter in HomePage Search** ✅
-- **Problem:** City filter was free-text input, users had to guess city names
-- **Solution:** 
-  - Created new endpoint `GET /api/v1/professionals/available_cities/`
-  - Returns list of cities with registered active professionals
-  - `SearchFilters.tsx` now uses dropdown populated from API
+**1. State Dropdown Filter in HomePage Search** ✅
+- **Problem:** City filter was free-text input (5000+ options impractical)
+- **Solution:** Changed to State filter with 27 Brazilian states
+  - Created endpoint `GET /api/v1/professionals/available_states/`
+  - Returns list of all 27 states with code and name
+  - `SearchFilters.tsx` now shows state dropdown
 - **Files:**
-  - `backend/professionals/views.py` - new `available_cities` action
-  - `frontend/src/services/professionalService.ts` - new `getAvailableCities()` method
-  - `frontend/src/components/SearchFilters.tsx` - city dropdown with loading state
+  - `backend/professionals/views.py` - new `available_states` action
+  - `frontend/src/services/professionalService.ts` - new `getAvailableStates()` method
+  - `frontend/src/components/SearchFilters.tsx` - state dropdown with loading state
+  - `frontend/src/types/Professional.ts` - added `state` to `ProfessionalFilters`
 
 #### Bug Fixes
 
-**2. available_cities Endpoint 500 Error** ✅
-- **Problem:** Endpoint returned 500 Internal Server Error
-- **Root Cause 1:** `available_cities` action not in `public_actions` list (required authentication)
-- **Root Cause 2:** Query used `is_active=True` but field is on `User` model, not `Professional`
-- **Solution:** 
-  - Added `cities` and `available_cities` to `public_actions` in `get_permissions()`
-  - Changed filter from `is_active=True` to `user__is_active=True`
-- **File:** `backend/professionals/views.py`
+**2. available_cities Endpoint 500 Error** ✅ (before changing to states)
+- **Root Cause 1:** Action not in `public_actions` list
+- **Root Cause 2:** Query used `is_active=True` but field is on `User` model
+- **Solution:** Fixed permissions and query, then replaced with states endpoint
 
 #### Notes
+- Backend already had `state` filter in `ProfessionalFilter` - just needed frontend
 - 183 tests passing ✅
 
 ---

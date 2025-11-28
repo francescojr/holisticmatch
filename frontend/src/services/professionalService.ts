@@ -60,12 +60,12 @@ export const professionalService = {
   },
 
   /**
-   * Get cities with registered professionals
-   * v1.5.1: New endpoint for city dropdown in search filters
+   * Get Brazilian states for search filter dropdown
+   * v1.5.2: Changed from cities to states (27 options vs 5000+)
    */
-  async getAvailableCities(): Promise<string[]> {
-    const response = await api.get<{ cities: string[]; count: number }>(`/professionals/available_cities/`)
-    return response.data.cities
+  async getAvailableStates(): Promise<{ code: string; name: string }[]> {
+    const response = await api.get<{ states: { code: string; name: string }[]; count: number }>(`/professionals/available_states/`)
+    return response.data.states
   },
 
   /**

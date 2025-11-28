@@ -51,6 +51,7 @@ export interface ProfessionalListResponse {
 export interface ProfessionalFilters {
   service?: string
   city?: string
+  state?: string  // v1.5.2: Added state filter
   price_min?: number
   price_max?: number
   attendance_type?: 'presencial' | 'online' | 'ambos'  // ← FIXED: Match backend
