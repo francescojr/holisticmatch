@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🔒 Security Hardening & Production Cleanup
 
 **Status:** ✅ READY FOR DEPLOY  
-**Type:** PATCH (Security)
+**Type:** PATCH (Security + Feature)
 
 #### Security Fixes
 
@@ -39,9 +39,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `frontend/src/pages/EmailVerificationPage.tsx`
   - `frontend/src/components/ProtectedRoute.tsx`
 
+#### New Features
+
+**3. City Dropdown Filter in HomePage Search** ✅
+- **Problem:** City filter was free-text input, users had to guess city names
+- **Solution:** 
+  - Created new endpoint `GET /api/v1/professionals/available_cities/`
+  - Returns list of cities with registered active professionals
+  - `SearchFilters.tsx` now uses dropdown populated from API
+- **Files:**
+  - `backend/professionals/views.py` - new `available_cities` action
+  - `frontend/src/services/professionalService.ts` - new `getAvailableCities()` method
+  - `frontend/src/components/SearchFilters.tsx` - city dropdown with loading state
+
 #### Notes
 - Critical `console.error` statements kept for error tracking
 - Backend logging (`loguru`) not affected - controlled by LOG_LEVEL in production
+- 183 tests passing ✅
 
 ---
 

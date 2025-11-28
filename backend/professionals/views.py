@@ -607,6 +607,33 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
             'count': len(sorted_cities)
         }, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['get'], url_path='available_cities')
+    def available_cities(self, request):
+        """
+        GET /api/v1/professionals/available_cities/
+        Returns list of cities where active professionals are registered
+        
+        Returns:
+            List of unique cities with active professionals, sorted alphabetically
+        """
+        # Get distinct cities from active professionals only
+        cities = Professional.objects.filter(
+            is_active=True,
+            na_contencao=False
+        ).exclude(
+            city__isnull=True
+        ).exclude(
+            city__exact=''
+        ).values_list('city', flat=True).distinct()
+        
+        # Sort using Python's sorted() to handle Unicode characters correctly
+        sorted_cities = sorted(set(cities))
+        
+        return Response({
+            'cities': sorted_cities,
+            'count': len(sorted_cities)
+        }, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def password_reset(self, request):
         """

@@ -60,6 +60,15 @@ export const professionalService = {
   },
 
   /**
+   * Get cities with registered professionals
+   * v1.5.1: New endpoint for city dropdown in search filters
+   */
+  async getAvailableCities(): Promise<string[]> {
+    const response = await api.get<{ cities: string[]; count: number }>(`/professionals/available_cities/`)
+    return response.data.cities
+  },
+
+  /**
    * Update professional profile (authenticated)
    */
   async updateProfessional(id: number, data: Partial<Professional>): Promise<Professional> {

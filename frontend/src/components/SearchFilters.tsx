@@ -1,11 +1,13 @@
 /**
  * SearchFilters component
  * Provides filtering controls for professional search
+ * v1.5.1: City filter now uses dropdown with registered cities
  */
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { itemVariants } from '../lib/animations'
 import { SERVICE_TYPES, type ProfessionalFilters } from '../types/Professional'
+import { professionalService } from '../services/professionalService'
 
 interface SearchFiltersProps {
   onFilterChange: (filters: ProfessionalFilters) => void
@@ -20,6 +22,25 @@ const ATTENDANCE_TYPES = [
 
 export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
   const [filters, setFilters] = useState<ProfessionalFilters>({})
+  const [availableCities, setAvailableCities] = useState<string[]>([])
+  const [citiesLoading, setCitiesLoading] = useState(true)
+
+  // Load available cities on mount
+  useEffect(() => {
+    const loadCities = async () => {
+      try {
+        setCitiesLoading(true)
+        const cities = await professionalService.getAvailableCities()
+        setAvailableCities(cities)
+      } catch (error) {
+        console.error('Error loading cities:', error)
+        setAvailableCities([])
+      } finally {
+        setCitiesLoading(false)
+      }
+    }
+    loadCities()
+  }, [])
 
   const handleFilterChange = (key: keyof ProfessionalFilters, value: string | number | undefined) => {
     const newFilters = { ...filters }
@@ -69,19 +90,27 @@ export default function SearchFilters({ onFilterChange }: SearchFiltersProps) {
           </select>
         </div>
 
-        {/* City Filter */}
+        {/* City Filter - v1.5.1: Now a dropdown with registered cities */}
         <div>
           <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-2">
             Cidade
           </label>
-          <input
-            type="text"
+          <select
             id="city"
             value={filters.city || ''}
             onChange={(e) => handleFilterChange('city', e.target.value)}
-            placeholder="Ex: São Paulo"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-          />
+            disabled={citiesLoading}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-wait"
+          >
+            <option value="">
+              {citiesLoading ? 'Carregando...' : 'Todas as cidades'}
+            </option>
+            {availableCities.map((city) => (
+              <option key={city} value={city}>
+                {city}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Attendance Type Filter */}
