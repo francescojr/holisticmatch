@@ -213,25 +213,47 @@ export const professionalService = {
   /**
    * Request password reset - sends email with reset link
    * v1.4.8: Fixed endpoint URL (underscore, not hyphen)
+   * v1.4.9: Added to publicEndpoints list (no auth required)
    */
   async requestPasswordReset(email: string): Promise<{ message: string }> {
-    const response = await api.post<{ message: string }>('/professionals/password_reset/', {
-      email,
-    })
-    return response.data
+    console.log('[professionalService] 📧 requestPasswordReset called with email:', email)
+    console.log('[professionalService] 🔗 Endpoint: POST /professionals/password_reset/')
+    try {
+      const response = await api.post<{ message: string }>('/professionals/password_reset/', {
+        email,
+      })
+      console.log('[professionalService] ✅ requestPasswordReset success:', response.data)
+      return response.data
+    } catch (error: any) {
+      console.error('[professionalService] ❌ requestPasswordReset error:', error)
+      console.error('[professionalService] ❌ Response status:', error.response?.status)
+      console.error('[professionalService] ❌ Response data:', error.response?.data)
+      throw error
+    }
   },
 
   /**
    * Confirm password reset - validates token and sets new password
    * v1.4.8: Fixed endpoint URL (underscore, not hyphen)
+   * v1.4.9: Added to publicEndpoints list (no auth required)
    */
   async confirmPasswordReset(data: {
     token: string
     password: string
     password_confirm: string
   }): Promise<{ message: string }> {
-    const response = await api.post<{ message: string }>('/professionals/password_reset_confirm/', data)
-    return response.data
+    console.log('[professionalService] 🔐 confirmPasswordReset called')
+    console.log('[professionalService] 🔗 Endpoint: POST /professionals/password_reset_confirm/')
+    try {
+      const response = await api.post<{ message: string }>('/professionals/password_reset_confirm/', data)
+      console.log('[professionalService] ✅ confirmPasswordReset success:', response.data)
+      return response.data
+    } catch (error: any) {
+      console.error('[professionalService] ❌ confirmPasswordReset error:', error)
+      console.error('[professionalService] ❌ Response status:', error.response?.status)
+      console.error('[professionalService] ❌ Response data:', error.response?.data)
+      throw error
+    }
   },
 }
 

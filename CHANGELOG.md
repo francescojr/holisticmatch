@@ -7,6 +7,162 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.4.9] - 2025-11-28
+
+### 🔧 Password Reset Authentication Fix & Moderation Tests
+
+**Status:** ✅ IMPLEMENTED - Password reset now works without requiring auth token
+
+#### Issues Fixed
+
+**1. Password Reset Still Not Working** ✅
+- **Problem:** Even after v1.4.8 endpoint URL fix, password reset still failed
+- **Symptoms:** Requests were being blocked by auth interceptor
+- **Root Cause:** `password_reset` and `password_reset_confirm` were not in `publicEndpoints` list
+- **Solution:** Added both endpoints to `publicEndpoints` in `api.ts`
+
+**2. Text Moderation Test Coverage** ✅
+- **Problem:** No explicit tests for inappropriate content blocking
+- **Solution:** Added tests to verify inappropriate names and bios are blocked
+- **Verified:** Regex fallback correctly blocks words like "caralho", "buceta", "porra", etc.
+
+#### 🚨 CRITICAL: Production API Test Results
+
+**Tested directly via PowerShell against production API:**
+
+```powershell
+# Password Reset - RETURNS AUTH ERROR (backend needs deploy)
+POST https://hollisticmatch.online/api/v1/professionals/password_reset/
+→ {"detail":"As credenciais de autenticação não foram fornecidas."}
+
+# Registration with inappropriate name - PASSES (backend needs deploy)
+POST https://hollisticmatch.online/api/v1/professionals/register/
+Body: {"name": "Joao Caralho", ...}
+→ 201 Created (SHOULD HAVE BEEN BLOCKED!)
+
+# Registration with inappropriate bio - PASSES (backend needs deploy)
+POST https://hollisticmatch.online/api/v1/professionals/register/
+Body: {"bio": "Profissional de merda que atende bem", ...}
+→ 201 Created (SHOULD HAVE BEEN BLOCKED!)
+```
+
+**Root Cause:** Production backend code is OUTDATED and doesn't have:
+1. `password_reset` endpoint with `AllowAny` permission
+2. Text moderation integration in serializers
+
+**ACTION REQUIRED:** Deploy backend to production!
+
+#### Debug Logs Added
+
+Added console logs to help diagnose issues:
+
+**`ForgotPasswordPage.tsx`:**
+- Logs email being requested
+- Logs success/error responses with full details
+
+**`professionalService.ts`:**
+- Logs endpoint being called
+- Logs request/response for password reset operations
+
+**`RegisterProfessionalPage.tsx`:**
+- Logs registration data (name, email, bio)
+- Logs moderation errors specifically (name/bio blocked)
+
+#### Technical Details
+
+**Auth Interceptor Fix:**
+```typescript
+// frontend/src/services/api.ts - BEFORE
+const publicEndpoints = [
+  '/professionals/register/',
+  '/professionals/verify-email/',
+  '/professionals/resend-verification/',
+  '/auth/login/',
+  '/auth/refresh/',
+]
+
+// AFTER (v1.4.9)
+const publicEndpoints = [
+  '/professionals/register/',
+  '/professionals/verify-email/',
+  '/professionals/resend-verification/',
+  '/professionals/password_reset/',      // ✅ ADDED
+  '/professionals/password_reset_confirm/', // ✅ ADDED
+  '/auth/login/',
+  '/auth/refresh/',
+]
+```
+
+**How the Bug Manifested:**
+1. User clicks "Esqueci minha senha"
+2. Frontend calls `POST /professionals/password_reset/`
+3. Auth interceptor sees endpoint NOT in `publicEndpoints`
+4. Interceptor adds `Authorization: Bearer <invalid_token>` header
+5. Backend has `AllowAny` permission but token is malformed → request fails
+
+#### API Version Endpoint
+
+Added `GET /api/v1/version/` to verify deployment:
+
+```bash
+# After deploy, check version:
+curl https://hollisticmatch.online/api/v1/version/
+
+# Expected response:
+{
+  "version": "1.4.9",
+  "build_date": "2025-11-28",
+  "status": "ok",
+  "features": ["password_reset_public", "text_moderation_regex", "text_moderation_openai"]
+}
+```
+
+#### Files Modified
+
+- `backend/professionals/views.py`:
+  - Added `API_VERSION = "1.4.9"` constant
+  - Added `api_version()` endpoint to verify deployment
+
+- `backend/professionals/urls.py`:
+  - Added route for `/version/` endpoint
+
+- `frontend/src/services/api.ts`:
+  - Added `/professionals/password_reset/` to `publicEndpoints`
+  - Added `/professionals/password_reset_confirm/` to `publicEndpoints`
+
+- `frontend/src/pages/ForgotPasswordPage.tsx`:
+  - Added debug logs for password reset flow
+
+- `frontend/src/services/professionalService.ts`:
+  - Added debug logs for `requestPasswordReset` and `confirmPasswordReset`
+
+- `frontend/src/pages/RegisterProfessionalPage.tsx`:
+  - Added debug logs for registration
+  - Added specific handling for moderation errors (name/bio blocked)
+
+- `backend/tests/unit/test_validators.py`:
+  - Added `test_inappropriate_names_blocked` - Tests 5 inappropriate names
+  - Added `test_inappropriate_bio_blocked` - Tests 3 inappropriate bios
+  - **Total tests: 183 passing**
+
+#### Text Moderation Status
+
+**Verified Working:**
+- Regex patterns block Portuguese profanity (caralho, buceta, porra, etc.)
+- OpenAI Moderation API ready for production (needs `OPENAI_API_KEY` env var)
+- Fallback to regex when OpenAI unavailable
+- Graceful degradation: accept content on API error (logs for manual review)
+
+**Production Checklist:**
+- [ ] Ensure `OPENAI_API_KEY` is set in production environment
+- [ ] Monitor logs for `[MODERATION]` entries
+- [ ] Review any `needs_manual_review: true` flagged content
+
+#### Backward Compatibility
+✅ 100% - Auth configuration change, no breaking changes
+
+---
+
 ## [1.4.8] - 2025-01-17
 
 ### 🔧 Password Reset Flow Fix

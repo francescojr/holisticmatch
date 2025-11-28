@@ -43,6 +43,8 @@ api.interceptors.request.use(
       '/professionals/register/',
       '/professionals/verify-email/',
       '/professionals/resend-verification/',
+      '/professionals/password_reset/',
+      '/professionals/password_reset_confirm/',
       '/auth/login/',
       '/auth/refresh/',
     ]

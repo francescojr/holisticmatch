@@ -22,8 +22,12 @@ function ForgotPasswordPage() {
     setError('')
     setLoading(true)
 
+    console.log('[ForgotPasswordPage] 📧 Requesting password reset for:', email)
+
     try {
-      await professionalService.requestPasswordReset(email)
+      console.log('[ForgotPasswordPage] 🔄 Calling professionalService.requestPasswordReset...')
+      const response = await professionalService.requestPasswordReset(email)
+      console.log('[ForgotPasswordPage] ✅ Success:', response)
       setSubmitted(true)
       toast.success('Email enviado com sucesso!', {
         message: 'Verifique sua caixa de email para o link de redefinição de senha'
@@ -34,6 +38,9 @@ function ForgotPasswordPage() {
         navigate('/login')
       }, 3000)
     } catch (err: any) {
+      console.error('[ForgotPasswordPage] ❌ Error:', err)
+      console.error('[ForgotPasswordPage] ❌ Response:', err.response?.data)
+      console.error('[ForgotPasswordPage] ❌ Status:', err.response?.status)
       const errorMessage = err.response?.data?.detail || err.message || 'Erro ao solicitar redefinição de senha'
       setError(errorMessage)
       toast.error('Erro', { message: errorMessage })

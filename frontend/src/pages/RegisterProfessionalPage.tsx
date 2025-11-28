@@ -448,8 +448,12 @@ function RegisterProfessionalPage() {
       }
 
 
+      console.log('[RegisterPage.Step2] 📝 Registration Data:')
+      console.log('[RegisterPage.Step2]    Name:', registrationData.name)
+      console.log('[RegisterPage.Step2]    Email:', registrationData.email)
       console.log('[RegisterPage.Step2]    Services:', registrationData.services.join(', '))
       console.log('[RegisterPage.Step2]    Price (a partir de):', `R$ ${registrationData.price_per_session}`)
+      console.log('[RegisterPage.Step2]    Bio:', registrationData.bio)
 
 
       // Show loading message
@@ -458,6 +462,7 @@ function RegisterProfessionalPage() {
         message: 'Por favor, aguarde enquanto processamos seu cadastro.'
       })
 
+      console.log('[RegisterPage.Step2] 🔄 Calling authService.register()...')
       // Use authService.register() which calls /professionals/register/ and returns JWT tokens
       const registerResult = await authService.register({
         email: step1Data.email,
@@ -474,7 +479,7 @@ function RegisterProfessionalPage() {
         whatsapp: step1Data.phone,
       })
 
-      
+      console.log('[RegisterPage.Step2] ✅ Registration successful:', registerResult)
       // IMPORTANT: Backend no longer returns JWT from register endpoint
       // User must verify email first, then login to get tokens
       console.log('[RegisterPage.Step2] ℹ️ JWT tokens NOT returned from register (user must verify email + login)')
@@ -496,9 +501,25 @@ function RegisterProfessionalPage() {
       }, 1500)
 
     } catch (error: any) {
+      console.error('[RegisterPage.Step2] ❌ Registration error:', error)
+      console.error('[RegisterPage.Step2] ❌ Response status:', error.response?.status)
+      console.error('[RegisterPage.Step2] ❌ Response data:', error.response?.data)
 
-
-
+      // Check if it's a moderation error (name or bio blocked)
+      if (error.response?.data?.name) {
+        console.error('[RegisterPage.Step2] ❌ NAME BLOCKED:', error.response.data.name)
+        toast.error('Nome inválido', {
+          message: error.response.data.name[0] || 'O nome contém conteúdo impróprio.'
+        })
+        return
+      }
+      if (error.response?.data?.bio) {
+        console.error('[RegisterPage.Step2] ❌ BIO BLOCKED:', error.response.data.bio)
+        toast.error('Bio inválida', {
+          message: error.response.data.bio[0] || 'A bio contém conteúdo impróprio.'
+        })
+        return
+      }
 
       if (error.response?.status === 400) {
         const errors = error.response.data

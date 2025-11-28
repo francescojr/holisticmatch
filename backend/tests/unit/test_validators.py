@@ -190,6 +190,20 @@ class TestNameValidator:
             with pytest.raises(ValidationError):
                 validate_name(name)
 
+    def test_inappropriate_names_blocked(self):
+        """Test that inappropriate names are blocked by moderation"""
+        inappropriate_names = [
+            'Joao Caralho',
+            'Maria Buceta',
+            'Teste Porra',
+            'Idiota da Silva',
+            'Desgraçado Santos',
+        ]
+        for name in inappropriate_names:
+            with pytest.raises(ValidationError) as exc_info:
+                validate_name(name)
+            assert 'impróprio' in str(exc_info.value).lower() or 'inappropriate' in str(exc_info.value).lower()
+
 
 class TestBioValidator:
     """Test bio validation"""
@@ -213,3 +227,15 @@ class TestBioValidator:
         for bio in invalid_bios:
             with pytest.raises(ValidationError):
                 validate_bio(bio)
+
+    def test_inappropriate_bio_blocked(self):
+        """Test that inappropriate bio content is blocked by moderation"""
+        inappropriate_bios = [
+            'Sou um terapeuta que vai te matar de tanta saúde',
+            'Especializado em terapia vai se fuder muito bom',
+            'Profissional merda que atende bem',
+        ]
+        for bio in inappropriate_bios:
+            with pytest.raises(ValidationError) as exc_info:
+                validate_bio(bio)
+            assert 'impróprio' in str(exc_info.value).lower() or 'inappropriate' in str(exc_info.value).lower()

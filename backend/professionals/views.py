@@ -2,11 +2,11 @@
 Views for the professionals app.
 Implements API endpoints for professional profiles.
 
-DEPLOYMENT: 2025-11-20 - Email validation & password reset fixes
+DEPLOYMENT: 2025-11-28 - v1.4.9 Password reset fix & Text moderation
 """
 from django.contrib.auth.models import User
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes as perm_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
@@ -25,6 +25,29 @@ from .serializers import (
 from .filters import ProfessionalFilter
 from .permissions import IsAuthenticatedAndOwnerOrReadOnly
 from .constants import SERVICE_TYPES
+
+# API Version - update this when deploying to verify deployment success
+API_VERSION = "1.4.9"
+API_BUILD_DATE = "2025-11-28"
+
+
+@api_view(['GET'])
+@perm_classes([AllowAny])
+def api_version(request):
+    """
+    GET /api/v1/version/
+    Returns current API version to verify deployment
+    """
+    return Response({
+        'version': API_VERSION,
+        'build_date': API_BUILD_DATE,
+        'status': 'ok',
+        'features': [
+            'password_reset_public',
+            'text_moderation_regex',
+            'text_moderation_openai',
+        ]
+    })
 
 
 class ProfessionalViewSet(viewsets.ModelViewSet):
