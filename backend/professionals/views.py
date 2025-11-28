@@ -140,10 +140,15 @@ class ProfessionalViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         """
-        Allow anyone to read, register, and verify email
+        Allow anyone to read, register, verify email, and reset password
         Require authentication for other write operations
         """
-        if self.action in ['list', 'retrieve', 'service_types', 'register', 'verify_email', 'resend_verification']:
+        public_actions = [
+            'list', 'retrieve', 'service_types', 'register', 
+            'verify_email', 'resend_verification',
+            'password_reset', 'password_reset_confirm', 'validate_photo'
+        ]
+        if self.action in public_actions:
             # Allow anyone for these actions
             return [AllowAny()]
         else:
