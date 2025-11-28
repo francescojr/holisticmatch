@@ -4,8 +4,8 @@
 
 [![Status](https://img.shields.io/badge/status-production%20live-success)]()
 [![Frontend](https://img.shields.io/badge/frontend-vercel%20live-blue)](https://holisticmatch.vercel.app)
-[![Backend](https://img.shields.io/badge/backend-elastic%20beanstalk-orange)](http://holisticmatch-env.eba-cthmhjpa.us-east-2.elasticbeanstalk.com)
-[![Tests](https://img.shields.io/badge/tests-180%2F180%20passing-brightgreen)]()
+[![Backend](https://img.shields.io/badge/backend-EC2%20live-orange)](https://hollisticmatch.online)
+[![Tests](https://img.shields.io/badge/tests-183%2F183%20passing-brightgreen)]()
 [![Security](https://img.shields.io/badge/security-hardened-9cf)]()
 
 ---
@@ -19,165 +19,45 @@
 ✅ **API**: Full CRUD endpoints with filtering, pagination & content moderation  
 ✅ **Authentication**: JWT tokens + Email verification + Timing attack protection
 
-### 🔐 Latest Updates (Jan 17, 2025 - CURRENT)
+### 🚀 Latest Updates (Nov 28, 2025 - CURRENT)
 
-#### ✅ v1.4.6 - Photo Validation Before Registration (UX Improvement)
+#### ✅ v1.5.0 - Production Deployment Fix & Infrastructure Corrections
 
-- **Pre-Registration Validation**: Photo validated with AWS BEFORE user submits form ✅
-- **Better Error Messages**: Clear feedback when photo has inappropriate content ✅
-- **Improved UX**: Validation happens when photo selected (not on submit) ✅
-- **New Endpoint**: `POST /api/professionals/validate-photo/` for pre-submission checks
+**Critical Issues Resolved:**
 
-**Why This Matters:**
-- Users get immediate feedback when selecting inappropriate photos
-- No more confusing 500 errors on registration
-- Photos are validated before step 2 of registration form
-- Users can fix issues before attempting to register
+1. **Production Server Was Running Outdated Code** ✅
+   - EC2 was 8+ days behind (git SSH failed, no GitHub keys)
+   - Changed git remote to HTTPS - webhook auto-deploy now works
 
-#### ✅ v1.4.5 - Token Refresh & Logout Cache Fixes (Critical)
+2. **Password Reset Now Works** ✅
+   - Added `password_reset` to `get_permissions()` public actions
+   - Returns 200 OK without authentication
 
-- **Login Reliability**: `flushSync()` replaces `setTimeout(0)` for guaranteed state updates ✅
-- **Logout Loop Fixed**: React Query cache properly invalidated after logout ✅
-- **Infinite Loading Fixed**: HomePage no longer stuck on loading after logout ✅
+3. **Text Moderation Now Blocks Inappropriate Content** ✅
+   - Registration with "Joao Caralho" now returns 400
+   - Regex patterns actively blocking profanity
 
-**What Was Fixed:**
-1. Login sometimes required multiple attempts (race condition) → NOW reliable on first try
-2. Logout redirects to home but stuck on loading → NOW loads professionals immediately
-3. Cache invalidation after logout was unreliable → NOW uses custom events for sync
+4. **Password Reset Email URLs Fixed** ✅
+   - Added `FRONTEND_URL=https://hollisticmatch.online` to production .env
+   - Emails now contain correct production URLs (not localhost)
 
-#### ✅ v1.4.4 - Production Issues & Dashboard Simplification
+**Verification:**
+```bash
+# Check deployment version
+curl https://hollisticmatch.online/api/v1/version/
+# Returns: {"version":"1.5.0","status":"ok"}
 
-- **Login Race Condition**: Fixed with state update synchronization ✅
-- **Dashboard Simplification**: Removed redundant edit/cancel buttons ✅
-- **Fields Always Editable**: Better UX with single-mode editing ✅
+# Test password reset (no auth needed)
+curl -X POST https://hollisticmatch.online/api/v1/professionals/password_reset/ \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@test.com"}'
+# Returns: 200 OK
 
-#### ✅ v1.4.3 - Production Validation Complete
-
-- **AWS Rekognition**: Verified working in production with real credentials ✅
-- **Frontend Integration**: Photo upload error handling confirmed working ✅
-- **End-to-End Testing**: Complete registration + photo upload flow validated ✅
-- **Build**: ✅ 181/181 tests passing (GitHub Actions + local)
-
-**Validation Performed:**
-- AWS credentials verified: VALID and ACTIVE
-- Photo validation: FUNCTIONAL with real AWS
-- Frontend error handling: VERIFIED (400 errors properly mapped to Portuguese messages)
-- Database: Supabase PostgreSQL connected and working
-- System Status: **PRODUCTION READY - ALL SYSTEMS GO**
-
-#### 🔧 v1.4.2 - Test Mode Detection for CI/CD (Photo Validation Fix)
-
-- **Intelligent Detection**: Automatically detects pytest/Django test runner ✅
-- **Test Mode**: Allows photos without AWS (enables CI/CD testing) ✅
-- **Production Mode**: Strict fail-closed validation when AWS enabled ✅
-- **Build**: ✅ 181/181 tests passing (GitHub Actions + local)
-
-**Why This Matters:**
-- GitHub Actions CI/CD now passes all tests (photo upload validation fixed)
-- Local development works with AWS credentials (production behavior)
-- Test environment works without AWS (CI/CD friendly)
-- Security maintained in both environments (fail-closed pattern)
-
-#### 🔐 v1.4.1 - Photo Validation Security Fix
-
-- **Photo Moderation**: Fail-closed pattern - AWS error = image rejection ✅
-- **Test Mode**: Allows images in TESTING environment (AWS not required for tests) ✅
-- **Production Mode**: Strictly enforces AWS validation (fail-closed security) ✅
-- **Build**: ✅ 181/181 tests passing, zero failures
-
-**Why This Matters:**
-- Users were previously able to register with inappropriate photos (bug fixed)
-- Now: Production enforces strict AWS validation (fail-closed)
-- Tests can run without AWS credentials (test mode support)
-- AWS Rekognition properly blocks explicit content, violence, weapons
-
-#### 🎨 v1.3.14 - UX Improvements for Registration & Dashboard
-
-- **CPF Input**: Now filters to digits only (cleaner format, no letters accepted) ✅
-- **Phase 2 Form**: Removed pre-submission validation alert (less user anxiety) ✅
-- **Dashboard Edit Mode**: Fields always editable by default (no "Edit" button needed) ✅
-- **Dashboard Buttons**: Always shows "Salvar Alterações" (simpler UX) ✅
-- **Photo Upload**: Moved to top of form (better discoverability) ✅
-- **Photo Sidebar**: Made display-only (no redundant edit button) ✅
-
-**Why These Changes:**
-- Users were confused by CPF accepting letters - now numeric-only
-- Validation warnings on Phase 2 were appearing before users did anything - removed for UX
-- Dashboard edit mode was too complex - fields always editable now
-- Photo editing in two places was redundant - consolidated to form top
-
----
-
-#### 🔐 Previous Updates (Nov 24, 2025 - v1.3.13 Hotfixes)
-- **Fixed "canceled" Error on HomePage**: Clean loading without false errors ✅
-- **Auto-Login Now Smooth**: Email verified → Dashboard (no LoginPage) 🚀
-- **Form Feedback Clear**: Users see exactly which fields need filling 📝
-- **Build**: 193.27 KB, zero TypeScript errors ✨
-
-**What was broken:**
-- HomePage showed "canceled" errors during initial load
-- Auto-login had redirect loops through LoginPage
-- Form validation button looked enabled but wasn't (confusing!)
-
-**What's fixed:**
-- AbortSignal handled naturally by axios ✅
-- LoginPage detects auth tokens and redirects to dashboard ✅
-- Step 2 form shows inline feedback for missing fields ✅
-
-#### 🎉 v1.3.0 - Auto-Login Race Conditions Fixed
-- **Immediate Redirect After Email Verification**: No more 2-second delay ✅
-- **Fixed Memory Leaks**: Fetch properly cancelled when component unmounts 🧹
-- **Multi-Tab Synchronization**: Consistent state across all browser tabs 🔄
-- **Authenticated User Protection**: Logged-in users can't see public homepage ⚔️
-
-#### 🎉 v1.2.0 - Frontend Race Condition Fixed
-- **Homepage Now Loads Data on First Visit**: No more "Carregando..." indefinitely ✅
-- **Root Cause**: React Query `staleTime: 0` + `gcTime: 0` broke state batching
-- **Solution**: Updated to `staleTime: 1000ms` + `gcTime: 5min` + proper isPending handling
-- **Result**: Users see professional listings immediately on homepage load 🚀
-
-#### 🎉 v1.1.1 - Test Suite Fixed (BUILD PASSING)
-- **181/181 Tests Now Passing** ✅ (was 176/181)
-- **Fixed Fixtures**: Test data now matches v1.1.0 constraints (na_contencao=true)
-
-#### 🎉 v1.1.0 - Professional Verification Gate (DEPLOYED!)
-- **Listing Now Filters by Verification**: Only verified professionals (`na_contencao=true`) appear in `/api/v1/professionals/`
-- **Unverified Hidden**: New registrations don't appear publicly until email is verified
-- **Cleaner Marketplace**: Eliminates test/incomplete profiles from public view
-- **Incentivizes Verification**: Users must verify email to appear in listings
-
-#### ✅ v1.0.9 - Production Field Values Fixed
-- **`na_contencao` & `is_active` now return proper booleans** (not `undefined`)
-- **Database migrations applied**: Field persisted correctly
-- **All 181 Tests Passing** ✅
-
-#### 📊 Auto-Login User Flow (v1.3.0+)
-```
-1. User registers → Verification email sent
-2. User clicks link in email
-3. Backend verifies token
-4. JWT tokens saved to localStorage
-5. IMMEDIATE redirect to /dashboard (v1.3.0 - no delay!)
-6. Dashboard loads with user data
-7. All tabs/browsers synchronized ✅
-8. Memory cleaned up properly ✅
-```
-
-#### ⚡ Frontend Performance (v1.3.0+)
-```
-Before v1.3.0 (Race Condition):
-- Redirect delayed 2 seconds
-- HomePage starts fetching simultaneously
-- Fetch continues after unmount (memory leak)
-- Other tabs inconsistent
-- User sees loading state
-
-After v1.3.0 (Smooth):
-- Immediate redirect
-- HomePage never fetches (auth check)
-- Fetch cancelled if unmount occurs
-- All tabs synchronized
-- User sees dashboard immediately ✅
+# Test text moderation
+curl -X POST https://hollisticmatch.online/api/v1/professionals/register/ \
+  -H "Content-Type: application/json" \
+  -d '{"full_name":"Joao Caralho",...}'
+# Returns: 400 Bad Request (blocked!)
 ```
 
 ---

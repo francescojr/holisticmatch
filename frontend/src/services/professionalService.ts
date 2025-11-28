@@ -36,7 +36,6 @@ export const professionalService = {
     } catch (error: any) {
       // v1.3.3: Don't re-throw abort/cancel errors - let the hook handle it
       if (error.name === 'AbortError' || error.name === 'CanceledError' || error.message === 'AbortError') {
-        console.log('[professionalService.getProfessionals] 🚫 Request cancelled (normal cleanup)')
         // Re-throw as-is so useProfessionals.ts can detect and handle properly
         throw error
       }
@@ -216,20 +215,10 @@ export const professionalService = {
    * v1.4.9: Added to publicEndpoints list (no auth required)
    */
   async requestPasswordReset(email: string): Promise<{ message: string }> {
-    console.log('[professionalService] 📧 requestPasswordReset called with email:', email)
-    console.log('[professionalService] 🔗 Endpoint: POST /professionals/password_reset/')
-    try {
-      const response = await api.post<{ message: string }>('/professionals/password_reset/', {
-        email,
-      })
-      console.log('[professionalService] ✅ requestPasswordReset success:', response.data)
-      return response.data
-    } catch (error: any) {
-      console.error('[professionalService] ❌ requestPasswordReset error:', error)
-      console.error('[professionalService] ❌ Response status:', error.response?.status)
-      console.error('[professionalService] ❌ Response data:', error.response?.data)
-      throw error
-    }
+    const response = await api.post<{ message: string }>('/professionals/password_reset/', {
+      email,
+    })
+    return response.data
   },
 
   /**
@@ -242,18 +231,8 @@ export const professionalService = {
     password: string
     password_confirm: string
   }): Promise<{ message: string }> {
-    console.log('[professionalService] 🔐 confirmPasswordReset called')
-    console.log('[professionalService] 🔗 Endpoint: POST /professionals/password_reset_confirm/')
-    try {
-      const response = await api.post<{ message: string }>('/professionals/password_reset_confirm/', data)
-      console.log('[professionalService] ✅ confirmPasswordReset success:', response.data)
-      return response.data
-    } catch (error: any) {
-      console.error('[professionalService] ❌ confirmPasswordReset error:', error)
-      console.error('[professionalService] ❌ Response status:', error.response?.status)
-      console.error('[professionalService] ❌ Response data:', error.response?.data)
-      throw error
-    }
+    const response = await api.post<{ message: string }>('/professionals/password_reset_confirm/', data)
+    return response.data
   },
 }
 

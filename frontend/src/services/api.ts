@@ -115,7 +115,6 @@ api.interceptors.response.use(
     // Parse error and display via toast (if handler is registered)
     // v1.3.5: Don't show toast for abort/cancel errors (normal request lifecycle)
     if (error.name === 'AbortError' || error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
-      console.log('[api.interceptor] 🚫 Request cancelled (not an error, normal cleanup)')
       return Promise.reject(error)
     }
     

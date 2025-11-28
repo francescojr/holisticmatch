@@ -27,7 +27,7 @@ from .permissions import IsAuthenticatedAndOwnerOrReadOnly
 from .constants import SERVICE_TYPES
 
 # API Version - update this when deploying to verify deployment success
-API_VERSION = "1.4.9"
+API_VERSION = "1.5.1"
 API_BUILD_DATE = "2025-11-28"
 
 

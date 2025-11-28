@@ -27,61 +27,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Check if user is authenticated on mount
     const checkAuth = async () => {
-      console.log('[useAuth] 🔄 checkAuth() starting...')
       try {
-        
         if (authService.isAuthenticated()) {
-          console.log('[useAuth] v1.3.7 🔍 Tokens present in localStorage - checking user profile')
-          
           // Try to fetch user profile from API
           const userProfile = await authService.getCurrentUser()
           
           if (userProfile) {
-            console.log('[useAuth] v1.3.7 ✅ User profile fetched from API')
-            
             // Also get professional_id from localStorage
             const professionalId = localStorage.getItem('professional_id')
             const fullUser = {
               ...userProfile,
               professional_id: userProfile.professional_id || (professionalId ? parseInt(professionalId) : undefined),
             }
-            
-            console.log('[useAuth] ✅ Setting user with API data:', fullUser)
             setUser(fullUser)
           } else {
             // If API endpoint doesn't exist, user is still authenticated but we'll use minimal data
-            console.log('[useAuth] v1.3.7 ⚠️ API returned null, using minimal user data (tokens are valid)')
             const professionalId = localStorage.getItem('professional_id')
             const minimalUser = { 
               id: 0, 
               email: '',
               professional_id: professionalId ? parseInt(professionalId) : undefined,
             }
-            console.log('[useAuth] ✅ Setting user with minimal data:', minimalUser)
             setUser(minimalUser)
           }
-        } else {
-          console.log('[useAuth] v1.3.7 ℹ️ No tokens in localStorage - user not authenticated')
         }
       } catch (error: any) {
         // v1.3.7: On error (e.g., 401), STILL set user if tokens exist
         // This prevents ProtectedRoute from redirecting authenticated users during token refresh
-        console.log('[useAuth] ❌ Error during auth check:', error.message)
         if (authService.isAuthenticated()) {
-          console.log('[useAuth] v1.3.7 ⚠️ API error but tokens present - using minimal user data (will refresh on next request)')
           const professionalId = localStorage.getItem('professional_id')
           const minimalUser = { 
             id: 0, 
             email: '',
             professional_id: professionalId ? parseInt(professionalId) : undefined,
           }
-          console.log('[useAuth] ✅ Setting user despite error:', minimalUser)
           setUser(minimalUser)
-        } else {
-          console.log('[useAuth] v1.3.7 ❌ API error AND no tokens - user not authenticated')
         }
       } finally {
-        console.log('[useAuth] 🏁 checkAuth() finished, setting isLoading=false')
         setIsLoading(false)
       }
     }
@@ -131,11 +113,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // v1.3.13: logout was async but never called setIsLoading(false)
   // v1.4.5: Now dispatches custom event to allow HomePage to refetch after logout
   const logout = async () => {
-    console.log('[useAuth] v1.4.5 🚪 Logout called - clearing auth state')
     try {
       await authService.logout()
     } catch (error) {
-      console.error('[useAuth] v1.4.5 Error calling authService.logout():', error)
+      console.error('[useAuth] Error calling authService.logout():', error)
     } finally {
       // v1.3.13: ALWAYS clear state, even if logout API call fails
       localStorage.removeItem('access_token')
@@ -146,7 +127,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false)  // ← CRITICAL: Must be false so loading spinner disappears
       // v1.4.5: Dispatch event to notify HomePage to refetch data
       window.dispatchEvent(new CustomEvent('auth-logout'))
-      console.log('[useAuth] v1.4.5 ✅ Logout complete - user state cleared, isLoading=false')
     }
   }
 
@@ -155,11 +135,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // This ensures AuthContext is updated immediately after email verification
   // v1.3.13: Enhanced error handling with proper try/catch/finally
   const recheckAuth = async () => {
-    console.log('[useAuth] v1.3.12 🔄 recheckAuth() called by EmailVerificationPage')
     setIsLoading(true)
     try {
       if (authService.isAuthenticated()) {
-        console.log('[useAuth] v1.3.12 ✅ Tokens found, fetching user profile...')
         try {
           const userProfile = await authService.getCurrentUser()
           if (userProfile) {
@@ -168,12 +146,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               ...userProfile,
               professional_id: userProfile.professional_id || (professionalId ? parseInt(professionalId) : undefined),
             }
-            console.log('[useAuth] v1.3.12 ✅ User authenticated and loaded:', fullUser.email)
             setUser(fullUser)
           }
         } catch (apiError) {
           // v1.3.13: If API fails but tokens exist, still set minimal user
-          console.log('[useAuth] v1.3.13 ⚠️ API error but tokens exist - setting minimal user')
           const professionalId = localStorage.getItem('professional_id')
           setUser({
             id: 0,
@@ -182,16 +158,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           })
         }
       } else {
-        console.log('[useAuth] v1.3.12 ❌ No tokens found - user not authenticated')
         setUser(null)
       }
     } catch (error) {
-      console.error('[useAuth] v1.3.13 Unexpected error in recheckAuth:', error)
+      console.error('[useAuth] Unexpected error in recheckAuth:', error)
       setUser(null)
     } finally {
       // v1.3.13: ALWAYS set isLoading to false
       setIsLoading(false)
-      console.log('[useAuth] v1.3.13 🏁 recheckAuth() complete, isLoading=false')
     }
   }
 

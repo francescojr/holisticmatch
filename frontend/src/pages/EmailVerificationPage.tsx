@@ -90,29 +90,17 @@ function EmailVerificationPage() {
       // v1.3.2: Save professional_id from response for dashboard access
       if (result.user?.professional?.id) {
         localStorage.setItem('professional_id', result.user.professional.id.toString())
-        console.log('[EmailVerification] 💾 Saved professional_id:', result.user.professional.id)
       }
       
       toast.success('Email verificado com sucesso!', {
         message: 'Redirecionando para seu dashboard...'
       })
       
-      // v1.3.11: Redirect DIRECTLY to /dashboard (not via HomePage)
-      // Reason: ProtectedRoute will check tokens, which are now in localStorage
-      // AuthProvider will have time to initialize while ProtectedRoute validates
-      console.log('[EmailVerification] v1.3.11 ✅ Tokens saved in localStorage')
-      console.log('[EmailVerification] v1.3.11   - access_token:', result.access.substring(0, 20) + '...')
-      console.log('[EmailVerification] v1.3.11   - refresh_token:', result.refresh.substring(0, 20) + '...')
-      console.log('[EmailVerification] v1.3.11   - professional_id:', result.user?.professional?.id)
-      
       // v1.3.12: Force AuthProvider to re-check authentication immediately
       // This ensures ProtectedRoute sees the authenticated state when it mounts
-      console.log('[EmailVerification] v1.3.12 🔄 Calling recheckAuth() to update AuthContext...')
       await recheckAuth()
-      console.log('[EmailVerification] v1.3.12 ✅ AuthContext updated, user is authenticated')
       
       // Navigate to dashboard - user is now authenticated in both localStorage AND AuthContext
-      console.log('[EmailVerification] v1.3.12 🚀 Redirecting to /dashboard')
       navigate('/dashboard', { replace: true })
     } catch (error: any) {
       const errorMsg = 

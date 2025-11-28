@@ -90,22 +90,18 @@ function RegisterProfessionalPage() {
   }, [])
 
   const handleStep1InputChange = (field: keyof Step1FormData, value: string | File | null) => {
-    console.log(`[RegisterPage.Step1.Input] ${field} changed to:`, value)
     setStep1Data(prev => ({ ...prev, [field]: value }))
 
     // Validate field on change
     if (typeof value === 'string') {
-      const isValid = validate(field, value, getValidationRules(field))
-      console.log(`[RegisterPage.Step1.Input] ${field} validation result:`, isValid)
+      validate(field, value, getValidationRules(field))
       
       // Special validation for password confirmation
       if (field === 'passwordConfirm') {
         setStep1Data(prev => ({ ...prev, passwordConfirm: value }))
         if (value !== step1Data.password) {
-          console.log('[RegisterPage.Step1.Input] Password mismatch detected')
           setFieldError('passwordConfirm', 'As senhas não conferem')
         } else {
-          console.log('[RegisterPage.Step1.Input] Passwords match')
           setFieldError('passwordConfirm', '') // Clear error when passwords match
         }
       }
@@ -152,8 +148,6 @@ function RegisterProfessionalPage() {
   }
 
   const handlePhotoChange = (file: File | null) => {
-    console.log('[RegisterPage.handlePhotoChange] Photo selected:', file?.name)
-    
     // Clear previous validation error
     setPhotoValidationError(null)
     
@@ -162,7 +156,6 @@ function RegisterProfessionalPage() {
     setStep1Data(prev => ({ ...prev, photo: file }))
 
     if (photoError) {
-      console.log('[RegisterPage.handlePhotoChange] Basic validation failed:', photoError)
       setPhotoValidationError(photoError)
       toast.error('Erro na foto', { message: photoError })
       return
@@ -177,12 +170,10 @@ function RegisterProfessionalPage() {
   const validatePhotoWithBackend = async (file: File) => {
     try {
       setPhotoValidating(true)
-      console.log('[RegisterPage.validatePhotoWithBackend] Validating with AWS Rekognition...')
       
       const result = await authService.validatePhoto(file)
       
       if (!result.is_valid) {
-        console.log('[RegisterPage.validatePhotoWithBackend] ❌ Photo rejected:', result.message)
         setPhotoValidationError(result.message || 'Foto contém conteúdo impróprio')
         // Clear the photo if validation fails
         setStep1Data(prev => ({ ...prev, photo: null }))
@@ -190,7 +181,6 @@ function RegisterProfessionalPage() {
           message: result.message || 'A foto contém conteúdo impróprio ou não é apropriada para perfil profissional. Por favor, selecione outra foto.'
         })
       } else {
-        console.log('[RegisterPage.validatePhotoWithBackend] ✅ Photo approved')
         setPhotoValidationError(null)
         toast.success('Foto validada', {
           message: 'Sua foto foi validada com sucesso!'
@@ -211,8 +201,6 @@ function RegisterProfessionalPage() {
     let isFormValid = true
     const failedFields: string[] = []
 
-    console.log('[RegisterPage.validateStep1Form] Starting validation')
-
     // Validate all text fields (except optional CPF field)
     Object.keys(step1Data).forEach(key => {
       if (key !== 'photo' && key !== 'cpf') {
@@ -220,7 +208,6 @@ function RegisterProfessionalPage() {
         const value = step1Data[fieldKey]
         if (typeof value === 'string') {
           const fieldValid = validate(fieldKey, value, getValidationRules(fieldKey))
-          console.log(`[RegisterPage.validateStep1Form] ${fieldKey}: "${value}" => ${fieldValid}`)
           if (!fieldValid) {
             isFormValid = false
             failedFields.push(fieldKey)
@@ -229,68 +216,33 @@ function RegisterProfessionalPage() {
       }
     })
 
-    if (failedFields.length > 0) {
-      console.log(`[RegisterPage.validateStep1Form] Failed fields: ${failedFields.join(', ')}`)
-    }
-
     // Validate password confirmation
-    console.log('[RegisterPage.validateStep1Form] Password comparison:', {
-      password: step1Data.password,
-      passwordConfirm: step1Data.passwordConfirm,
-      match: step1Data.password === step1Data.passwordConfirm
-    })
-    
     if (step1Data.password !== step1Data.passwordConfirm) {
-      console.log('[RegisterPage.validateStep1Form] ❌ Passwords do NOT match!', {
-        pass: step1Data.password,
-        confirm: step1Data.passwordConfirm
-      })
       toast.error('Erro de validação', { message: 'As senhas não conferem' })
       isFormValid = false
-    } else {
-      console.log('[RegisterPage.validateStep1Form] ✅ Passwords match!')
     }
 
     // v1.4.6: Check if photo was already validated with backend
     // If there's a validation error from previous check, reject form
     if (photoValidationError) {
-      console.log('[RegisterPage.validateStep1Form] ❌ Photo failed validation:', photoValidationError)
       toast.error('Erro na foto', { message: photoValidationError })
       isFormValid = false
     } else {
       // Basic validation only if no backend validation error
       const photoError = validatePhoto(step1Data.photo)
       if (photoError) {
-        console.log('[RegisterPage.validateStep1Form] Photo error:', photoError)
         toast.error('Erro na foto', { message: photoError })
         isFormValid = false
-      } else if (step1Data.photo) {
-        console.log('[RegisterPage.validateStep1Form] ✅ Photo validation passed')
       }
-    }
-
-    if (!isFormValid) {
-      console.log('[RegisterPage.validateStep1Form] Validation FAILED')
-    } else {
-      console.log('[RegisterPage.validateStep1Form] Validation PASSED')
     }
 
     return isFormValid
   }
 
   const handleStep1Submit = async (e: React.FormEvent) => {
-    console.log('[RegisterPage.Step1.Submit] ============ FORM SUBMISSION STARTED ============')
     e.preventDefault()
-    console.log('[RegisterPage.Step1.Submit] preventDefault called')
-
-    console.log('[RegisterPage.Step1.Submit] Form submission started')
-    console.log('[RegisterPage.Step1.Submit] Current step1Data:', step1Data)
-    console.log('[RegisterPage.Step1.Submit] Current errors:', errors)
 
     if (!validateStep1Form()) {
-      console.log('[RegisterPage.Step1] Validation failed')
-      console.log('[RegisterPage.Step1] Errors object:', errors)
-      
       // Build list of missing required fields
       const missingFields: string[] = []
       if (!step1Data.fullName) missingFields.push('Nome completo')
@@ -301,31 +253,23 @@ function RegisterProfessionalPage() {
       if (!step1Data.password) missingFields.push('Senha')
       if (!step1Data.passwordConfirm) missingFields.push('Confirmação de senha')
       
-      console.log('[RegisterPage.Step1] Missing fields:', missingFields)
-      console.log('[RegisterPage.Step1] Validation errors:', errors)
-      
       // Prepare detailed error message
       let errorMsg: string
       if (missingFields.length > 0) {
         errorMsg = `Campos obrigatórios faltando: ${missingFields.join(', ')}`
-        console.log('[RegisterPage.Step1] Missing required fields:', missingFields)
       } else if (Object.keys(errors).length > 0) {
         const errorFields = Object.entries(errors)
           .map(([field, message]) => `${field}: ${message}`)
           .join(' | ')
         errorMsg = `Erros de validação: ${errorFields}`
-        console.log('[RegisterPage.Step1] Validation errors:', errorFields)
       } else {
         errorMsg = 'Por favor, corrija os erros no formulário'
-        console.log('[RegisterPage.Step1] Unknown validation error')
       }
       
-      console.log('[RegisterPage.Step1] Final error message:', errorMsg)
       toast.error('Validação incompleta', { message: errorMsg })
       return
     }
     
-    console.log('[RegisterPage.Step1] Validation passed!')
     setLoading(true)
 
     try {
@@ -423,7 +367,6 @@ function RegisterProfessionalPage() {
   const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-
     if (!validateStep2Form()) {
       return
     }
@@ -447,22 +390,11 @@ function RegisterProfessionalPage() {
         ...(step1Data.photo && { photo: step1Data.photo })
       }
 
-
-      console.log('[RegisterPage.Step2] 📝 Registration Data:')
-      console.log('[RegisterPage.Step2]    Name:', registrationData.name)
-      console.log('[RegisterPage.Step2]    Email:', registrationData.email)
-      console.log('[RegisterPage.Step2]    Services:', registrationData.services.join(', '))
-      console.log('[RegisterPage.Step2]    Price (a partir de):', `R$ ${registrationData.price_per_session}`)
-      console.log('[RegisterPage.Step2]    Bio:', registrationData.bio)
-
-
       // Show loading message
-
       toast.info('Criando seu perfil profissional...', {
         message: 'Por favor, aguarde enquanto processamos seu cadastro.'
       })
 
-      console.log('[RegisterPage.Step2] 🔄 Calling authService.register()...')
       // Use authService.register() which calls /professionals/register/ and returns JWT tokens
       const registerResult = await authService.register({
         email: step1Data.email,
@@ -479,10 +411,8 @@ function RegisterProfessionalPage() {
         whatsapp: step1Data.phone,
       })
 
-      console.log('[RegisterPage.Step2] ✅ Registration successful:', registerResult)
       // IMPORTANT: Backend no longer returns JWT from register endpoint
       // User must verify email first, then login to get tokens
-      console.log('[RegisterPage.Step2] ℹ️ JWT tokens NOT returned from register (user must verify email + login)')
 
       // Clear session storage (Step 1 data)
       sessionStorage.removeItem('registerStep1')
@@ -501,20 +431,16 @@ function RegisterProfessionalPage() {
       }, 1500)
 
     } catch (error: any) {
-      console.error('[RegisterPage.Step2] ❌ Registration error:', error)
-      console.error('[RegisterPage.Step2] ❌ Response status:', error.response?.status)
-      console.error('[RegisterPage.Step2] ❌ Response data:', error.response?.data)
+      console.error('[RegisterPage.Step2] Registration error:', error)
 
       // Check if it's a moderation error (name or bio blocked)
       if (error.response?.data?.name) {
-        console.error('[RegisterPage.Step2] ❌ NAME BLOCKED:', error.response.data.name)
         toast.error('Nome inválido', {
           message: error.response.data.name[0] || 'O nome contém conteúdo impróprio.'
         })
         return
       }
       if (error.response?.data?.bio) {
-        console.error('[RegisterPage.Step2] ❌ BIO BLOCKED:', error.response.data.bio)
         toast.error('Bio inválida', {
           message: error.response.data.bio[0] || 'A bio contém conteúdo impróprio.'
         })

@@ -7,6 +7,146 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.5.1] - 2025-11-28
+
+### 🔒 Security Hardening & Production Cleanup
+
+**Status:** ✅ READY FOR DEPLOY  
+**Type:** PATCH (Security)
+
+#### Security Fixes
+
+**1. Insecure SECRET_KEY in Production** ✅
+- **Problem:** Production was using default insecure `SECRET_KEY` from `settings.py`
+- **Risk:** JWT tokens, CSRF protection, and session cookies were vulnerable
+- **Solution:** Generated new 50-character cryptographically secure key and updated production `.env`
+- **Impact:** All existing sessions invalidated (users must re-login)
+
+**2. Debug Logs Removed from Frontend** ✅
+- **Problem:** ~60+ `console.log` statements exposing sensitive debug info in browser console
+- **Risk:** Passwords, tokens, form data, and user info visible to anyone opening DevTools
+- **Solution:** Removed all debug console.log statements from production code
+- **Files Cleaned:**
+  - `frontend/src/services/professionalService.ts`
+  - `frontend/src/services/authService.ts`
+  - `frontend/src/services/api.ts`
+  - `frontend/src/hooks/useAuth.tsx`
+  - `frontend/src/hooks/useProfessionals.ts`
+  - `frontend/src/pages/LoginPage.tsx`
+  - `frontend/src/pages/HomePage.tsx`
+  - `frontend/src/pages/RegisterProfessionalPage.tsx`
+  - `frontend/src/pages/ForgotPasswordPage.tsx`
+  - `frontend/src/pages/EmailVerificationPage.tsx`
+  - `frontend/src/components/ProtectedRoute.tsx`
+
+#### Notes
+- Critical `console.error` statements kept for error tracking
+- Backend logging (`loguru`) not affected - controlled by LOG_LEVEL in production
+
+---
+
+## [1.5.0] - 2025-11-28
+
+### 🚀 Production Deployment Fix & Infrastructure Corrections
+
+**Status:** ✅ DEPLOYED TO PRODUCTION  
+**Deploy Date:** Nov 28, 2025  
+**API Version:** 1.4.9 (confirmed via `/api/v1/version/`)
+
+#### Critical Issues Resolved
+
+**1. Production Server Was Running Outdated Code** ✅
+- **Problem:** EC2 server was 8+ days behind (last deploy Nov 20, 2025)
+- **Root Cause:** Git remote was configured with SSH (`git@github.com`) but no SSH keys for GitHub
+- **Symptom:** All webhook deploys since Nov 20 failed with "Host key verification failed"
+- **Solution:** Changed git remote to HTTPS (`https://github.com/francescojr/holisticmatch.git`)
+- **Result:** Webhook auto-deploy now functional for future pushes
+
+**2. Password Reset Returning 401 Unauthorized** ✅
+- **Problem:** `POST /api/v1/professionals/password_reset/` returned 401 even with `AllowAny` decorator
+- **Root Cause:** `get_permissions()` method in ViewSet was overriding `@action` decorator permissions
+- **Solution:** Added `password_reset`, `password_reset_confirm`, `validate_photo` to `public_actions` list in `get_permissions()`
+- **File:** `backend/professionals/views.py`
+- **Result:** Password reset now returns 200 OK without authentication
+
+**3. Text Moderation Not Blocking Inappropriate Content** ✅  
+- **Problem:** Registration with name "Joao Caralho" was accepted (201 Created)
+- **Root Cause:** Outdated code in production didn't have moderation validators
+- **Solution:** Deployed current code with regex moderation patterns
+- **Result:** Registration now returns 400 with "Nome contém conteúdo impróprio"
+
+**4. Password Reset Email Using localhost URL** ✅
+- **Problem:** Reset password emails contained `http://localhost:5173/reset-password?token=xxx`
+- **Root Cause:** `FRONTEND_URL` not configured in production `.env`
+- **Solution:** Added `FRONTEND_URL=https://hollisticmatch.online` to `/home/django/holisticmatch/backend/.env`
+- **Result:** Emails now contain correct production URL
+
+#### Infrastructure Fixes
+
+**EC2 Git Remote Configuration:**
+```bash
+# Before (broken):
+origin  git@github.com:francescojr/holisticmatch.git (SSH - no keys)
+
+# After (working):
+origin  https://github.com/francescojr/holisticmatch.git (HTTPS - public repo)
+```
+
+**Webhook Deploy Log:** Cleared 8 days of failed deploy attempts from `/tmp/holisticmatch-deploy.log`
+
+**Production Environment Variables Added:**
+```
+FRONTEND_URL=https://hollisticmatch.online
+```
+
+#### Production Verification
+
+```bash
+# Version endpoint (confirms deployment)
+GET https://hollisticmatch.online/api/v1/version/
+→ {"version":"1.4.9","build_date":"2025-11-28","status":"ok",
+   "features":["password_reset_public","text_moderation_regex","text_moderation_openai"]}
+
+# Password reset (now works)
+POST https://hollisticmatch.online/api/v1/professionals/password_reset/
+→ 200 {"detail":"Se este email estiver cadastrado, você receberá um link de reset de senha"}
+
+# Text moderation (now blocks)
+POST https://hollisticmatch.online/api/v1/professionals/register/
+Body: {"full_name": "Joao Caralho", ...}
+→ 400 {"name":["Nome contém conteúdo impróprio (detectado por regex)..."]}
+```
+
+#### Files Modified
+
+- `backend/professionals/views.py`: Added public actions to `get_permissions()` method
+- Production `.env`: Added `FRONTEND_URL` environment variable
+- EC2 git remote: Changed from SSH to HTTPS
+
+#### Deployment Commands Used
+
+```bash
+# SSH into EC2
+ssh -i hollistickeypair.pem ubuntu@44.197.112.222
+
+# Fix git remote
+sudo bash -c 'cd /home/django/holisticmatch && git remote set-url origin https://github.com/francescojr/holisticmatch.git'
+
+# Pull latest code
+sudo bash -c 'cd /home/django/holisticmatch && git fetch origin && git reset --hard origin/main'
+
+# Add FRONTEND_URL
+echo 'FRONTEND_URL=https://hollisticmatch.online' | sudo tee -a /home/django/holisticmatch/backend/.env
+
+# Restart gunicorn
+sudo systemctl restart gunicorn
+```
+
+#### Backward Compatibility
+✅ 100% - No breaking changes, configuration fixes only
+
+---
+
 ## [1.4.9] - 2025-11-28
 
 ### 🔧 Password Reset Authentication Fix & Moderation Tests

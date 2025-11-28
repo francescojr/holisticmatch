@@ -19,7 +19,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   // v1.3.13: Simplified logging - reduced console spam
   // Show loading skeleton while checking authentication
   if (isLoading) {
-    console.log('[ProtectedRoute] ⏳ Auth still loading, showing skeleton...')
     return (
       <div className="min-h-screen bg-background-light dark:bg-background-dark p-4">
         <DashboardSkeleton />
@@ -29,12 +28,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // If not authenticated, redirect to login
   if (!isAuthenticated) {
-    console.log('[ProtectedRoute] ❌ Not authenticated, redirecting to /login')
     return <Navigate to="/login" replace />
   }
 
   // If authenticated, render the protected page
-  console.log('[ProtectedRoute] ✅ Authenticated! Rendering protected content')
   return <>{children}</>
 }
 

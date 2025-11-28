@@ -31,23 +31,13 @@ export function useProfessionals(
   return useQuery({
     queryKey: ['professionals', filters],
     queryFn: async ({ signal }) => {
-      console.log('[useProfessionals] 🔄 Fetching professionals with filters:', filters)
-      
       try {
         // v1.3.1: Pass signal to fetch and let axios handle cancellation properly
         const data = await professionalService.getProfessionals(filters, signal)
-        
-        // v1.3.0: Only log if component still mounted
-        if (isMountedRef.current) {
-          console.log('[useProfessionals] ✅ API returned:', data.count, 'professionals')
-          console.log('[useProfessionals] 📋 Results:', data.results.map(p => `${p.name} (ID: ${p.id}) - is_active: ${p.is_active}, na_contencao: ${p.na_contencao}`))
-        }
-        
         return data
       } catch (error: any) {
         // v1.3.3: Handle axios cancel + abort errors properly - return empty data instead of throwing
         if (error.name === 'CanceledError' || error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
-          console.log('[useProfessionals] 🚫 Request cancelled by axios/abort (normal cleanup, not an error)')
           // Return gracefully for cancelled requests - don't show error toast
           return { count: 0, results: [], next: null, previous: null }
         }

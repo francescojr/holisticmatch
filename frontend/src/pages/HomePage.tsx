@@ -15,8 +15,6 @@ import hero01 from '../assets/images/hero01.jpg'
 import hero02 from '../assets/images/hero02.jpg'
 
 function HomePage() {
-  console.log('[HomePage] 🏠 HomePage component rendering...');
-  
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { isAuthenticated, isLoading: authLoading } = useAuth()
@@ -34,17 +32,10 @@ function HomePage() {
   const { data: professionalsData, isLoading, error, isPending } = useProfessionals(filters)
   const { containerRef, isContainerVisible } = useSequentialAnimation<HTMLDivElement>()
 
-  console.log('[HomePage] 📊 Current state:');
-  console.log('[HomePage] - isPending:', isPending, '| isLoading:', isLoading);
-  console.log('[HomePage] - error:', error);
-  console.log('[HomePage] - professionalsData:', professionalsData);
-  console.log('[HomePage] - professionals count:', professionalsData?.results?.length);
-
   // v1.4.5 FIX: Invalidate cache on mount AND listen for logout event
   // This ensures fresh data loads after logout, preventing infinite loading
   useEffect(() => {
     const handleLogout = () => {
-      console.log('[HomePage] v1.4.5 🔄 Logout detected - invalidating professionals cache')
       queryClient.removeQueries({ queryKey: ['professionals'] })
       queryClient.invalidateQueries({ queryKey: ['professionals'], exact: false })
     }
@@ -163,10 +154,7 @@ function HomePage() {
             ref={containerRef}
             className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
           >
-            {professionalsData.results.map((professional, index) => {
-              // Log to verify backend filtering
-              console.log('[HomePage] 🔹 Rendering:', professional.name, 'is_active:', professional.is_active, 'na_contencao:', professional.na_contencao);
-              return (
+            {professionalsData.results.map((professional, index) => (
               <motion.div
                 key={professional.id}
                 variants={scrollItemVariants(index)}
@@ -178,7 +166,7 @@ function HomePage() {
               >
                 <ProfessionalCard professional={professional} />
               </motion.div>
-            )})}
+            ))}
           </div>
         )}
 

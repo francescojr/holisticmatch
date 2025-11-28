@@ -43,13 +43,6 @@ function LoginPage() {
     setLoading(true)
 
     try {
-      // Check what's in localStorage BEFORE login
-      const preAccessToken = localStorage.getItem('access_token')
-      const preRefreshToken = localStorage.getItem('refresh_token')
-      console.log('[LoginPage]   - access_token before: ' + (preAccessToken ? '✅ exists' : '❌ empty'))
-      console.log('[LoginPage]   - refresh_token before: ' + (preRefreshToken ? '✅ exists' : '❌ empty'))
-
-      
       // Call login from auth context (which calls authService.login)
       // v1.4.5 FIX: Use flushSync for guaranteed React state completion before navigation
       // v1.4.4 had setTimeout(0) which is microtask - not reliable for state sync
@@ -57,14 +50,6 @@ function LoginPage() {
       await login({ email, password })
       flushSync(() => {})
       
-      // Check what's in localStorage AFTER login
-      const postAccessToken = localStorage.getItem('access_token')
-      const postRefreshToken = localStorage.getItem('refresh_token')
-      
-      // Verify tokens changed
-      if (postAccessToken && postAccessToken !== preAccessToken) {
-      } else if (!postAccessToken) {
-      }
       // Clear verified email flags
       localStorage.removeItem('just_verified_email')
       localStorage.removeItem('verification_email')
